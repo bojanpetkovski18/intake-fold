@@ -1,24 +1,10 @@
-from collections.abc import Iterator
-
 import pytest
 from fastapi.testclient import TestClient
-from testcontainers.community.postgres import PostgresContainer
 
 from intakefold.api.app import build_app
 from intakefold.settings import Settings
 
-# Same image as compose.yaml, so tests run on what the stack runs.
-POSTGRES_IMAGE = (
-    "postgres:18.6-alpine@sha256:10a5c69a83035ab5239f5620d708520e8b28f5aa1f2b20143e6024532edadfb5"
-)
-
 pytestmark = pytest.mark.integration
-
-
-@pytest.fixture(scope="module")
-def database_url() -> Iterator[str]:
-    with PostgresContainer(POSTGRES_IMAGE, driver="psycopg") as postgres:
-        yield postgres.get_connection_url()
 
 
 def client_for(database_url: str) -> TestClient:

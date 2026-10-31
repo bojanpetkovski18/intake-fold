@@ -22,7 +22,7 @@ browser
 ## Processes
 
 - **api:** thin routes that authenticate, validate, and call handlers. It never calls the model.
-- **worker:** claims one job at a time with `FOR UPDATE SKIP LOCKED`, commits, then does the work outside a transaction. Run more workers for concurrency.
+- **worker:** claims one job at a time with `FOR UPDATE SKIP LOCKED`, commits, then does the work outside a transaction, with a background thread renewing the lease. On a stop signal it finishes the current job and exits. Run more workers for concurrency.
 - **sink:** a separate small app with no access to the database.
 
 ## Boundaries

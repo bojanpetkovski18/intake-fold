@@ -7,7 +7,7 @@ from fastapi import FastAPI
 from intakefold.api import health
 from intakefold.api.middleware import RequestContextMiddleware
 from intakefold.api.problems import register_problem_handlers
-from intakefold.db import build_engine
+from intakefold.db.engine import build_engine
 from intakefold.logging import configure_logging
 from intakefold.settings import ConfigurationError, Settings, load_settings
 

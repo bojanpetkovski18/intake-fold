@@ -210,3 +210,27 @@ Numbered and never renumbered. A reversal is a new entry. The owner approved Pha
 - **Why:** `pip-audit` stopped the push on PYSEC-2026-4320 (certifi bundled root CAs with compromised keys) and 17 filelock advisories, and Node 24.22.1 is a security release. All three are dev or CI only. Neither package is in the runtime tree.
 - **Alternatives:** wait about 24 hours for the packages and 3 days for Node.
 - **Trade-offs:** less soak time for these three. The entries in `pyproject.toml` can go once `exclude-newer` passes those dates.
+
+## D-034 TRUNCATE is the one way around the audit trigger
+- **Date:** 2026-10-31. **Status:** decided in M2, for owner review.
+- **Decision:** the append-only trigger is a row trigger, so `UPDATE` and `DELETE` fail but `TRUNCATE` works. A test records this.
+- **Why:** the demo reset (AC-22) must clear the audit trail. AC-18 says rows cannot be updated or deleted through SQL, and this meets it for those statements only.
+- **Alternatives:** a statement-level `BEFORE TRUNCATE` trigger with a separate privileged role for the reset, which is stronger but adds a second database role to a local demo.
+- **Trade-offs:** anyone with table privileges can still erase the trail. A production system would use a restricted application role.
+
+## D-035 Attempts count at claim, and finishing is fenced
+- **Date:** 2026-10-31. **Status:** decided in M2.
+- **Decision:** `attempts` increases when a job is claimed. Heartbeat, success and failure apply only if the job is running with the same `locked_by` and `attempts`. Stored errors hold an exception type or a safe code, never its message.
+- **Why:** a job that kills its worker still runs out of attempts. A worker that lost its lease cannot overwrite the new owner's result. Both parts of the fence are needed, because `requeue` resets attempts, and a mutation run showed that gap in the tests.
+- **Trade-offs:** a stale worker's side effects still happen, so handlers must be idempotent.
+
+## D-036 Enums are checked strings
+- **Date:** 2026-10-31. **Status:** decided in M2.
+- **Decision:** enum columns are `VARCHAR` with a `CHECK` constraint, not native PostgreSQL enums.
+- **Why:** changing a value is then an ordinary migration, and removing one is possible.
+- **Trade-offs:** Alembic does not detect changes to `CHECK` constraints, so enum changes need a hand-written migration.
+
+## D-037 Seeded users cannot sign in until M3
+- **Date:** 2026-10-31. **Status:** decided in M2.
+- **Decision:** the seed stores an unusable `!` as the password hash. Four vendors are seeded now; M5 adds the rest.
+- **Why:** hashing arrives with M3, and a plain or weak placeholder should never exist.
