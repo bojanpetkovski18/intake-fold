@@ -30,7 +30,9 @@ def problem_response(status: int, detail: str, **extra: object) -> JSONResponse:
 
 def _http_exception(_: Request, error: Exception) -> JSONResponse:
     assert isinstance(error, HTTPException)  # noqa: S101 - narrows the type Starlette registers
-    return problem_response(error.status_code, str(error.detail))
+    response = problem_response(error.status_code, str(error.detail))
+    response.headers.update(error.headers or {})
+    return response
 
 
 def _validation_error(_: Request, error: Exception) -> JSONResponse:

@@ -22,7 +22,7 @@ browser
 ## Processes
 
 - **api:** thin routes that authenticate, validate, and call handlers. It never calls the model.
-- **worker:** claims one job at a time with `FOR UPDATE SKIP LOCKED`, commits, then does the work outside a transaction. Run more workers for concurrency.
+- **worker:** claims one job at a time with `FOR UPDATE SKIP LOCKED`, commits, then does the work outside a transaction, with a background thread renewing the lease. On a stop signal it finishes the current job and exits. Run more workers for concurrency.
 - **sink:** a separate small app with no access to the database.
 
 ## Boundaries
@@ -31,6 +31,7 @@ browser
 - Model output is proposed data. It crosses into the domain only after Pydantic validation.
 - Rules and routing are pure functions over domain objects, so they are tested without a database or a model.
 - Every external call happens outside a database transaction.
+- `enforce_access` runs on every route. Authentication is on unless a route is listed in `PUBLIC_ROUTES`.
 
 ## Reliability
 
@@ -40,4 +41,4 @@ browser
 
 ## To be written from the code
 
-Request flow, auth, concurrency, external integrations, data model diagram, delivery.
+Request flow, concurrency, external integrations, data model diagram, delivery.

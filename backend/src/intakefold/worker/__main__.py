@@ -5,10 +5,13 @@ from types import FrameType
 
 import structlog
 
+from intakefold.clock import SystemClock
+from intakefold.db.engine import build_engine
 from intakefold.logging import configure_logging
 from intakefold.settings import ConfigurationError, load_settings
+from intakefold.worker.loop import Handler, Worker
 
-POLL_SECONDS = 1.0
+HANDLERS: dict[str, Handler] = {}  # Real handlers arrive in M4.
 
 
 def run() -> None:
@@ -30,9 +33,10 @@ def run() -> None:
     if sys.platform == "win32":  # Windows has no real SIGTERM for other processes.
         signal.signal(signal.SIGBREAK, request_stop)
 
+    engine = build_engine(settings)
     log.info("worker_started")
-    while not stop.wait(POLL_SECONDS):
-        pass  # Jobs arrive in M2.
+    Worker(engine, HANDLERS, clock=SystemClock()).run(stop)
+    engine.dispose()
     log.info("worker_stopped")
 
 

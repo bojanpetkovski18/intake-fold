@@ -9,6 +9,7 @@
 
 **Scope**
 - Multi-stage images, non-root, health checks, `.dockerignore`. Migrations and seed on start.
+- Run uvicorn with `--no-proxy-headers`, set `TRUSTED_PROXIES` to the Compose network, and decide `ALLOW_INSECURE_COOKIES` for the demo (D-041, D-042).
 - `docker compose up --build` with no API key.
 - One Playwright journey against the built stack: sign in, upload, review, correct, approve, see the delivery, export, read metrics. Fails on console errors and CSP violations, with axe checks per page. CI job.
 - `README.md` rewritten for visitors. `docs/ARCHITECTURE.md` written from the code.
