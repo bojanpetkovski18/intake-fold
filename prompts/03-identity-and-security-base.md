@@ -9,7 +9,7 @@
 
 **Scope**
 - `POST /auth/login`, `POST /auth/logout`, `GET /auth/me`.
-- Argon2 hashing. Opaque session tokens stored hashed. HttpOnly, SameSite cookie. A local plain-http switch that is explicit and off by default.
+- Argon2 hashing, and replace `UNUSABLE_PASSWORD` in `db/seed.py` with real demo credentials from configuration. Opaque session tokens stored hashed. HttpOnly, SameSite cookie. A local plain-http switch that is explicit and off by default.
 - `require_user` and `require_role` dependencies. Authentication on by default, with public routes listed explicitly.
 - CSRF: `X-CSRF-Token` plus an `Origin` allow-list on unsafe methods.
 - Rate limit on sign-in. Client IP trusted from the proxy only.

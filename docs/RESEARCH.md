@@ -2,6 +2,10 @@
 
 Time-sensitive facts with sources. All entries checked **2026-10-31** unless dated otherwise. The two-week floor on that date is **2026-10-17**. Re-check at the start of the milestone that uses each one.
 
+## M2 re-check (2026-10-31)
+
+SQLAlchemy 2.1.5 and Alembic 1.20.0 remain the newest releases past the floor (2.1.6 and 1.20.1 are from 2026-10-21 and 2026-10-22). Web searches for the four seeded vendor names found no business using them: Quillbrook Office Supply, Tarnwell Freight, Morrowfen Catering, Ostrel Print Works. A search is not proof a name is unused. [Quill](https://en.wikipedia.org/wiki/Quill_Corporation) is a real office supply brand with a similar-looking name; "Quillbrook" is a different word, but M5 should reconsider it.
+
 ## Local tools
 
 Checked with the commands listed. Windows 11 Pro 10.0.26200.
