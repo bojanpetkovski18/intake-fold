@@ -95,7 +95,7 @@ After every push, in the chat (not in a file), as raw Markdown inside a fenced c
 
 ## Repository layout
 
-Planned; update it as the code lands.
+`api/`, `worker/`, `settings.py`, `logging.py`, `db.py` and `frontend/src/` exist. The rest is planned; update this as code lands.
 
 ```
 backend/
@@ -119,13 +119,47 @@ data/labeled/            generated documents and ground truth
 reports/eval/            dated evaluation reports
 docs/                    SPEC, ARCHITECTURE, RESEARCH, AUDIT, portfolio/
 prompts/                 session starter and milestone briefs
-compose.yaml             api, worker, sink, db, web
+scripts/                 check.sh (all CI checks), install-tools.sh (pinned, checksummed tools)
+compose.yaml             db now; api, worker, sink and web in M14
 ```
 
 ## Commands
 
-Add a command only after running it, with the date. None verified yet.
+Add a command only after running it, with the date. All verified 2026-10-31 on Windows from Git Bash or PowerShell, unless noted.
+
+```bash
+# Everything CI runs, chained. A failure stops it. Needs Docker, uv, Node and Git Bash on Windows.
+bash scripts/check.sh
+bash scripts/check.sh backend      # or: frontend, repository
+
+# Backend (from backend/)
+uv sync --locked
+uv run ruff format --check . && uv run ruff check .
+uv run pyright
+uv run pytest
+uv run pytest -m "not integration"   # no Docker needed
+uv run python -m intakefold.worker
+uv run uvicorn --factory intakefold.api.app:create_app --host 127.0.0.1 --port 8100
+
+# Frontend (from frontend/)
+npm ci
+npm run dev
+npm run lint && npm run format:check && npm run typecheck
+npm test
+npm run build
+
+# Database
+cp .env.example .env               # then set values
+docker compose up -d --wait db
+docker compose down                # add -v only to delete the data volume
+```
+
+The API and worker read settings from the environment only. Export the values in `.env` first, or use `uv run --env-file ../.env ...` (not verified yet).
+
+Updating dependencies: move `exclude-newer` in `backend/pyproject.toml` and pass `--before` to `npm install`, both set to the two-week floor.
 
 ## Local environment notes
 
 Checked 2026-10-31 on the owner's Windows 11 machine. Other projects use host ports 5432, 5433, 5434, 8080, 8025 and 1025. Look at what is on a port before assuming it is free. Scratch runs use a separate Compose project name, port and volume.
+
+Windows can hide Linux-only failures, such as pyright errors on platform-specific code. Before pushing a change that touches platform code, also run the checks in a Linux container. Do not pipe a check through `tail` when its exit code matters.

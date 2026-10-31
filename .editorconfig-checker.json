@@ -1,0 +1,3 @@
+{
+  "Exclude": ["uv\\.lock$", "package-lock\\.json$"]
+}

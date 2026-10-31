@@ -20,7 +20,29 @@ Host ports already listening: 5432, 5433, 5434, 8080. Containers also publish 10
 
 ## Repository
 
-`bojanpetkovski18/file-fold` on GitHub is **public** and empty, with default branch `main` (GitHub API, unauthenticated). The local repository has branch `master`, no commits and no remote.
+`bojanpetkovski18/intake-fold` on GitHub (renamed from `file-fold` on 2026-10-31) is **public** by the owner's choice, with default branch `main`.
+
+## M1 re-check (2026-10-31)
+
+All pins above and below were confirmed by resolving with the floor in place. Changes and additions:
+
+| Item | Result | Note |
+|---|---|---|
+| Python | 3.15.0 | Patches 3.15.1 and 3.15.2 clear the floor on 2026-11-04 and 2026-11-08 |
+| `python:3.15.0-slim` | `sha256:f5b92f2a669a4c347044f29367f31983280b648250ca94dea66f98c53bc87e58` | For M14 |
+| `postgres:18.6-alpine` | `sha256:10a5c69a83035ab5239f5620d708520e8b28f5aa1f2b20143e6024532edadfb5` | Same digest as `18-alpine` |
+| Node | 24.22.1 (2026-10-20) | Security release, taken below the floor with owner approval (D-033) |
+| certifi | 2026.10.18 | Fixes PYSEC-2026-4320. Below the floor with owner approval (D-033) |
+| filelock | 4.2.1 | Fixes 17 advisories. Below the floor with owner approval (D-033) |
+| `httpx2` | 2.13.1 (2026-09-23) | Replaces `httpx`, which Starlette 1.8 deprecates for its test client |
+| actions/checkout | v7.0.1, `3d3c42e5aac5ba805825da76410c181273ba90b1` | |
+| actions/setup-node | v7.1.0, `949feb2413d6458794dcd2491c4babbbce0c15c1` | |
+| astral-sh/setup-uv | v10.3.0, `1c37ad07a6a961277cf70c0d37d6f313000f5884` | |
+| gitleaks | 8.30.1 | Linux and Windows SHA-256 in `scripts/install-tools.sh` |
+| actionlint | 1.7.12 | As above |
+| editorconfig-checker | 4.0.2 | As above |
+| `eslint-plugin-jsx-a11y` | 6.10.2 | Rejected: peer range stops at ESLint 9 |
+| minimatch advisory | [GHSA-g3hv-75wg-m249](https://github.com/advisories/GHSA-g3hv-75wg-m249), published 2026-10-30, fixed in 11.0.1 | Reaches dev tooling only. See D-028 |
 
 ## Runtimes
 
