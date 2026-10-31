@@ -30,6 +30,8 @@ build-backend = "uv_build"
 [tool.uv]
 # The two-week floor, applied to transitive packages as well as direct ones.
 exclude-newer = "2026-10-17T00:00:00Z"
+# Security patches taken below the floor with the owner's approval (D-033).
+exclude-newer-package = { certifi = "2026-10-19T00:00:00Z", filelock = "2026-10-17T17:00:00Z" }
 
 [tool.ruff]
 line-length = 100

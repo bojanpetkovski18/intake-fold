@@ -203,3 +203,10 @@ Numbered and never renumbered. A reversal is a new entry. The owner approved Pha
 - **Decision:** one pure ASGI middleware sets the trace ID and headers, writes the request log, and turns unhandled exceptions into problem responses.
 - **Why:** FastAPI's `Exception` handler runs outside user middleware, so a 500 there would have no security headers or trace ID. A test covers this.
 - **Trade-offs:** slightly more code than `BaseHTTPMiddleware`.
+
+## D-033 Security patches below the two-week floor
+- **Date:** 2026-10-31. **Status:** approved by the owner. Supersedes D-030.
+- **Decision:** take certifi 2026.10.18, filelock 4.2.1 and Node 24.22.1 before they clear the floor. The two packages use `exclude-newer-package`, so the floor still holds for everything else.
+- **Why:** `pip-audit` stopped the push on PYSEC-2026-4320 (certifi bundled root CAs with compromised keys) and 17 filelock advisories, and Node 24.22.1 is a security release. All three are dev or CI only. Neither package is in the runtime tree.
+- **Alternatives:** wait about 24 hours for the packages and 3 days for Node.
+- **Trade-offs:** less soak time for these three. The entries in `pyproject.toml` can go once `exclude-newer` passes those dates.

@@ -47,7 +47,6 @@ None yet. Every number used in the README or portfolio kit must have a row here.
 |---|---|
 | The repository is public by the owner's choice, ahead of the M14 scan | gitleaks scans full history on every CI run. Full scan including personal data stays in M14 |
 | `minimatch` advisory (moderate, 11 npm audit lines, dev tooling only) | Re-check at each milestone start. Remove when ESLint moves to a fixed version, or take an override with owner approval. See D-028 |
-| CI runs Node 24.22.0, one release behind security release 24.22.1 | Bump after 2026-11-03, or sooner with owner approval. See D-030 |
 | Python 3.15.0 is behind 3.15.1 and 3.15.2 | Check their release notes, and bump after 2026-11-04 |
 | The API key is not needed until M15 | Owner stores it in local `.env` when authorizing a run |
 
