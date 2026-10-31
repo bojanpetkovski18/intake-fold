@@ -1,6 +1,6 @@
 # Progress
 
-Last updated 2026-10-31. **M2 is pushed for review. Next: M3, after the owner merges into `dev`.**
+Last updated 2026-10-31. **M3 is pushed for review. Next: M4, after the owner merges into `dev`.**
 
 ## Milestones
 
@@ -10,8 +10,8 @@ Estimates are planning guesses, not measurements. Total: about 104 hours.
 |---|---|---|---|---|
 | 0 | Phase 0 planning | none | done | Approved 2026-10-31 |
 | 1 | Repository, tooling, CI, app shell | 0 | 7 h | Merged; CI green on PR, `main` and `dev` |
-| 2 | Database schema and job queue | 1 | 8 h | Pushed; CI result unknown until a PR exists |
-| 3 | Identity and security base | 2 | 5 h | Not started |
+| 2 | Database schema and job queue | 1 | 8 h | Merged |
+| 3 | Identity and security base | 2 | 5 h | Pushed; CI result unknown until a PR exists |
 | 4 | Upload and documents API | 3 | 7 h | Not started |
 | 5 | Fictional document generator and labeled set | 1 | 7 h | Not started |
 | 6 | Extraction: mock, Claude, schema, repair, injection defense | 4, 5 | 10 h | Not started |
@@ -48,9 +48,11 @@ None yet. Every number used in the README or portfolio kit must have a row here.
 | The repository is public by the owner's choice, ahead of the M14 scan | gitleaks scans full history on every CI run. Full scan including personal data stays in M14 |
 | `minimatch` advisory (moderate, 11 npm audit lines, dev tooling only) | Re-check at each milestone start. Remove when ESLint moves to a fixed version, or take an override with owner approval. See D-028 |
 | Python 3.15.0 is behind 3.15.1 and 3.15.2 | Check their release notes, and bump after 2026-11-04 |
+| Local `.env` files need the new `DEMO_*_PASSWORD` values before seeding | Copy them from `.env.example` and change them |
+| Session cookie defaults to Secure, and the local http demo may need `ALLOW_INSECURE_COOKIES` | Decide in M14 (D-041) |
 | The API key is not needed until M15 | Owner stores it in local `.env` when authorizing a run |
 | `TRUNCATE` bypasses the audit trigger, by design for the demo reset | Owner to confirm the reading of AC-18 in D-034 |
 
 ## Next step
 
-Owner opens a PR for `#0002-database-schema-and-job-queue` against `dev`, checks CI, and merges. Then M3.
+Owner opens a PR for `#0003-identity-and-security-base` against `dev`, checks CI, and merges. Then M4.

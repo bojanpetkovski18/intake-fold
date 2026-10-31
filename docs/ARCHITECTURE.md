@@ -31,6 +31,7 @@ browser
 - Model output is proposed data. It crosses into the domain only after Pydantic validation.
 - Rules and routing are pure functions over domain objects, so they are tested without a database or a model.
 - Every external call happens outside a database transaction.
+- `enforce_access` runs on every route. Authentication is on unless a route is listed in `PUBLIC_ROUTES`.
 
 ## Reliability
 
@@ -40,4 +41,4 @@ browser
 
 ## To be written from the code
 
-Request flow, auth, concurrency, external integrations, data model diagram, delivery.
+Request flow, concurrency, external integrations, data model diagram, delivery.

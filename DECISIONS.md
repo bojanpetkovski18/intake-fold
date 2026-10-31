@@ -124,7 +124,7 @@ Numbered and never renumbered. A reversal is a new entry. The owner approved Pha
 
 ## D-019 slowapi with in-memory limits
 - **Date:** 2026-10-31. **Status:** approved with Phase 0.
-- **Decision:** slowapi, one API process, keyed by user, or by client IP on sign-in.
+- **Decision:** slowapi, one API process, keyed by user, or by client IP on sign-in. D-038 replaces the library; the in-memory approach stands.
 - **Why:** no Redis, and one process is all the demo runs.
 - **Trade-offs:** limits reset on restart and would not span instances. Behind nginx, the client IP must be read only from the trusted proxy.
 
@@ -232,5 +232,36 @@ Numbered and never renumbered. A reversal is a new entry. The owner approved Pha
 
 ## D-037 Seeded users cannot sign in until M3
 - **Date:** 2026-10-31. **Status:** decided in M2.
+- **Superseded in M3:** the seed now hashes passwords from `DEMO_REVIEWER_PASSWORD` and `DEMO_ADMIN_PASSWORD`, and refuses to run without them.
 - **Decision:** the seed stores an unusable `!` as the password hash. Four vendors are seeded now; M5 adds the rest.
 - **Why:** hashing arrives with M3, and a plain or weak placeholder should never exist.
+
+## D-038 The limits library instead of slowapi
+- **Date:** 2026-10-31. **Status:** decided in M3.
+- **Decision:** use `limits`, which slowapi wraps, from a small FastAPI dependency, with an in-memory moving window.
+- **Why:** slowapi's decorator raises a deprecation error on Python 3.15 under `filterwarnings = error`, the call is removed in 3.16, and the decorator fails strict pyright. A dependency also suits M4's per-user upload limit.
+- **Trade-offs:** about 20 lines of our own. The window uses the library's clock, not the injectable one, so its expiry test waits for real time.
+
+## D-039 The CSRF token is derived from the session token
+- **Date:** 2026-10-31. **Status:** decided in M3.
+- **Decision:** the CSRF token is an HMAC of the session token, and `csrf_token_hash` stores its SHA-256.
+- **Why:** `/auth/me` must return the token while the database holds only hashes, and rotating it there would break other tabs. A database leak yields neither token.
+- **Trade-offs:** the token lasts as long as the session.
+
+## D-040 Access is enforced by one global dependency
+- **Date:** 2026-10-31. **Status:** decided in M3.
+- **Decision:** `enforce_access` runs on every route: Origin on unsafe methods, then session and CSRF unless the route is in `PUBLIC_ROUTES`. `require_role` is added per route. Admin outranks reviewer.
+- **Why:** a route that forgets to protect itself is still protected, and a test proves it.
+- **Trade-offs:** `PUBLIC_ROUTES` matches the request path, because FastAPI 0.143 keeps included routers lazy and the matched route omits their prefix. A public route with path parameters would need a different check. The route-table test reads the OpenAPI schema for the same reason, so a route hidden from the schema would escape it.
+
+## D-041 Session and sign-in limits
+- **Date:** 2026-10-31. **Status:** decided in M3, for owner review.
+- **Decision:** sessions last 12 hours with no sliding renewal. The cookie is HttpOnly, Secure, `SameSite=Strict` and scoped to `/api`. Sign-in allows 10 attempts per minute per client IP, counting successes. Unsafe requests with no `Origin` are refused. Argon2 uses the library's default parameters.
+- **Why:** the spec sets none of these. They are the simplest strict choices for a same-origin app.
+- **Trade-offs:** a reviewer signs in again after 12 hours, and scripts must send `Origin`. `ALLOW_INSECURE_COOKIES` must be on for browsers that refuse Secure cookies over local http; M14 decides this for the Docker demo.
+
+## D-042 Only our code reads forwarded headers
+- **Date:** 2026-10-31. **Status:** decided in M3.
+- **Decision:** `client_ip` trusts `X-Forwarded-For` only from peers in `TRUSTED_PROXIES`, walking from the right. Uvicorn runs with `--no-proxy-headers`.
+- **Why:** on a real server with default flags, uvicorn trusted the header from loopback, and a forged value dodged the limit six times out of six. With the flag, the limit held.
+- **Trade-offs:** the flag lives in the run command, not in code, so the M14 image must carry it.
