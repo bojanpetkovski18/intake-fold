@@ -5,6 +5,7 @@ import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
+from intakefold.api.access import enforce_access
 from intakefold.api.app import build_app
 from intakefold.settings import Settings
 
@@ -14,6 +15,8 @@ UNREACHABLE = "postgresql+psycopg://nobody:nothing@127.0.0.1:1/none"
 def make_app(environment: str = "test") -> FastAPI:
     settings = Settings.model_validate({"database_url": UNREACHABLE, "environment": environment})
     app = build_app(settings)
+    # These tests are about error shape and headers; the access rules have their own tests.
+    app.dependency_overrides[enforce_access] = lambda: None
 
     @app.get("/api/explode")
     def explode() -> None:
