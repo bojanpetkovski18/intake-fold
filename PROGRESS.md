@@ -1,6 +1,6 @@
 # Progress
 
-Last updated 2026-10-31. **Phase 0 is approved. No application code exists. Next: M1.**
+Last updated 2026-10-31. **M1 is pushed for review. Next: M2, after the owner merges.**
 
 ## Milestones
 
@@ -9,7 +9,7 @@ Estimates are planning guesses, not measurements. Total: about 104 hours.
 | # | Milestone | Depends on | Estimate | Status |
 |---|---|---|---|---|
 | 0 | Phase 0 planning | none | done | Approved 2026-10-31 |
-| 1 | Repository, tooling, CI, app shell | 0 | 7 h | Not started |
+| 1 | Repository, tooling, CI, app shell | 0 | 7 h | Pushed; CI result unknown until a PR exists |
 | 2 | Database schema and job queue | 1 | 8 h | Not started |
 | 3 | Identity and security base | 2 | 5 h | Not started |
 | 4 | Upload and documents API | 3 | 7 h | Not started |
@@ -45,11 +45,12 @@ None yet. Every number used in the README or portfolio kit must have a row here.
 
 | Issue | Plan |
 |---|---|
-| The GitHub repository is public, and the playbook starts repositories as private until the scan | Owner has not chosen to change it. Full scan in M14 either way; remind the owner before M1 pushes code |
-| The GitHub repository is named `file-fold`; the project is Intakefold | Owner's rename, optional |
-| Python is not installed on the host | uv installs the pinned interpreter in M1 |
+| The repository is public by the owner's choice, ahead of the M14 scan | gitleaks scans full history on every CI run. Full scan including personal data stays in M14 |
+| `minimatch` advisory (moderate, 11 npm audit lines, dev tooling only) | Re-check at each milestone start. Remove when ESLint moves to a fixed version, or take an override with owner approval. See D-028 |
+| CI runs Node 24.22.0, one release behind security release 24.22.1 | Bump after 2026-11-03, or sooner with owner approval. See D-030 |
+| Python 3.15.0 is behind 3.15.1 and 3.15.2 | Check their release notes, and bump after 2026-11-04 |
 | The API key is not needed until M15 | Owner stores it in local `.env` when authorizing a run |
 
 ## Next step
 
-Start M1 on `#0001-repository-tooling-and-ci`, from `dev`.
+Owner opens a PR for `#0001-repository-tooling-and-ci` against `dev`, checks CI, and merges. Then M2.

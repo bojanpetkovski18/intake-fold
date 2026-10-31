@@ -168,3 +168,38 @@ Numbered and never renumbered. A reversal is a new entry. The owner approved Pha
 - **Why:** the remote was empty and milestones branch from `dev`. The noreply address was recommended in Phase 0 and keeps a personal email out of a public history. The owner did not state a preference.
 - **Alternatives:** the owner's personal email, or the owner creating the branches.
 - **Trade-offs:** the exception does not extend to any later push. A different address would apply only to new commits, because history is not rewritten without approval.
+
+## D-027 The two-week floor is enforced by tooling
+- **Date:** 2026-10-31. **Status:** decided in M1.
+- **Decision:** `exclude-newer` in `backend/pyproject.toml` and `--before` on `npm install` set the floor when dependencies change.
+- **Why:** this covers transitive packages, which a check of direct pins misses.
+- **Trade-offs:** the floor date must be moved by hand when updating.
+
+## D-028 Audit thresholds differ for runtime and dev tooling
+- **Date:** 2026-10-31. **Status:** decided in M1, for owner review.
+- **Decision:** CI fails on moderate or worse in runtime npm packages and on high or worse in everything. Python packages are audited with no threshold.
+- **Why:** an advisory on `minimatch` below 11.0.1, published 2026-10-30, reaches only ESLint tooling. The fix is newer than the floor and outside the `^10.2` range ESLint declares, and `npm audit fix --force` would downgrade ESLint to 4.
+- **Alternatives:** an `overrides` entry forcing minimatch 11, which needs the owner's approval as a security exception and may break ESLint.
+- **Trade-offs:** moderate dev-tool advisories do not fail CI, so they must be tracked in `PROGRESS.md`.
+
+## D-029 Testing and accessibility libraries follow what is compatible
+- **Date:** 2026-10-31. **Status:** decided in M1.
+- **Decision:** `httpx2` for FastAPI's test client, because Starlette 1.8 deprecates `httpx`. `eslint-plugin-jsx-a11y` is left out, because it does not support ESLint 10. Accessibility is covered by Testing Library role queries now, and axe in M13 and M14.
+- **Trade-offs:** no static accessibility lint until the plugin catches up.
+
+## D-030 Node 24.22.0 in CI
+- **Date:** 2026-10-31. **Status:** decided in M1, for owner review.
+- **Decision:** CI pins Node 24.22.0. The host's 24.20.0 is accepted by `engines`.
+- **Why:** 24.22.1 (2026-10-20) is a security release but under two weeks old, and taking it early needs the owner's approval. Node only runs build and test tools here; nothing ships on it.
+- **Trade-offs:** CI runs a known-unpatched Node until the bump, which the floor allows from 2026-11-03.
+
+## D-031 API documentation endpoints are off
+- **Date:** 2026-10-31. **Status:** decided in M1.
+- **Decision:** `docs_url`, `redoc_url` and `openapi_url` are disabled. M8 revisits how API types reach the front end.
+- **Why:** the routes are public by default, which breaks the authentication rule, and their pages load scripts the CSP blocks.
+
+## D-032 Middleware handles unexpected errors itself
+- **Date:** 2026-10-31. **Status:** decided in M1.
+- **Decision:** one pure ASGI middleware sets the trace ID and headers, writes the request log, and turns unhandled exceptions into problem responses.
+- **Why:** FastAPI's `Exception` handler runs outside user middleware, so a 500 there would have no security headers or trace ID. A test covers this.
+- **Trade-offs:** slightly more code than `BaseHTTPMiddleware`.
