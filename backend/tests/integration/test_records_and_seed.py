@@ -3,6 +3,8 @@ from datetime import timedelta
 from decimal import Decimal
 
 import pytest
+from conftest import ADMIN_PASSWORD, DEMO_PASSWORDS, REVIEWER_PASSWORD
+from pydantic import SecretStr
 from sqlalchemy import Engine, select
 from sqlalchemy.orm import Session
 from support import FakeClock
@@ -20,7 +22,9 @@ from intakefold.db.models import (
     User,
     Vendor,
 )
-from intakefold.db.seed import UNUSABLE_PASSWORD, seed
+from intakefold.db.seed import demo_passwords, seed
+from intakefold.identity.passwords import verify_password
+from intakefold.settings import ConfigurationError, Settings
 
 pytestmark = pytest.mark.integration
 
@@ -124,7 +128,7 @@ def test_audit_event_commits_with_the_callers_transaction(
 def test_seed_creates_fictional_records_and_is_repeatable(engine: Engine) -> None:
     for _ in range(2):
         with Session(engine) as session, session.begin():
-            seed(session)
+            seed(session, DEMO_PASSWORDS)
 
     with Session(engine) as session:
         users = session.scalars(select(User)).all()
@@ -134,4 +138,26 @@ def test_seed_creates_fictional_records_and_is_repeatable(engine: Engine) -> Non
     assert len(users) == 2
     assert len(vendors) == 4
     assert all(user.email.endswith("@example.com") for user in users)
-    assert all(user.password_hash == UNUSABLE_PASSWORD for user in users)
+    by_role = {user.role: user.password_hash for user in users}
+    assert verify_password(by_role[Role.REVIEWER], REVIEWER_PASSWORD)
+    assert verify_password(by_role[Role.ADMIN], ADMIN_PASSWORD)
+    assert not verify_password(by_role[Role.REVIEWER], ADMIN_PASSWORD)
+
+
+def test_seed_applies_a_changed_password_to_an_existing_database(engine: Engine) -> None:
+    changed = DEMO_PASSWORDS | {Role.REVIEWER: SecretStr("a-different-password")}
+    for passwords in (DEMO_PASSWORDS, changed):
+        with Session(engine) as session, session.begin():
+            seed(session, passwords)
+
+    with Session(engine) as session:
+        reviewer = session.scalars(select(User).where(User.role == Role.REVIEWER)).one()
+
+    assert verify_password(reviewer.password_hash, "a-different-password")
+
+
+def test_seed_refuses_to_run_without_passwords() -> None:
+    settings = Settings.model_validate({"database_url": "postgresql://unused"})
+
+    with pytest.raises(ConfigurationError, match="DEMO_REVIEWER_PASSWORD"):
+        demo_passwords(settings)
