@@ -325,6 +325,21 @@ class TestLeases:
 
         assert not queue.succeed(engine, old, clock)
 
+    def test_requeue_cannot_revive_a_stale_workers_attempt_number(
+        self, engine: Engine, clock: FakeClock
+    ) -> None:
+        job_id = add_job(engine, clock, max_attempts=1)
+        stale = claimed(engine, clock, "worker-a")
+        clock.advance(LEASE + timedelta(seconds=1))
+        queue.reclaim_expired(engine, clock)
+        queue.requeue(engine, job_id, clock)
+        current = claimed(engine, clock, "worker-b")
+        assert current.attempts == stale.attempts
+
+        assert not queue.succeed(engine, stale, clock)
+
+        assert load(engine, job_id).status is JobStatus.RUNNING
+
     def test_two_reclaimers_count_each_job_once(self, engine: Engine) -> None:
         clock = SystemClock()
         fake = FakeClock(clock.now())
