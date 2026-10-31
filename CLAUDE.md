@@ -93,6 +93,10 @@ Suggested next step: <one line>
 
 After every push, in the chat (not in a file), as raw Markdown inside a fenced code block, starting with a line naming its readers, with these sections: What changed (grouped), Verified locally (a table of real results), Not verified, Review notes, Out of scope. Add the GitHub compare link for the branch, with `#` encoded as `%23`.
 
+Directly above the description, give the PR title on its own line: `#00nn: Milestone name - #<PR number>`, for example `#0002: Database schema and job queue - #3`. The PR number is the repository's next issue or PR number, so check it before giving the title.
+
+Keep the milestone report and PR description short: about half the length feels natural to write. Keep every required section and each real result, and cut restatement and detail the diff already shows.
+
 ## Repository layout
 
 `api/`, `worker/`, `jobs/`, `audit/`, `db/`, `migrations/` and `frontend/src/` exist. The rest is planned; update this as code lands.
