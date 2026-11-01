@@ -21,6 +21,7 @@ from intakefold.documents.rendering import MAX_RENDER_SIDE
 from intakefold.documents.storage import Storage
 from intakefold.extraction.mock import MockExtractor
 from intakefold.jobs import queue
+from intakefold.settings import Settings
 from intakefold.worker.handlers import build_handlers, fail_documents_of_dead_jobs
 from intakefold.worker.loop import Worker
 
@@ -28,6 +29,7 @@ pytestmark = pytest.mark.integration
 
 LEASE = timedelta(minutes=5)
 EMPTY_MOCK = MockExtractor(Path("does-not-exist"))
+RULE_SETTINGS = Settings.model_validate({"database_url": "postgresql://unused"})
 
 
 @pytest.fixture
@@ -44,7 +46,7 @@ def storage(tmp_path: Path) -> Storage:
 def worker(seeded: Engine, storage: Storage, clock: FakeClock) -> Worker:
     return Worker(
         seeded,
-        build_handlers(seeded, storage, clock, EMPTY_MOCK),
+        build_handlers(seeded, storage, clock, EMPTY_MOCK, RULE_SETTINGS),
         clock=clock,
         lease=LEASE,
         on_job_dead=partial(fail_documents_of_dead_jobs, seeded, clock),
@@ -97,10 +99,11 @@ def test_pdf_pages_are_rendered_and_served(
     assert worker.run_once() is True
 
     assert only_job(seeded).status is JobStatus.SUCCEEDED
-    assert document(seeded, document_id).status is DocumentStatus.PROCESSING
+    assert document(seeded, document_id).status is DocumentStatus.NEEDS_REVIEW
     assert steps(seeded, document_id) == [
         ("render", StepStatus.SUCCEEDED, 1),
         ("extract", StepStatus.SUCCEEDED, 1),
+        ("validate", StepStatus.SUCCEEDED, 1),
     ]
     for page in (1, 2):
         response = client.get(f"/api/documents/{document_id}/pages/{page}")
@@ -149,13 +152,13 @@ def test_running_the_job_again_is_harmless(
     job = queue.claim(seeded, "other", LEASE, clock)
     assert job is None
 
-    handler = build_handlers(seeded, storage, clock, EMPTY_MOCK)[PROCESS_DOCUMENT]
+    handler = build_handlers(seeded, storage, clock, EMPTY_MOCK, RULE_SETTINGS)[PROCESS_DOCUMENT]
     finished = only_job(seeded)
     handler(
         queue.ClaimedJob(finished.id, finished.kind, finished.payload, 2, 5, "redelivered"),
     )
 
-    assert document(seeded, document_id).status is DocumentStatus.PROCESSING
+    assert document(seeded, document_id).status is DocumentStatus.NEEDS_REVIEW
     assert storage.exists(storage.page_key(document_id, 1))
 
 

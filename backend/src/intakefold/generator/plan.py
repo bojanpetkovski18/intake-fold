@@ -295,6 +295,8 @@ def plan_injection_pairs(rng: random.Random) -> list[DocumentPlan]:
                     degradations,
                     replace(facts, lines=lines),
                     seed,
+                    # The twins are one invoice, so whichever is processed second is a duplicate.
+                    duplicate_of=None if twin_injection is None else f"{pair_id}-clean",
                     pair_id=pair_id,
                     injection=twin_injection,
                 )

@@ -7,7 +7,7 @@
   "degradations": [
     "rotation"
   ],
-  "duplicate_of": null,
+  "duplicate_of": "pair-01-clean",
   "pair_id": "pair-01",
   "injection_placement": "footer",
   "contains_embedded_instructions": true,
@@ -58,6 +58,7 @@
   "expected_routing": {
     "outcome": "needs_review",
     "reasons": [
+      "not_duplicate",
       "embedded_instructions"
     ]
   },
