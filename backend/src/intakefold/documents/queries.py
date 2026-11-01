@@ -98,8 +98,3 @@ def after_cursor(
     position = tuple_(column, Document.id)
     bound = (value, document_id)
     return position < bound if descending else position > bound
-
-
-def get_document(engine: Engine, document_id: uuid.UUID) -> Document | None:
-    with Session(engine) as session:
-        return session.get(Document, document_id)

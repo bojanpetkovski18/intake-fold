@@ -82,55 +82,64 @@ def known_vendor_ids(session: Session) -> dict[str, uuid.UUID]:
     return known
 
 
+def evaluate(
+    session: Session,
+    clock: Clock,
+    settings: Settings,
+    document_id: uuid.UUID,
+    invoice: Invoice,
+) -> Decision:
+    """Runs the rules and stores their results. What to do with the decision is the caller's."""
+    today: date = clock.now().date()
+    lines = list(
+        session.scalars(
+            select(LineItem).where(LineItem.invoice_id == invoice.id).order_by(LineItem.position)
+        )
+    )
+    if invoice.normalized_vendor is not None:
+        serialize_vendor(session, invoice.normalized_vendor)
+
+    duplicate = find_duplicate(session, invoice)
+    vendor_id = known_vendor_ids(session).get(invoice.normalized_vendor or "")
+    results = run_rules(
+        facts_of(invoice, lines),
+        today=today,
+        limits=thresholds_from(settings),
+        duplicate_of=str(duplicate) if duplicate else None,
+        vendor_known=vendor_id is not None,
+    )
+    decision = route(
+        results,
+        Signals(
+            document_type=invoice.document_type.value,
+            overall_confidence=invoice.overall_confidence.value,
+            uncertain_fields=tuple(invoice.uncertain_fields),
+            contains_embedded_instructions=invoice.contains_embedded_instructions,
+        ),
+    )
+    session.execute(delete(RuleResultRow).where(RuleResultRow.document_id == document_id))
+    session.add_all(
+        RuleResultRow(
+            document_id=document_id,
+            extraction_id=invoice.extraction_id,
+            rule=result.rule,
+            outcome=result.outcome,
+            reason_code=result.reason_code,
+            detail=result.detail,
+        )
+        for result in results
+    )
+    invoice.vendor_id = vendor_id
+    return decision
+
+
 def validate_document(
     engine: Engine, clock: Clock, settings: Settings, document_id: uuid.UUID
 ) -> Decision:
-    today: date = clock.now().date()
     with Session(engine) as session, session.begin():
         document = session.get_one(Document, document_id, with_for_update=True)
         invoice = session.scalars(select(Invoice).where(Invoice.document_id == document_id)).one()
-        lines = list(
-            session.scalars(
-                select(LineItem)
-                .where(LineItem.invoice_id == invoice.id)
-                .order_by(LineItem.position)
-            )
-        )
-        if invoice.normalized_vendor is not None:
-            serialize_vendor(session, invoice.normalized_vendor)
-
-        duplicate = find_duplicate(session, invoice)
-        vendor_id = known_vendor_ids(session).get(invoice.normalized_vendor or "")
-        results = run_rules(
-            facts_of(invoice, lines),
-            today=today,
-            limits=thresholds_from(settings),
-            duplicate_of=str(duplicate) if duplicate else None,
-            vendor_known=vendor_id is not None,
-        )
-        decision = route(
-            results,
-            Signals(
-                document_type=invoice.document_type.value,
-                overall_confidence=invoice.overall_confidence.value,
-                uncertain_fields=tuple(invoice.uncertain_fields),
-                contains_embedded_instructions=invoice.contains_embedded_instructions,
-            ),
-        )
-
-        session.execute(delete(RuleResultRow).where(RuleResultRow.document_id == document_id))
-        session.add_all(
-            RuleResultRow(
-                document_id=document_id,
-                extraction_id=invoice.extraction_id,
-                rule=result.rule,
-                outcome=result.outcome,
-                reason_code=result.reason_code,
-                detail=result.detail,
-            )
-            for result in results
-        )
-        invoice.vendor_id = vendor_id
+        decision = evaluate(session, clock, settings, document_id, invoice)
         document.status = decision.status
         document.status_reasons = decision.reasons
         document.finished_at = clock.now()

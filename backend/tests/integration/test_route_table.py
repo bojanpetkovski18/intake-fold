@@ -35,6 +35,9 @@ ROUTE_TABLE: dict[tuple[str, str], str | Role] = {
     ("GET", "/api/documents"): Role.REVIEWER,
     ("GET", "/api/documents/{document_id}"): Role.REVIEWER,
     ("GET", "/api/documents/{document_id}/pages/{page}"): Role.REVIEWER,
+    ("PATCH", "/api/documents/{document_id}/fields"): Role.REVIEWER,
+    ("POST", "/api/documents/{document_id}/approve"): Role.REVIEWER,
+    ("POST", "/api/documents/{document_id}/reject"): Role.REVIEWER,
     ("GET", "/api/jobs"): Role.REVIEWER,
     ("POST", "/api/jobs/{job_id}/retry"): Role.ADMIN,
 }
