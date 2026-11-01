@@ -99,7 +99,7 @@ Keep the milestone report and PR description short: about half the length feels 
 
 ## Repository layout
 
-`api/`, `identity/`, `documents/`, `extraction/`, `worker/`, `jobs/`, `audit/`, `db/`, `generator/`, `migrations/`, `data/labeled/` and `frontend/src/` exist. The rest is planned; update this as code lands.
+`api/`, `identity/`, `documents/`, `extraction/`, `validation/`, `worker/`, `jobs/`, `audit/`, `db/`, `generator/`, `migrations/`, `data/labeled/` and `frontend/src/` exist. The rest is planned; update this as code lands.
 
 ```
 backend/

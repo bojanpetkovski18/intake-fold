@@ -351,3 +351,22 @@ Numbered and never renumbered. A reversal is a new entry. The owner approved Pha
 - **Decision:** a failed extraction sends the document to `needs_review` with its reason at once. A successful one stores `extractions`, `invoices` and `line_items` and stays `processing` until M7 routes it. A job redelivered after success reuses the stored result for the same prompt version. The mock returns `overall_confidence: high` for labeled documents.
 - **Why:** SPEC section 6 sets the failure routes, and rules are out of scope here. A redelivery must not pay twice.
 - **Trade-offs:** until M7 merges, successful documents stop at `processing`.
+
+## D-057 Duplicates are decided in routing order
+- **Date:** 2026-11-01. **Status:** decided in M7.
+- **Decision:** routing takes a transaction-scoped advisory lock on the normalized vendor, then compares only against documents already routed: not `queued`, `processing` or `rejected`. The first of two copies passes and the second is flagged.
+- **Why:** invoices are stored before rules run, so two copies in flight would otherwise each see the other, and both get flagged, or with no comparison both pass. A test runs four copies at once.
+- **Alternatives:** a unique index, which cannot express "non-rejected, or same date and total when there is no number".
+- **Trade-offs:** routing is serial per vendor, and the lock is held only for this short transaction. A hash collision between vendors only makes one wait.
+
+## D-058 Routing reasons and thresholds
+- **Date:** 2026-11-01. **Status:** decided in M7.
+- **Decision:** `status_reasons` holds failed rule names plus `embedded_instructions`, `confidence_not_high`, `uncertain_fields` and `unsupported_document_type`. A missing tax or adjustment counts as zero in `total_reconciles`. A line with no quantity or unit price is summed but not multiplied, and a line with no amount fails. "5 years" is 1,825 days, `RULE_MAX_AGE_DAYS`. Every routing writes a system audit event.
+- **Why:** the spec names the conditions but not these codes or edge cases. The rules read stored invoices, not model output, so M9 can re-run them on corrections.
+- **Trade-offs:** normalization removes punctuation, so `INV-1` and `INV1` count as one number. Clean labels are dated up to 2026-09 and stay plausible until about 2031.
+
+## D-059 Injection twins are duplicates of each other
+- **Date:** 2026-11-01. **Status:** decided in M7. Refines D-051.
+- **Decision:** the injected twin's label now has `duplicate_of` and expects `not_duplicate`. Eight label files changed, and no document bytes.
+- **Why:** running all 76 documents through the worker showed the code was right and the labels were wrong: twins share a vendor and number, so the second is a real duplicate. M5's unit tests could not see this.
+- **Trade-offs:** M12 must process twins so that this does not count as a routing miss, or compare fields only for pairs.
