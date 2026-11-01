@@ -38,7 +38,8 @@ def run() -> None:
     engine = build_engine(settings)
     clock = SystemClock()
     storage = Storage(settings.storage_dir)
-    handlers = build_handlers(engine, storage, clock, build_extractor(settings, engine))
+    extractor = build_extractor(settings, engine)
+    handlers = build_handlers(engine, storage, clock, extractor, settings)
     log.info("worker_started")
     Worker(
         engine,

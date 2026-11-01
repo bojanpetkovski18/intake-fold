@@ -66,6 +66,8 @@ Vendor name check, 2026-11-01: exact-phrase web searches for Brindlecote Station
 
 Re-checked 2026-11-01 for M6, with the Claude API skill (2.1.314) and live docs. Prices for Opus 5.5, Sonnet 5.5 and Haiku 5.5 match the table below. Fallback is at `build-with-claude/refusals-and-fallback`; the older URL returns 404. Token counting accepts base64 PDFs and images, and the count is an estimate. The structured outputs page says nothing about fallback, and the fallback page says only that an entry can override `output_config`, so the combination is unconfirmed until a real run. anthropic 1.15.0 (2026-10-15) is the highest eligible; 1.16.0 and 1.17.0 are from 2026-10-20 and 2.0.0 from 2026-10-21. 1.15.0 sends API version `2023-06-01`.
 
+Re-checked 2026-11-01 for M7 on the PyPI JSON API: hypothesis 6.170.1 (2026-10-16, MPL-2.0) is the highest eligible, as a dev dependency only.
+
 Native packages at the versions below have wheels for Python 3.15 on Windows and Linux x86-64 (pydantic-core, SQLAlchemy, psycopg-binary, Pillow directly; argon2-cffi-bindings by abi3; pypdfium2 by py3-none). Source: PyPI JSON API.
 
 Image digests observed, to be re-read and pinned in M1:

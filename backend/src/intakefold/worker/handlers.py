@@ -30,8 +30,10 @@ from intakefold.extraction.types import (
     ExtractionResult,
     Extractor,
 )
-from intakefold.generator.vendors import normalized_name
 from intakefold.jobs.queue import ClaimedJob
+from intakefold.settings import Settings
+from intakefold.validation.apply import validate_document
+from intakefold.validation.normalize import normalize_invoice_number, normalize_vendor
 from intakefold.worker.loop import Handler, PermanentJobError
 
 log = structlog.get_logger()
@@ -48,13 +50,20 @@ FAILURE_REASONS = {
 
 
 def build_handlers(
-    engine: Engine, storage: Storage, clock: Clock, extractor: Extractor
+    engine: Engine, storage: Storage, clock: Clock, extractor: Extractor, settings: Settings
 ) -> dict[str, Handler]:
-    return {PROCESS_DOCUMENT: partial(process_document, engine, storage, clock, extractor)}
+    return {
+        PROCESS_DOCUMENT: partial(process_document, engine, storage, clock, extractor, settings)
+    }
 
 
 def process_document(
-    engine: Engine, storage: Storage, clock: Clock, extractor: Extractor, job: ClaimedJob
+    engine: Engine,
+    storage: Storage,
+    clock: Clock,
+    extractor: Extractor,
+    settings: Settings,
+    job: ClaimedJob,
 ) -> None:
     document_id = uuid.UUID(str(job.payload["document_id"]))
     with Session(engine) as session, session.begin():
@@ -86,8 +95,32 @@ def process_document(
 
     if already_extracted(engine, document_id):
         log.info("extraction_reused", document_id=str(document_id))
-        return
+    else:
+        content = storage.read(storage_key)
+        document_input = DocumentInput(document_id, batch_id, sha256, media_type, content)
+        if not extract_and_store(engine, clock, extractor, job, document_id, document_input):
+            return
 
+    with run_step(
+        engine,
+        clock,
+        document_id=document_id,
+        job_id=job.id,
+        attempt=job.attempts,
+        step="validate",
+    ):
+        validate_document(engine, clock, settings, document_id)
+
+
+def extract_and_store(
+    engine: Engine,
+    clock: Clock,
+    extractor: Extractor,
+    job: ClaimedJob,
+    document_id: uuid.UUID,
+    document_input: DocumentInput,
+) -> bool:
+    """True if there is an invoice to validate. A failed extraction already went to review."""
     with run_step(
         engine,
         clock,
@@ -97,9 +130,7 @@ def process_document(
         step="extract",
     ) as details:
         try:
-            result = extractor.extract(
-                DocumentInput(document_id, batch_id, sha256, media_type, storage.read(storage_key))
-            )
+            result = extractor.extract(document_input)
         except ExtractionRejected as error:
             raise PermanentJobError(error.code) from None
         details.extractor = result.extractor
@@ -112,6 +143,7 @@ def process_document(
         details.estimated_cost_usd = result.estimated_cost_usd
 
     store_result(engine, clock, document_id, result)
+    return result.data is not None
 
 
 def already_extracted(engine: Engine, document_id: uuid.UUID) -> bool:
@@ -151,7 +183,7 @@ def store_result(
         if result.data is not None:
             replace_invoice(session, document_id, extraction.id, result.data)
             return
-        # Successes wait for routing in M7. A failed extraction goes straight to a person.
+        # There is nothing for the rules to read, so this goes straight to a person.
         document = session.get_one(Document, document_id)
         document.status = DocumentStatus.NEEDS_REVIEW
         document.status_reasons = [FAILURE_REASONS[result.outcome]]
@@ -181,9 +213,9 @@ def replace_invoice(
         overall_confidence=Confidence(data.overall_confidence),
         uncertain_fields=[field.value for field in data.uncertain_fields],
         contains_embedded_instructions=data.contains_embedded_instructions,
-        normalized_vendor=normalized_name(data.vendor_name) if data.vendor_name else None,
+        normalized_vendor=normalize_vendor(data.vendor_name) if data.vendor_name else None,
         normalized_invoice_number=(
-            data.invoice_number.strip().upper() if data.invoice_number else None
+            normalize_invoice_number(data.invoice_number) if data.invoice_number else None
         ),
     )
     session.add(invoice)

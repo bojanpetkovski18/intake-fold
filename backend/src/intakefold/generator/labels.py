@@ -2,9 +2,10 @@ from datetime import timedelta
 from decimal import Decimal
 
 from intakefold.generator.plan import AS_OF, DocumentPlan, Facts, Line
-from intakefold.generator.vendors import KNOWN_VENDORS, normalized_name
+from intakefold.generator.vendors import KNOWN_VENDORS
+from intakefold.validation.normalize import normalize_vendor
 
-KNOWN_NAMES = {normalized_name(vendor.name) for vendor in KNOWN_VENDORS}
+KNOWN_NAMES = {normalize_vendor(vendor.name) for vendor in KNOWN_VENDORS}
 LINE_TOLERANCE = Decimal("0.01")
 OVERALL_TOLERANCE = Decimal("0.02")
 OLDEST_ACCEPTED_DAYS = 5 * 365
@@ -50,7 +51,7 @@ def expected_reasons(plan: DocumentPlan) -> list[str]:
         ("total_reconciles", total_reconciles(facts)),
         ("date_plausible", dates_plausible(facts)),
         ("not_duplicate", plan.duplicate_of is None),
-        ("known_vendor", normalized_name(facts.vendor.name) in KNOWN_NAMES),
+        ("known_vendor", normalize_vendor(facts.vendor.name) in KNOWN_NAMES),
         ("embedded_instructions", plan.injection is None),
     )
     return [rule for rule, passed in checks if not passed]

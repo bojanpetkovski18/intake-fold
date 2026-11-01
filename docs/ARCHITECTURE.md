@@ -30,7 +30,7 @@ browser
 - `Extractor` is the seam between the pipeline and the model. Tests and the default demo use the mock.
 - Tokens are reserved per batch before a model call, in one SQL statement, then settled to actual use.
 - Model output is proposed data. It crosses into the domain only after Pydantic validation.
-- Rules and routing are pure functions over domain objects, so they are tested without a database or a model.
+- Rules and routing are pure functions over domain objects, so they are tested without a database or a model. `validation/apply.py` is the only part that touches the database.
 - Every external call happens outside a database transaction.
 - Uploads are read after the access checks, one file at a time. pypdf and Pillow decode them in the API; PDFium runs only in the worker.
 - `enforce_access` runs on every route. Authentication is on unless a route is listed in `PUBLIC_ROUTES`.
