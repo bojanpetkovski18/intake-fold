@@ -12,6 +12,7 @@ from sqlalchemy import Engine
 from sqlalchemy.exc import SQLAlchemyError
 
 from intakefold.clock import Clock
+from intakefold.db.models import JobStatus
 from intakefold.jobs import queue
 from intakefold.jobs.queue import ClaimedJob
 
@@ -42,6 +43,7 @@ class Worker:
         rng: random.Random | None = None,
         lease: timedelta = DEFAULT_LEASE,
         poll_seconds: float = DEFAULT_POLL_SECONDS,
+        on_job_dead: Callable[[], None] = lambda: None,
     ) -> None:
         self.engine = engine
         self.handlers = handlers
@@ -50,6 +52,7 @@ class Worker:
         self.rng = rng or random.Random()  # noqa: S311
         self.lease = lease
         self.poll_seconds = poll_seconds
+        self.on_job_dead = on_job_dead
         self.worker_id = f"{socket.gethostname()}:{os.getpid()}:{uuid.uuid4().hex[:8]}"
         self._next_reclaim = clock.now()
 
@@ -85,6 +88,7 @@ class Worker:
         reclaimed = queue.reclaim_expired(self.engine, self.clock)
         if reclaimed:
             log.warning("jobs_reclaimed", count=reclaimed)
+            self.on_job_dead()
 
     def _execute(self, job: ClaimedJob) -> None:
         handler = self.handlers.get(job.kind)
@@ -109,6 +113,8 @@ class Worker:
     def _record_failure(self, job: ClaimedJob, error: str, *, retryable: bool) -> None:
         status = queue.fail(self.engine, job, error, self.clock, self.rng, retryable=retryable)
         log.warning("job_failed", attempt=job.attempts, error=error, status=status)
+        if status == JobStatus.DEAD:
+            self.on_job_dead()
 
     @contextmanager
     def _heartbeat(self, job: ClaimedJob) -> Generator[None]:
