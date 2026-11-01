@@ -136,7 +136,7 @@ def test_seed_creates_fictional_records_and_is_repeatable(engine: Engine) -> Non
 
     assert {user.role for user in users} == {Role.REVIEWER, Role.ADMIN}
     assert len(users) == 2
-    assert len(vendors) == 4
+    assert len(vendors) == 8
     assert all(user.email.endswith("@example.com") for user in users)
     by_role = {user.role: user.password_hash for user in users}
     assert verify_password(by_role[Role.REVIEWER], REVIEWER_PASSWORD)

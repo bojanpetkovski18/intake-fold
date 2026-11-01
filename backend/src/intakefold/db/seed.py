@@ -6,15 +6,9 @@ from sqlalchemy.orm import Session
 
 from intakefold.db.engine import build_engine
 from intakefold.db.models import Role, User, Vendor, new_id
+from intakefold.generator.vendors import KNOWN_VENDORS, normalized_name
 from intakefold.identity.passwords import hash_password
 from intakefold.settings import ConfigurationError, Settings, load_settings
-
-VENDORS: list[tuple[str, str, list[str]]] = [
-    ("Quillbrook Office Supply", "quillbrook office supply", ["Quillbrook"]),
-    ("Tarnwell Freight", "tarnwell freight", ["Tarnwell Freight Co"]),
-    ("Morrowfen Catering", "morrowfen catering", []),
-    ("Ostrel Print Works", "ostrel print works", ["Ostrel Print"]),
-]
 
 USERS = [
     ("reviewer@example.com", "Riley Reviewer", Role.REVIEWER),
@@ -30,10 +24,15 @@ def demo_passwords(settings: Settings) -> dict[Role, SecretStr]:
 
 
 def seed(session: Session, passwords: dict[Role, SecretStr]) -> None:
-    for name, normalized_name, aliases in VENDORS:
+    for vendor in KNOWN_VENDORS:
         session.execute(
             insert(Vendor)
-            .values(id=new_id(), name=name, normalized_name=normalized_name, aliases=aliases)
+            .values(
+                id=new_id(),
+                name=vendor.name,
+                normalized_name=normalized_name(vendor.name),
+                aliases=list(vendor.aliases),
+            )
             .on_conflict_do_nothing(index_elements=[Vendor.normalized_name])
         )
     for email, display_name, role in USERS:
