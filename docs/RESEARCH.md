@@ -68,6 +68,8 @@ Re-checked 2026-11-01 for M6, with the Claude API skill (2.1.314) and live docs.
 
 Re-checked 2026-11-01 for M7 on the PyPI JSON API: hypothesis 6.170.1 (2026-10-16, MPL-2.0) is the highest eligible, as a dev dependency only.
 
+Re-checked 2026-11-01 for M8 on the npm registry: @tanstack/react-query 5.104.4 (2026-10-17) is the highest eligible, and react-router stays at 8.4.0. openapi-typescript 7.13.0 declares a peer of TypeScript 5, so it was not used (D-060). Playwright 1.64.1 (2026-10-14) was used for browser checks from outside the repository.
+
 Native packages at the versions below have wheels for Python 3.15 on Windows and Linux x86-64 (pydantic-core, SQLAlchemy, psycopg-binary, Pillow directly; argon2-cffi-bindings by abi3; pypdfium2 by py3-none). Source: PyPI JSON API.
 
 Image digests observed, to be re-read and pinned in M1:

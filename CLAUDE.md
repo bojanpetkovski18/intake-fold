@@ -99,7 +99,7 @@ Keep the milestone report and PR description short: about half the length feels 
 
 ## Repository layout
 
-`api/`, `identity/`, `documents/`, `extraction/`, `validation/`, `worker/`, `jobs/`, `audit/`, `db/`, `generator/`, `migrations/`, `data/labeled/` and `frontend/src/` exist. The rest is planned; update this as code lands.
+`api/`, `identity/`, `documents/`, `extraction/`, `validation/`, `worker/`, `jobs/`, `audit/`, `db/`, `generator/`, `migrations/`, `data/labeled/`, `frontend/src/api/` and `frontend/src/screens/` exist. The rest is planned; update this as code lands.
 
 ```
 backend/
@@ -120,6 +120,9 @@ backend/
   migrations/            Alembic revisions (not alembic/, which could shadow the package)
   tests/                 unit/ and integration/
 frontend/                React, TypeScript, Vite; nginx config
+  src/api/               client, hooks, types written by hand (D-060)
+  src/screens/           one file per screen, tests beside them
+  src/components/        shared pieces
 data/labeled/            generated documents and ground truth
 reports/eval/            dated evaluation reports
 docs/                    SPEC, ARCHITECTURE, RESEARCH, AUDIT, portfolio/
@@ -175,5 +178,7 @@ Updating dependencies: move `exclude-newer` in `backend/pyproject.toml` and pass
 ## Local environment notes
 
 Checked 2026-10-31 on the owner's Windows 11 machine. Other projects use host ports 5432, 5433, 5434, 8080, 8025 and 1025. Look at what is on a port before assuming it is free. Scratch runs use a separate Compose project name, port and volume.
+
+jsdom applies no CSS, so focus and layout need a real browser. M8 found a focus bug that way that every unit test passed. Keep browser tooling out of the repository until M14.
 
 Windows can hide Linux-only failures, such as pyright errors on platform-specific code. Before pushing a change that touches platform code, also run the checks in a Linux container. Do not pipe a check through `tail` when its exit code matters.

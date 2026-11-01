@@ -1,6 +1,6 @@
 # Progress
 
-Last updated 2026-10-31. **M7 is pushed for review. Next: M8, after the owner merges into `dev`.**
+Last updated 2026-10-31. **M8 is pushed for review. Next: M9, after the owner merges into `dev`.**
 
 ## Milestones
 
@@ -15,8 +15,8 @@ Estimates are planning guesses, not measurements. Total: about 104 hours.
 | 4 | Upload and documents API | 3 | 7 h | Merged |
 | 5 | Fictional document generator and labeled set | 1 | 7 h | Merged |
 | 6 | Extraction: mock, Claude, schema, repair, injection defense | 4, 5 | 10 h | Merged |
-| 7 | Validation rules and routing | 6 | 6 h | Pushed; CI result unknown until a PR exists |
-| 8 | Sign-in and inbox screens | 3, 4 | 6 h | Not started |
+| 7 | Validation rules and routing | 6 | 6 h | Merged |
+| 8 | Sign-in and inbox screens | 3, 4 | 6 h | Pushed; CI result unknown until a PR exists |
 | 9 | Review screen | 7, 8 | 9 h | Not started |
 | 10 | Webhook delivery, sink and CSV export | 7 | 7 h | Not started |
 | 11 | Run log, audit trail and metrics | 9, 10 | 6 h | Not started |
@@ -51,7 +51,7 @@ None yet. Every number used in the README or portfolio kit must have a row here.
 | Local `.env` files need the new `DEMO_*_PASSWORD` values before seeding | Copy them from `.env.example` and change them |
 | Session cookie defaults to Secure, and the local http demo may need `ALLOW_INSECURE_COOKIES` | Decide in M14 (D-041) |
 | `main` lacks M6 and later, because PRs #1, #4 and #6 went there and #7 went to `dev` | A release brings `main` up to date. Setting `dev` as the default branch prevents repeats |
-| M8's requeue must return a failed document to `queued` | Handle in M8 (D-046) |
+| The Vite dev server needs `ALLOW_INSECURE_COOKIES=true` and its origin in `ALLOWED_ORIGINS` | Local setup only |
 | No time limit on a single PDFium render | Revisit in M6 (D-047) |
 | M12 must not score the injected twin's `not_duplicate` as a routing miss | Handle in the harness (D-059) |
 | Move to `anthropic` 2.x before any real run | After 2026-11-04, in M15 (D-052) |
@@ -62,4 +62,4 @@ None yet. Every number used in the README or portfolio kit must have a row here.
 
 ## Next step
 
-Owner opens a PR for `#0007-validation-rules-and-routing` against `dev`, checks CI, and merges. Then M8.
+Owner opens a PR for `#0008-sign-in-and-inbox-screens` against `dev`, checks CI, and merges. Then M9.

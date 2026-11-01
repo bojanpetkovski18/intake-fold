@@ -370,3 +370,29 @@ Numbered and never renumbered. A reversal is a new entry. The owner approved Pha
 - **Decision:** the injected twin's label now has `duplicate_of` and expects `not_duplicate`. Eight label files changed, and no document bytes.
 - **Why:** running all 76 documents through the worker showed the code was right and the labels were wrong: twins share a vendor and number, so the second is a real duplicate. M5's unit tests could not see this.
 - **Trade-offs:** M12 must process twins so that this does not count as a routing miss, or compare fields only for pairs.
+
+## D-060 API types are written by hand
+- **Date:** 2026-11-01. **Status:** decided in M8. Follows up D-031.
+- **Decision:** `frontend/src/api/types.ts` holds the types, by hand.
+- **Why:** openapi-typescript declares a peer of TypeScript 5 and this project is on 6, so generating them would mean forcing a peer dependency. The surface is small.
+- **Alternatives:** generation with `--legacy-peer-deps`, or a runtime schema library, which adds a dependency for a same-origin API.
+- **Trade-offs:** the types can drift from the API. Component tests would not notice; the M14 browser journey would.
+
+## D-061 Session handling in the browser
+- **Date:** 2026-11-01. **Status:** decided in M8.
+- **Decision:** the CSRF token lives in a module variable, never in web storage. The session query is the source of truth, and any 401 clears it. Sign-out removes all other cached data. `/auth/me` also returns `extractor`, which drives the mock banner. Uploads use `XMLHttpRequest`, because `fetch` cannot report upload progress. Busy buttons use `aria-disabled` and ignore presses.
+- **Why:** a script injected into the page must not find a token in storage. The next person on a shared machine must not see the last person's documents.
+- **Trade-offs:** a reload refetches the token through `/auth/me`.
+
+## D-062 Requeue reopens the document
+- **Date:** 2026-11-01. **Status:** decided in M8. Settles the follow-up in D-046.
+- **Decision:** `POST /jobs/{id}/retry` runs one transaction: the job goes back to `queued`, the document returns to `queued` with its reasons cleared, and an audit event names the admin. It returns `202`, or `409` if the job is not dead.
+- **Why:** a requeued job with a document still marked `failed` would show two different stories.
+- **Trade-offs:** `queue.requeue` keeps its own transaction for the queue's tests, so both share `requeue_statement`.
+
+## D-063 Expected 401s reach the browser console
+- **Date:** 2026-11-01. **Status:** decided in M8, for owner review.
+- **Decision:** accept the browser's own "Failed to load resource" line for `/auth/me` when signed out and for a wrong password. The M14 journey allows exactly those two.
+- **Why:** browsers log every 4xx response themselves, and script cannot suppress that. AC-23 requires the 401. A separate public session route would change the spec's route table.
+- **Alternatives:** a public `GET /auth/session` that returns 200 with `null`.
+- **Trade-offs:** the console is not literally empty when signed out. Across three widths, all 14 messages were these two kinds, with no app errors.
