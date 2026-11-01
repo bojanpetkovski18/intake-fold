@@ -265,3 +265,40 @@ Numbered and never renumbered. A reversal is a new entry. The owner approved Pha
 - **Decision:** `client_ip` trusts `X-Forwarded-For` only from peers in `TRUSTED_PROXIES`, walking from the right. Uvicorn runs with `--no-proxy-headers`.
 - **Why:** on a real server with default flags, uvicorn trusted the header from loopback, and a forged value dodged the limit six times out of six. With the flag, the limit held.
 - **Trade-offs:** the flag lives in the run command, not in code, so the M14 image must carry it.
+
+## D-043 pypdf 6.21.4 below the floor
+- **Date:** 2026-10-31. **Status:** approved by the owner.
+- **Decision:** take pypdf 6.21.4 through `exclude-newer-package`. The floor still holds for everything else.
+- **Why:** 6.21.0, the highest eligible, has 11 advisories for loops, memory use and long runtimes on crafted PDFs, plus one that calls arbitrary image parsers. pypdf reads untrusted uploads in the API.
+- **Alternatives:** replacing pypdf with PDFium, which would put a native parser in the API process, or waiting until 2026-11-11.
+- **Trade-offs:** three days of soak time instead of fourteen. The entry can go once `exclude-newer` passes 2026-10-29.
+
+## D-044 The upload route reads its own body
+- **Date:** 2026-10-31. **Status:** decided in M4.
+- **Decision:** `POST /documents` declares no file parameters and calls `request.form()` after the access checks. It requires `Content-Length`, capped at the batch maximum, and handles one file at a time.
+- **Why:** FastAPI parses declared form fields before it runs dependencies, so an anonymous caller could spool files to disk. The server holds a body to its declared length, which bounds what is read.
+- **Trade-offs:** clients must send `Content-Length`, and browsers do. `nginx` should set a matching limit in M14.
+
+## D-045 One response per file, and deduplication on uploaded bytes
+- **Date:** 2026-10-31. **Status:** decided in M4.
+- **Decision:** a batch keeps its good files and reports each refused one. The response is `201` if anything new was created, `200` if everything was already known, and `422` with `errors` if nothing was accepted. More files than the cap refuses the whole request with `400`. A batch row exists only if a document does. SHA-256 is taken before re-encoding.
+- **Why:** M8 shows per-file errors, and the spec says refused uploads never become documents. Hashing the uploaded bytes makes a repeat match without decoding it again.
+- **Trade-offs:** the cap's `400` comes from the multipart parser, so it has no per-file detail. A crash between storing a file and committing leaves an orphan file.
+
+## D-046 Every dead job fails its document through one path
+- **Date:** 2026-10-31. **Status:** decided in M4.
+- **Decision:** the worker calls `fail_documents_of_dead_jobs` after any job goes dead, including at reclaim. It copies the job's safe error code into `status_reasons`.
+- **Why:** a PDFium crash on the last attempt kills the worker, so no handler can record the failure, and the document would stay `processing`.
+- **Trade-offs:** M8's requeue must also return the document to `queued`.
+
+## D-047 Rendering
+- **Date:** 2026-10-31. **Status:** decided in M4.
+- **Decision:** PDFium runs only in the worker, at 150 DPI with the longest side capped at 2400 px. Images get a PNG page too, so there is one preview path. If PDFium and pypdf disagree on the page count, the document fails. The placeholder step leaves documents `processing` until M6.
+- **Why:** a PDF states its own page size, so rendering must be bounded. A crash here costs a job attempt, not the API.
+- **Trade-offs:** a very large page renders below 150 DPI. M6 must check whether the cap suits extraction. There is no time limit on a single PDFium call.
+
+## D-048 Default batch token cap
+- **Date:** 2026-10-31. **Status:** decided in M4, provisional.
+- **Decision:** `BATCH_TOKEN_CAP` defaults to 2,000,000. It is stored on each batch and enforced from M6.
+- **Why:** the column is required now and the spec gives no number. This is a placeholder, not a measured value.
+- **Trade-offs:** M6 sets it from real document sizes.

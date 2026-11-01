@@ -99,7 +99,7 @@ Keep the milestone report and PR description short: about half the length feels 
 
 ## Repository layout
 
-`api/`, `identity/`, `worker/`, `jobs/`, `audit/`, `db/`, `migrations/` and `frontend/src/` exist. The rest is planned; update this as code lands.
+`api/`, `identity/`, `documents/`, `worker/`, `jobs/`, `audit/`, `db/`, `migrations/` and `frontend/src/` exist. The rest is planned; update this as code lands.
 
 ```
 backend/
@@ -163,7 +163,7 @@ docker compose up -d --wait db
 docker compose down                # add -v only to delete the data volume
 ```
 
-The API and worker read settings from the environment only. Export the values in `.env` first, or use `uv run --env-file ../.env ...`.
+The API and worker must share `STORAGE_DIR`, which defaults to `storage` under the working directory. The API and worker read settings from the environment only. Export the values in `.env` first, or use `uv run --env-file ../.env ...`.
 
 Every new route goes in `ROUTE_TABLE` in `tests/integration/test_route_table.py`, and authentication is on unless it is in `PUBLIC_ROUTES`. Keep `--no-proxy-headers`: without it, uvicorn lets a local client forge its IP (D-042).
 
