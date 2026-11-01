@@ -1,0 +1,71 @@
+{
+  "id": "doc-017",
+  "split": "held_out",
+  "scenario": "missing_invoice_number",
+  "layout": "ledger",
+  "file_format": "pdf",
+  "degradations": [],
+  "duplicate_of": null,
+  "pair_id": null,
+  "injection_placement": null,
+  "contains_embedded_instructions": false,
+  "fields": {
+    "document_type": "invoice",
+    "vendor_name": "Harrowmere Cleaning Services",
+    "invoice_number": null,
+    "issue_date": "2026-03-02",
+    "due_date": "2026-04-01",
+    "currency": "USD",
+    "subtotal": "2124.70",
+    "tax_total": "106.24",
+    "adjustments_total": "0.00",
+    "total": "2230.94",
+    "line_items": [
+      {
+        "description": "Printer paper, 500 sheets",
+        "quantity": "2",
+        "unit_price": "12.50",
+        "amount": "25.00"
+      },
+      {
+        "description": "Callout charge",
+        "quantity": "3",
+        "unit_price": "65.00",
+        "amount": "195.00"
+      },
+      {
+        "description": "Water cooler refill",
+        "quantity": "2",
+        "unit_price": "18.60",
+        "amount": "37.20"
+      },
+      {
+        "description": "Pallet transport, regional",
+        "quantity": "9",
+        "unit_price": "145.00",
+        "amount": "1305.00"
+      },
+      {
+        "description": "Delivery surcharge",
+        "quantity": "9",
+        "unit_price": "24.00",
+        "amount": "216.00"
+      },
+      {
+        "description": "Hourly labour",
+        "quantity": "9",
+        "unit_price": "38.50",
+        "amount": "346.50"
+      }
+    ]
+  },
+  "expected_routing": {
+    "outcome": "needs_review",
+    "reasons": [
+      "required_fields"
+    ]
+  },
+  "file": "doc-017.pdf",
+  "media_type": "application/pdf",
+  "sha256": "6cc65c4e626f1cd74eceaf4138b45b1602c8e59c5cf2671165049a8163f2ca45"
+}

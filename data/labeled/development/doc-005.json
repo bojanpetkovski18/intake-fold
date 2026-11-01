@@ -1,0 +1,69 @@
+{
+  "id": "doc-005",
+  "split": "development",
+  "scenario": "missing_date",
+  "layout": "banded",
+  "file_format": "png",
+  "degradations": [
+    "rotation",
+    "blur",
+    "low_contrast"
+  ],
+  "duplicate_of": null,
+  "pair_id": null,
+  "injection_placement": null,
+  "contains_embedded_instructions": false,
+  "fields": {
+    "document_type": "invoice",
+    "vendor_name": "Pellandine Water Supply",
+    "invoice_number": "INV-2605",
+    "issue_date": null,
+    "due_date": null,
+    "currency": "USD",
+    "subtotal": "1214.05",
+    "tax_total": "0.00",
+    "adjustments_total": "-60.70",
+    "total": "1153.35",
+    "line_items": [
+      {
+        "description": "Toner cartridge",
+        "quantity": "1",
+        "unit_price": "54.30",
+        "amount": "54.30"
+      },
+      {
+        "description": "Working lunch for ten",
+        "quantity": "7",
+        "unit_price": "118.75",
+        "amount": "831.25"
+      },
+      {
+        "description": "Delivery surcharge",
+        "quantity": "4",
+        "unit_price": "24.00",
+        "amount": "96.00"
+      },
+      {
+        "description": "Pallet transport, regional",
+        "quantity": "1",
+        "unit_price": "145.00",
+        "amount": "145.00"
+      },
+      {
+        "description": "Printer paper, 500 sheets",
+        "quantity": "7",
+        "unit_price": "12.50",
+        "amount": "87.50"
+      }
+    ]
+  },
+  "expected_routing": {
+    "outcome": "needs_review",
+    "reasons": [
+      "required_fields"
+    ]
+  },
+  "file": "doc-005.png",
+  "media_type": "image/png",
+  "sha256": "8ff21301f3f9efcb58dc0d061ddaed0a4243bb2953c5de6b7437dd241f9ca6ce"
+}

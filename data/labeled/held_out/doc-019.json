@@ -1,0 +1,65 @@
+{
+  "id": "doc-019",
+  "split": "held_out",
+  "scenario": "unknown_vendor",
+  "layout": "ledger",
+  "file_format": "pdf",
+  "degradations": [],
+  "duplicate_of": null,
+  "pair_id": null,
+  "injection_placement": null,
+  "contains_embedded_instructions": false,
+  "fields": {
+    "document_type": "invoice",
+    "vendor_name": "Zenthorpe Packaging",
+    "invoice_number": "INV-2619",
+    "issue_date": "2026-03-07",
+    "due_date": "2026-04-06",
+    "currency": "GBP",
+    "subtotal": "3953.85",
+    "tax_total": "790.77",
+    "adjustments_total": "0.00",
+    "total": "4744.62",
+    "line_items": [
+      {
+        "description": "Printer paper, 500 sheets",
+        "quantity": "7",
+        "unit_price": "12.50",
+        "amount": "87.50"
+      },
+      {
+        "description": "Delivery surcharge",
+        "quantity": "7",
+        "unit_price": "24.00",
+        "amount": "168.00"
+      },
+      {
+        "description": "Brochure run, two colour",
+        "quantity": "9",
+        "unit_price": "264.40",
+        "amount": "2379.60"
+      },
+      {
+        "description": "Working lunch for ten",
+        "quantity": "5",
+        "unit_price": "118.75",
+        "amount": "593.75"
+      },
+      {
+        "description": "Pallet transport, regional",
+        "quantity": "5",
+        "unit_price": "145.00",
+        "amount": "725.00"
+      }
+    ]
+  },
+  "expected_routing": {
+    "outcome": "needs_review",
+    "reasons": [
+      "known_vendor"
+    ]
+  },
+  "file": "doc-019.pdf",
+  "media_type": "application/pdf",
+  "sha256": "1472d10ff35a46e3b279e9493c80dc83c85d6554f2ecc9cb137bb4e3033adddd"
+}

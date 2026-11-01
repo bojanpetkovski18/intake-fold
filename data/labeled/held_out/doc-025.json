@@ -1,0 +1,53 @@
+{
+  "id": "doc-025",
+  "split": "held_out",
+  "scenario": "wrong_total",
+  "layout": "classic",
+  "file_format": "pdf",
+  "degradations": [],
+  "duplicate_of": null,
+  "pair_id": null,
+  "injection_placement": null,
+  "contains_embedded_instructions": false,
+  "fields": {
+    "document_type": "invoice",
+    "vendor_name": "Velloway Electrical",
+    "invoice_number": "INV-2625",
+    "issue_date": "2026-07-18",
+    "due_date": "2026-08-17",
+    "currency": "GBP",
+    "subtotal": "2028.90",
+    "tax_total": "405.78",
+    "adjustments_total": "0.00",
+    "total": "2429.18",
+    "line_items": [
+      {
+        "description": "Office deep clean",
+        "quantity": "1",
+        "unit_price": "96.00",
+        "amount": "96.00"
+      },
+      {
+        "description": "Hourly labour",
+        "quantity": "9",
+        "unit_price": "38.50",
+        "amount": "346.50"
+      },
+      {
+        "description": "Brochure run, two colour",
+        "quantity": "6",
+        "unit_price": "264.40",
+        "amount": "1586.40"
+      }
+    ]
+  },
+  "expected_routing": {
+    "outcome": "needs_review",
+    "reasons": [
+      "total_reconciles"
+    ]
+  },
+  "file": "doc-025.pdf",
+  "media_type": "application/pdf",
+  "sha256": "099d398dc61c49f04607843189318b62da7372027da71c4e7dc79001f8060a9f"
+}

@@ -1,0 +1,55 @@
+{
+  "id": "doc-060",
+  "split": "development",
+  "scenario": "duplicate",
+  "layout": "receipt",
+  "file_format": "png",
+  "degradations": [
+    "rotation"
+  ],
+  "duplicate_of": "doc-027",
+  "pair_id": null,
+  "injection_placement": null,
+  "contains_embedded_instructions": false,
+  "fields": {
+    "document_type": "receipt",
+    "vendor_name": "Brindlecote Stationers",
+    "invoice_number": "RCT-2627",
+    "issue_date": "2026-07-05",
+    "due_date": null,
+    "currency": "GBP",
+    "subtotal": "702.25",
+    "tax_total": "35.11",
+    "adjustments_total": "0.00",
+    "total": "737.36",
+    "line_items": [
+      {
+        "description": "Working lunch for ten",
+        "quantity": "3",
+        "unit_price": "118.75",
+        "amount": "356.25"
+      },
+      {
+        "description": "Office deep clean",
+        "quantity": "2",
+        "unit_price": "96.00",
+        "amount": "192.00"
+      },
+      {
+        "description": "Hourly labour",
+        "quantity": "4",
+        "unit_price": "38.50",
+        "amount": "154.00"
+      }
+    ]
+  },
+  "expected_routing": {
+    "outcome": "needs_review",
+    "reasons": [
+      "not_duplicate"
+    ]
+  },
+  "file": "doc-060.png",
+  "media_type": "image/png",
+  "sha256": "dc93c1343ea4d0d97c541994f832fa132c1d1f160c5f8c29a167cf40dc660b78"
+}

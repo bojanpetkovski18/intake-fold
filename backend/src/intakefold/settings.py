@@ -1,9 +1,12 @@
 from ipaddress import IPv4Network, IPv6Network
+from pathlib import Path
 from typing import Annotated, Literal
 
 from limits import parse
 from pydantic import BeforeValidator, Field, SecretStr, ValidationError, field_validator
 from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
+
+MIB = 1024 * 1024
 
 
 def split_commas(value: object) -> object:
@@ -32,12 +35,22 @@ class Settings(BaseSettings):
     # Only these peers may state a client IP through X-Forwarded-For.
     trusted_proxies: Annotated[tuple[IPv4Network | IPv6Network, ...], NoDecode, CommaSeparated] = ()
     sign_in_rate_limit: str = "10/minute"
+    upload_rate_limit: str = "30/minute"
+
+    storage_dir: Path = Path("storage")
+    max_pdf_bytes: int = Field(default=10 * MIB, gt=0)
+    max_image_bytes: int = Field(default=7 * MIB, gt=0)
+    max_pdf_pages: int = Field(default=10, gt=0)
+    max_image_side: int = Field(default=8000, gt=0)
+    max_image_pixels: int = Field(default=40_000_000, gt=0)
+    max_batch_files: int = Field(default=25, gt=0)
+    batch_token_cap: int = Field(default=2_000_000, gt=0)
 
     # Read by the seed only.
     demo_reviewer_password: DemoPassword | None = None
     demo_admin_password: DemoPassword | None = None
 
-    @field_validator("sign_in_rate_limit")
+    @field_validator("sign_in_rate_limit", "upload_rate_limit")
     @classmethod
     def rate_limit_parses(cls, value: str) -> str:
         try:

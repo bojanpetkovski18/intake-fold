@@ -85,9 +85,14 @@ def seeded(engine: Engine) -> Engine:
 
 
 @pytest.fixture
-def build(database_url: str) -> BuildApp:
+def build(database_url: str, tmp_path: Path) -> BuildApp:
     def build_test_app(clock: Clock | None = None, **settings: object) -> FastAPI:
-        values = {"database_url": database_url, "allowed_origins": ORIGIN} | settings
+        values: dict[str, object] = {
+            "database_url": database_url,
+            "allowed_origins": ORIGIN,
+            "storage_dir": tmp_path / "storage",
+        }
+        values |= settings
         return build_app(Settings.model_validate(values), clock)
 
     return build_test_app

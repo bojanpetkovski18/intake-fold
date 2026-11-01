@@ -1,0 +1,63 @@
+{
+  "id": "doc-041",
+  "split": "held_out",
+  "scenario": "wrong_total",
+  "layout": "banded",
+  "file_format": "png",
+  "degradations": [
+    "rotation",
+    "blur",
+    "low_contrast"
+  ],
+  "duplicate_of": null,
+  "pair_id": null,
+  "injection_placement": null,
+  "contains_embedded_instructions": false,
+  "fields": {
+    "document_type": "invoice",
+    "vendor_name": "Ostrel Print Works",
+    "invoice_number": "INV-2641",
+    "issue_date": "2026-02-25",
+    "due_date": "2026-03-27",
+    "currency": "EUR",
+    "subtotal": "2929.55",
+    "tax_total": "292.96",
+    "adjustments_total": "0.00",
+    "total": "3232.51",
+    "line_items": [
+      {
+        "description": "Brochure run, two colour",
+        "quantity": "8",
+        "unit_price": "264.40",
+        "amount": "2115.20"
+      },
+      {
+        "description": "Hourly labour",
+        "quantity": "9",
+        "unit_price": "38.50",
+        "amount": "346.50"
+      },
+      {
+        "description": "Working lunch for ten",
+        "quantity": "3",
+        "unit_price": "118.75",
+        "amount": "356.25"
+      },
+      {
+        "description": "Water cooler refill",
+        "quantity": "6",
+        "unit_price": "18.60",
+        "amount": "111.60"
+      }
+    ]
+  },
+  "expected_routing": {
+    "outcome": "needs_review",
+    "reasons": [
+      "total_reconciles"
+    ]
+  },
+  "file": "doc-041.png",
+  "media_type": "image/png",
+  "sha256": "8d19dad22f9fe4f732f4fedf97ff6de3a4e08a10f5050119cae6a0db7f494abf"
+}

@@ -1,0 +1,62 @@
+{
+  "id": "doc-038",
+  "split": "held_out",
+  "scenario": "future_date",
+  "layout": "classic",
+  "file_format": "png",
+  "degradations": [
+    "rotation",
+    "blur"
+  ],
+  "duplicate_of": null,
+  "pair_id": null,
+  "injection_placement": null,
+  "contains_embedded_instructions": false,
+  "fields": {
+    "document_type": "invoice",
+    "vendor_name": "Harrowmere Cleaning Services",
+    "invoice_number": "INV-2638",
+    "issue_date": "2099-06-01",
+    "due_date": "2099-07-01",
+    "currency": "USD",
+    "subtotal": "553.45",
+    "tax_total": "55.34",
+    "adjustments_total": "0.00",
+    "total": "608.79",
+    "line_items": [
+      {
+        "description": "Working lunch for ten",
+        "quantity": "1",
+        "unit_price": "118.75",
+        "amount": "118.75"
+      },
+      {
+        "description": "Office deep clean",
+        "quantity": "2",
+        "unit_price": "96.00",
+        "amount": "192.00"
+      },
+      {
+        "description": "Water cooler refill",
+        "quantity": "7",
+        "unit_price": "18.60",
+        "amount": "130.20"
+      },
+      {
+        "description": "Printer paper, 500 sheets",
+        "quantity": "9",
+        "unit_price": "12.50",
+        "amount": "112.50"
+      }
+    ]
+  },
+  "expected_routing": {
+    "outcome": "needs_review",
+    "reasons": [
+      "date_plausible"
+    ]
+  },
+  "file": "doc-038.png",
+  "media_type": "image/png",
+  "sha256": "2dde2ce00fa83065ad2e3c3b9b557263c19a645c358b1fe6978e4c0cb2195b75"
+}

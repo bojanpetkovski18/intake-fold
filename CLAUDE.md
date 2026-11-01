@@ -93,13 +93,13 @@ Suggested next step: <one line>
 
 After every push, in the chat (not in a file), as raw Markdown inside a fenced code block, starting with a line naming its readers, with these sections: What changed (grouped), Verified locally (a table of real results), Not verified, Review notes, Out of scope. Add the GitHub compare link for the branch, with `#` encoded as `%23`.
 
-Directly above the description, give the PR title on its own line: `#00nn: Milestone name - #<PR number>`, for example `#0002: Database schema and job queue - #3`. The PR number is the repository's next issue or PR number, so check it before giving the title.
+Directly above the description, give the PR title on its own line: `#00nn: Milestone name`, for example `#0002: Database schema and job queue`.
 
 Keep the milestone report and PR description short: about half the length feels natural to write. Keep every required section and each real result, and cut restatement and detail the diff already shows.
 
 ## Repository layout
 
-`api/`, `identity/`, `worker/`, `jobs/`, `audit/`, `db/`, `migrations/` and `frontend/src/` exist. The rest is planned; update this as code lands.
+`api/`, `identity/`, `documents/`, `worker/`, `jobs/`, `audit/`, `db/`, `generator/`, `migrations/`, `data/labeled/` and `frontend/src/` exist. The rest is planned; update this as code lands.
 
 ```
 backend/
@@ -144,6 +144,7 @@ uv run pyright
 uv run pytest
 uv run pytest -m "not integration"   # no Docker needed
 uv run python -m intakefold.worker
+uv run python -m intakefold.generator --out ../data/labeled   # only to change the set: D-050
 uv run uvicorn --factory intakefold.api.app:create_app --host 127.0.0.1 --port 8100 --no-proxy-headers
 uv run --env-file ../.env alembic upgrade head
 uv run --env-file ../.env alembic check            # models and migrations agree
@@ -163,7 +164,7 @@ docker compose up -d --wait db
 docker compose down                # add -v only to delete the data volume
 ```
 
-The API and worker read settings from the environment only. Export the values in `.env` first, or use `uv run --env-file ../.env ...`.
+The API and worker must share `STORAGE_DIR`, which defaults to `storage` under the working directory. The API and worker read settings from the environment only. Export the values in `.env` first, or use `uv run --env-file ../.env ...`.
 
 Every new route goes in `ROUTE_TABLE` in `tests/integration/test_route_table.py`, and authentication is on unless it is in `PUBLIC_ROUTES`. Keep `--no-proxy-headers`: without it, uvicorn lets a local client forge its IP (D-042).
 

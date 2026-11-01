@@ -8,8 +8,10 @@ from limits import parse
 from limits.storage import MemoryStorage
 from limits.strategies import MovingWindowRateLimiter
 
+from intakefold.api.access import CurrentUser
 
-class SignInLimiter:
+
+class RateLimiter:
     """In memory, per process: limits reset on restart, and one API process is all we run."""
 
     def __init__(self, limit: str) -> None:
@@ -50,12 +52,19 @@ def _is_trusted(address: str, trusted: Sequence[IPv4Network | IPv6Network]) -> b
 
 
 def limit_sign_in(request: Request) -> None:
-    limiter: SignInLimiter = request.app.state.sign_in_limiter
+    limiter: RateLimiter = request.app.state.sign_in_limiter
     trusted: Sequence[IPv4Network | IPv6Network] = request.app.state.settings.trusted_proxies
-    retry_after = limiter.retry_after(client_ip(request, trusted))
+    enforce(limiter, client_ip(request, trusted), "Too many sign-in attempts. Try again later.")
+
+
+def limit_upload(request: Request, principal: CurrentUser) -> None:
+    limiter: RateLimiter = request.app.state.upload_limiter
+    enforce(limiter, str(principal.user_id), "Too many uploads. Try again later.")
+
+
+def enforce(limiter: RateLimiter, key: str, detail: str) -> None:
+    retry_after = limiter.retry_after(key)
     if retry_after is not None:
         raise HTTPException(
-            status_code=429,
-            detail="Too many sign-in attempts. Try again later.",
-            headers={"Retry-After": str(retry_after)},
+            status_code=429, detail=detail, headers={"Retry-After": str(retry_after)}
         )

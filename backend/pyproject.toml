@@ -8,9 +8,13 @@ dependencies = [
     "argon2-cffi==25.1.0",
     "fastapi==0.143.3",
     "limits==5.8.0",
+    "pillow==13.0.0",
     "psycopg[binary]==3.3.6",
     "pydantic==2.14.1",
     "pydantic-settings==2.16.0",
+    "pypdf==6.21.4",
+    "pypdfium2==5.14.0",
+    "python-multipart==0.0.32",
     "sqlalchemy==2.1.5",
     "structlog==26.1.0",
     "uvicorn==0.54.0",
@@ -22,6 +26,7 @@ dev = [
     "pip-audit==2.10.1",
     "pyright==1.1.414",
     "pytest==9.1.1",
+    "reportlab==5.0.1",
     "ruff==0.17.1",
     "testcontainers==4.15.0",
 ]
@@ -33,8 +38,8 @@ build-backend = "uv_build"
 [tool.uv]
 # The two-week floor, applied to transitive packages as well as direct ones.
 exclude-newer = "2026-10-17T00:00:00Z"
-# Security patches taken below the floor with the owner's approval (D-033).
-exclude-newer-package = { certifi = "2026-10-19T00:00:00Z", filelock = "2026-10-17T17:00:00Z" }
+# Security patches taken below the floor with the owner's approval (D-033, D-043).
+exclude-newer-package = { certifi = "2026-10-19T00:00:00Z", filelock = "2026-10-17T17:00:00Z", pypdf = "2026-10-29T00:00:00Z" }
 
 [tool.ruff]
 line-length = 100
