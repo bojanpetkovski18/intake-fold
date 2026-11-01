@@ -35,8 +35,14 @@ ROUTE_TABLE: dict[tuple[str, str], str | Role] = {
     ("GET", "/api/documents"): Role.REVIEWER,
     ("GET", "/api/documents/{document_id}"): Role.REVIEWER,
     ("GET", "/api/documents/{document_id}/pages/{page}"): Role.REVIEWER,
+    ("GET", "/api/jobs"): Role.REVIEWER,
+    ("POST", "/api/jobs/{job_id}/retry"): Role.ADMIN,
 }
-PATH_VALUES = {"document_id": "00000000-0000-7000-8000-000000000000", "page": 1}
+PATH_VALUES = {
+    "document_id": "00000000-0000-7000-8000-000000000000",
+    "job_id": "00000000-0000-7000-8000-000000000000",
+    "page": 1,
+}
 PROTECTED = [
     (method, path.format(**PATH_VALUES))
     for (method, path), access in ROUTE_TABLE.items()
@@ -106,6 +112,24 @@ def test_valid_csrf_token_from_a_bad_origin_is_refused(
     assert response.status_code == 403
 
 
+@pytest.mark.parametrize(
+    ("method", "path"),
+    [
+        (method, path.format(**PATH_VALUES))
+        for (method, path), access in ROUTE_TABLE.items()
+        if access == Role.ADMIN
+    ],
+)
+def test_reviewer_is_refused_on_admin_routes(anonymous: TestClient, method: str, path: str) -> None:
+    csrf_token = sign_in(anonymous, REVIEWER_EMAIL, REVIEWER_PASSWORD)
+
+    response = anonymous.request(
+        method, path, headers={"Origin": ORIGIN, "X-CSRF-Token": csrf_token}
+    )
+
+    assert response.status_code == 403
+
+
 def test_a_new_route_is_protected_without_asking(seeded: Engine, build: BuildApp) -> None:
     app = build()
 
@@ -119,7 +143,6 @@ def test_a_new_route_is_protected_without_asking(seeded: Engine, build: BuildApp
 
 @pytest.fixture
 def role_probe(seeded: Engine, build: BuildApp) -> Iterator[TestClient]:
-    # No real admin route exists until M8. When one does, add it to the table with Role.ADMIN.
     app = build()
 
     @app.get("/api/probe/admin")

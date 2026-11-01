@@ -25,3 +25,5 @@
 **Acceptance criteria:** AC-24, AC-25, AC-27, AC-28.
 
 **Portfolio rules:** verified features and measured numbers only. No invented clients, results or testimonials.
+
+**From M8:** the journey may allow exactly two console messages, the browser's own 401 lines for `/auth/me` when signed out and for a wrong password (D-063), and should assert focus after a requeue.
