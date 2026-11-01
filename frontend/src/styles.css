@@ -6,6 +6,9 @@
   --color-border: #d3dbd9;
   --color-accent: #1f5f5b;
   --color-on-accent: #ffffff;
+  --color-error: #a3261c;
+  --color-banner: #f6e7bd;
+  --color-on-banner: #4a3a0b;
   --space-2: 0.5rem;
   --space-3: 0.75rem;
   --space-4: 1rem;
@@ -29,6 +32,9 @@
     --color-border: #33403d;
     --color-accent: #7fc4bd;
     --color-on-accent: #10201e;
+    --color-error: #f2a59d;
+    --color-banner: #4a3a0b;
+    --color-on-banner: #f6e7bd;
   }
 }
 
@@ -115,6 +121,230 @@ body {
 
 .muted {
   color: var(--color-muted);
+}
+
+button,
+input,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  padding: var(--space-2) var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: 0.375rem;
+  background: var(--color-surface);
+  cursor: pointer;
+}
+
+button.primary {
+  border-color: var(--color-accent);
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+}
+
+button[aria-disabled="true"] {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+input,
+select {
+  max-width: 100%;
+  padding: var(--space-2);
+  border: 1px solid var(--color-border);
+  border-radius: 0.375rem;
+  background: var(--color-surface);
+}
+
+.app-user {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  margin-left: auto;
+}
+
+.banner {
+  margin: 0;
+  padding: var(--space-2) var(--space-4);
+  background: var(--color-banner);
+  color: var(--color-on-banner);
+  text-align: center;
+}
+
+.panel {
+  margin-bottom: var(--space-6);
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+  background: var(--color-surface);
+}
+
+.panel h2 {
+  margin-top: 0;
+}
+
+.panel form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.panel label {
+  flex-basis: 100%;
+}
+
+.panel input {
+  min-width: 0;
+  flex: 1 1 14rem;
+}
+
+progress {
+  display: block;
+  width: 100%;
+  margin-top: var(--space-3);
+}
+
+.file-results {
+  margin: 0;
+  padding-left: var(--space-6);
+}
+
+.file-results .refused {
+  color: var(--color-error);
+}
+
+.filename {
+  overflow-wrap: anywhere;
+}
+
+.section-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+
+.section-heading h2 {
+  margin: 0;
+}
+
+.records {
+  width: 100%;
+  margin-bottom: var(--space-4);
+  border-collapse: collapse;
+  background: var(--color-surface);
+}
+
+.records th,
+.records td {
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--color-border);
+  text-align: left;
+  vertical-align: top;
+}
+
+.records tbody th {
+  font-weight: 500;
+}
+
+.status {
+  white-space: nowrap;
+}
+
+.status-needs_review,
+.status-failed {
+  font-weight: 600;
+}
+
+.status-failed {
+  color: var(--color-error);
+}
+
+.status-message:empty {
+  display: none;
+}
+
+.status-message:focus {
+  outline: none;
+}
+
+.notice {
+  margin: 0 0 var(--space-4);
+  padding: var(--space-3);
+  border-radius: 0.375rem;
+}
+
+.notice p {
+  margin: 0 0 var(--space-2);
+}
+
+.notice-error {
+  border: 1px solid var(--color-error);
+  color: var(--color-error);
+}
+
+.notice-error:focus {
+  outline-offset: 1px;
+}
+
+.trace {
+  font-size: 0.8125rem;
+  overflow-wrap: anywhere;
+}
+
+.sign-in {
+  max-width: 24rem;
+  margin: var(--space-6) auto;
+}
+
+.sign-in form {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.sign-in button {
+  margin-top: var(--space-3);
+}
+
+@media (max-width: 40rem) {
+  .records thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+
+  .records,
+  .records tbody,
+  .records tr,
+  .records th,
+  .records td {
+    display: block;
+    width: 100%;
+  }
+
+  .records tr {
+    padding: var(--space-2) 0;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .records tbody th,
+  .records td {
+    padding: var(--space-2) var(--space-3);
+    border: 0;
+  }
+
+  .records td::before {
+    content: attr(data-label) ": ";
+    color: var(--color-muted);
+  }
 }
 
 @media (prefers-reduced-motion: no-preference) {
