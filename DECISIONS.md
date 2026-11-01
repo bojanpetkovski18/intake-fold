@@ -302,3 +302,21 @@ Numbered and never renumbered. A reversal is a new entry. The owner approved Pha
 - **Decision:** `BATCH_TOKEN_CAP` defaults to 2,000,000. It is stored on each batch and enforced from M6.
 - **Why:** the column is required now and the spec gives no number. This is a placeholder, not a measured value.
 - **Trade-offs:** M6 sets it from real document sizes.
+
+## D-049 The labeled set is committed, and injection pairs are extra
+- **Date:** 2026-11-01. **Status:** decided in M5.
+- **Decision:** `data/labeled/` holds 76 documents and their labels: 20 development, 40 held out and 16 injection, as 8 clean and injected twins. Quillbrook is replaced by Brindlecote Stationers. Each pair is one split of its own, so injection never changes the accuracy of the 60.
+- **Why:** SPEC section 13 says the set "also has" the pairs. The mock finds documents by SHA-256, so those exact bytes must reach a fresh clone, and the Docker image will not carry reportlab.
+- **Trade-offs:** 4.9 MB of binary files in history, more with each regeneration. A database seeded before M5 keeps its Quillbrook row until reset.
+
+## D-050 Reproducible per platform
+- **Date:** 2026-11-01. **Status:** decided in M5.
+- **Decision:** PDFs use reportlab's `invariant` mode with an embedded Vera font, and noise comes from a private seeded generator. The same seed gives identical labels everywhere, and identical files on one platform. The committed files are the source of truth for hashes.
+- **Why:** a comparison found 118 of 152 files differing between Windows and Linux, with PDF lengths differing too. The likely cause is that CPython's Windows build uses zlib-ng, which was not proved. Forcing identical compression would add work and no value, since nothing regenerates the set at run time.
+- **Trade-offs:** regenerating on another platform changes the hashes, so the set should be regenerated only deliberately, and all at once.
+
+## D-051 What a label says
+- **Date:** 2026-11-01. **Status:** decided in M5.
+- **Decision:** labels hold what is printed, right or wrong, plus `expected_routing` computed from those printed values with SPEC section 7's rule names and a fixed date of 2026-10-01. `reportlab` is a dev dependency. Duplicates come after their originals in the same split, so `not_duplicate` depends on processing in label order.
+- **Why:** a wrong total must be labeled as the wrong number on the page, because extraction is scored on reading, and rules are scored on catching it. A label should not change with the day it is read.
+- **Trade-offs:** `labels.py` repeats the rules' logic in small form. M7 must test its rules against these labels, and any disagreement is a bug in one of them. `overall_confidence` is not labeled; M6 decides what the mock returns.

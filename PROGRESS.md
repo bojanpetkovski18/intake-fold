@@ -1,6 +1,6 @@
 # Progress
 
-Last updated 2026-10-31. **M4 is pushed for review. Next: M5, after the owner merges into `dev`.**
+Last updated 2026-10-31. **M5 is pushed for review. Next: M6, after the owner merges into `dev`.**
 
 ## Milestones
 
@@ -11,9 +11,9 @@ Estimates are planning guesses, not measurements. Total: about 104 hours.
 | 0 | Phase 0 planning | none | done | Approved 2026-10-31 |
 | 1 | Repository, tooling, CI, app shell | 0 | 7 h | Merged; CI green on PR, `main` and `dev` |
 | 2 | Database schema and job queue | 1 | 8 h | Merged |
-| 3 | Identity and security base | 2 | 5 h | Merged into `main`; CI green. `dev` still needs it |
-| 4 | Upload and documents API | 3 | 7 h | Pushed; CI result unknown until a PR exists |
-| 5 | Fictional document generator and labeled set | 1 | 7 h | Not started |
+| 3 | Identity and security base | 2 | 5 h | Merged |
+| 4 | Upload and documents API | 3 | 7 h | Merged |
+| 5 | Fictional document generator and labeled set | 1 | 7 h | Pushed; CI result unknown until a PR exists |
 | 6 | Extraction: mock, Claude, schema, repair, injection defense | 4, 5 | 10 h | Not started |
 | 7 | Validation rules and routing | 6 | 6 h | Not started |
 | 8 | Sign-in and inbox screens | 3, 4 | 6 h | Not started |
@@ -50,12 +50,13 @@ None yet. Every number used in the README or portfolio kit must have a row here.
 | Python 3.15.0 is behind 3.15.1 and 3.15.2 | Check their release notes, and bump after 2026-11-04 |
 | Local `.env` files need the new `DEMO_*_PASSWORD` values before seeding | Copy them from `.env.example` and change them |
 | Session cookie defaults to Secure, and the local http demo may need `ALLOW_INSECURE_COOKIES` | Decide in M14 (D-041) |
-| PR #4 (M3) was merged into `main`, so `dev` is behind, and M4 branches from `main` | Owner updates `dev` from `main`, then opens the M4 PR against `dev` |
+| PR #4 (M3) went to `main`, not `dev`. `dev` now has M3 through M4, and `main` has no M4 | Settled for `dev`. A later release brings `main` up to date |
 | M8's requeue must return a failed document to `queued` | Handle in M8 (D-046) |
 | No time limit on a single PDFium render | Revisit in M6 (D-047) |
+| Rules in M7 must agree with `expected_routing` in the labels | Test against the labels in M7 (D-051) |
 | The API key is not needed until M15 | Owner stores it in local `.env` when authorizing a run |
 | `TRUNCATE` bypasses the audit trigger, by design for the demo reset | Owner to confirm the reading of AC-18 in D-034 |
 
 ## Next step
 
-Owner updates `dev` from `main`, opens a PR for `#0004-upload-and-documents-api` against `dev`, checks CI, and merges. Then M5.
+Owner opens a PR for `#0005-document-generator-and-labeled-set` against `dev`, checks CI, and merges. Then M6.
