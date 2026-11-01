@@ -4,11 +4,12 @@ import random
 import uuid
 from collections.abc import Mapping
 from dataclasses import dataclass
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 from sqlalchemy import ColumnElement, Engine, and_, case, select, update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
+from sqlalchemy.sql.dml import ReturningUpdate
 
 from intakefold.clock import Clock
 from intakefold.db.models import Job, JobStatus
@@ -206,20 +207,23 @@ def reclaim_expired(engine: Engine, clock: Clock) -> int:
         return len(connection.execute(statement).all())
 
 
+def requeue_statement(job_id: uuid.UUID, now: datetime) -> ReturningUpdate[uuid.UUID]:
+    return (
+        update(Job)
+        .where(Job.id == job_id, Job.status == JobStatus.DEAD)
+        .values(
+            status=JobStatus.QUEUED,
+            attempts=0,
+            run_after=now,
+            last_error=None,
+            updated_at=now,
+        )
+        .returning(Job.id)
+    )
+
+
 def requeue(engine: Engine, job_id: uuid.UUID, clock: Clock) -> bool:
     """Gives a dead job a fresh set of attempts."""
-    now = clock.now()
     with engine.begin() as connection:
-        updated = connection.execute(
-            update(Job)
-            .where(Job.id == job_id, Job.status == JobStatus.DEAD)
-            .values(
-                status=JobStatus.QUEUED,
-                attempts=0,
-                run_after=now,
-                last_error=None,
-                updated_at=now,
-            )
-            .returning(Job.id)
-        ).first()
+        updated = connection.execute(requeue_statement(job_id, clock.now())).first()
     return updated is not None
