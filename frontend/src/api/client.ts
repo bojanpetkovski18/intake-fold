@@ -3,6 +3,8 @@ import type {
   DocumentStatus,
   DocumentSummary,
   Page,
+  ReviewDocument,
+  ReviewFields,
   Session,
   UploadedFile,
   UploadResult,
@@ -10,23 +12,35 @@ import type {
 
 const FALLBACK_DETAIL = "Something went wrong. Please try again.";
 
+export interface FieldError {
+  field: string;
+  message: string;
+}
+
 interface Problem {
   detail?: string;
   traceId?: string | null;
-  errors?: UploadedFile[];
+  errors?: (UploadedFile | FieldError)[];
+}
+
+function isFieldError(error: UploadedFile | FieldError): error is FieldError {
+  return "field" in error;
 }
 
 export class ApiError extends Error {
   readonly status: number;
   readonly traceId: string | null;
   readonly files: UploadedFile[];
+  readonly fieldErrors: FieldError[];
 
   constructor(status: number, problem: Problem) {
     super(problem.detail ?? FALLBACK_DETAIL);
     this.name = "ApiError";
     this.status = status;
     this.traceId = problem.traceId ?? null;
-    this.files = problem.errors ?? [];
+    const errors = problem.errors ?? [];
+    this.fieldErrors = errors.filter(isFieldError);
+    this.files = errors.filter((error): error is UploadedFile => !isFieldError(error));
   }
 }
 
@@ -103,6 +117,48 @@ export function listDocuments({ status, cursor }: DocumentQuery): Promise<Page<D
   if (cursor) params.set("cursor", cursor);
   const query = params.size ? `?${params.toString()}` : "";
   return request<Page<DocumentSummary>>(`/documents${query}`);
+}
+
+export function getDocument(id: string): Promise<ReviewDocument> {
+  return request<ReviewDocument>(`/documents/${id}`);
+}
+
+function sendJson<T>(method: string, path: string, body: unknown): Promise<T> {
+  return request<T>(path, {
+    method,
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+}
+
+export function correctDocument(
+  id: string,
+  version: number,
+  fields: ReviewFields,
+): Promise<ReviewDocument> {
+  return sendJson("PATCH", `/documents/${id}/fields`, { version, fields });
+}
+
+export function approveDocument(
+  id: string,
+  version: number,
+  overrideReason: string | null,
+): Promise<ReviewDocument> {
+  return sendJson("POST", `/documents/${id}/approve`, { version, overrideReason });
+}
+
+export function rejectDocument(
+  id: string,
+  version: number,
+  reason: string,
+): Promise<ReviewDocument> {
+  return sendJson("POST", `/documents/${id}/reject`, { version, reason });
+}
+
+/** The next document waiting for a person, or null if the queue is clear. */
+export async function nextInReview(currentId: string): Promise<string | null> {
+  const page = await listDocuments({ status: "needs_review", cursor: null });
+  return page.items.find((item) => item.id !== currentId)?.id ?? null;
 }
 
 export function listDeadJobs(cursor: string | null): Promise<Page<DeadJob>> {

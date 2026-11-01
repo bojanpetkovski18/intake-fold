@@ -4,7 +4,9 @@ import { useSession, useSignOut } from "./api/hooks";
 import { BusyButton, ErrorNotice } from "./components/feedback";
 
 export function AppLayout() {
-  const { pathname } = useLocation();
+  const location = useLocation();
+  const { pathname } = location;
+  const flash = (location.state as { flash?: string } | null)?.flash;
   const navigate = useNavigate();
   const session = useSession();
   const signOut = useSignOut();
@@ -76,6 +78,7 @@ export function AppLayout() {
       )}
       <main id="main" className="app-main" ref={main} tabIndex={-1}>
         {signOut.isError && <ErrorNotice error={signOut.error} />}
+        {flash && <p role="status">{flash}</p>}
         <Outlet />
       </main>
     </>

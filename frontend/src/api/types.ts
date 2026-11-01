@@ -38,6 +38,46 @@ export interface DocumentSummary {
   finishedAt: string | null;
 }
 
+// Money and quantities are decimal strings, end to end. Never parse them to number.
+export interface LineItemFields {
+  description: string;
+  quantity: string | null;
+  unitPrice: string | null;
+  amount: string | null;
+}
+
+export interface ReviewFields {
+  documentType: "invoice" | "receipt" | "other";
+  vendorName: string | null;
+  invoiceNumber: string | null;
+  issueDate: string | null;
+  dueDate: string | null;
+  currency: string | null;
+  subtotal: string | null;
+  taxTotal: string | null;
+  adjustmentsTotal: string | null;
+  total: string | null;
+  lineItems: LineItemFields[];
+}
+
+export interface RuleView {
+  rule: string;
+  outcome: "pass" | "fail" | "skip";
+  reasonCode: string | null;
+  detail: string | null;
+  fields: string[];
+}
+
+export interface ReviewDocument extends DocumentSummary {
+  version: number;
+  statusReasons: string[];
+  fields: ReviewFields | null;
+  overallConfidence: string | null;
+  uncertainFields: string[];
+  containsEmbeddedInstructions: boolean;
+  ruleResults: RuleView[];
+}
+
 export interface Page<T> {
   items: T[];
   nextCursor: string | null;
