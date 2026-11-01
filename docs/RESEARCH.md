@@ -60,6 +60,12 @@ Re-checked 2026-10-31 for M3 on the PyPI JSON API: argon2-cffi 25.1.0 and limits
 
 Re-checked 2026-10-31 for M4 on the PyPI JSON API: python-multipart 0.0.32 (0.0.33 is under the floor until 2026-11-14), Pillow 13.0.0 and pypdfium2 5.14.0 are the highest eligible. pypdf 6.21.0 is the highest eligible but `pip-audit` lists 11 advisories fixed by 6.21.1 to 6.21.4, so 6.21.4 (2026-10-28) is taken as an approved exception (D-043).
 
+Re-checked 2026-11-01 for M5 on the PyPI JSON API: reportlab 5.0.1 (2026-08-20) is the highest eligible, and 5.1.0 (2026-10-22) is under the floor until 2026-11-05. Pillow stays at 13.0.0. reportlab's output differs between Windows and Linux in compressed streams, so byte reproducibility holds per platform (D-050).
+
+Vendor name check, 2026-11-01: exact-phrase web searches for Brindlecote Stationers, Harrowmere Cleaning, Velloway Electrical, Cindergate Joinery, Pellandine Water, Drovemoor Tools, Lunnick Textiles and Zenthorpe Packaging found no business with that name. This was a web search only, not a trademark or company-registry search. Yarrowgate Couriers also found none, but was dropped as too close to Yellowgates Courier Ltd. Quillbrook was replaced because it resembles the Quill brand. Tarnwell, Morrowfen and Ostrel were searched in Phase 0.
+
+Re-checked 2026-11-01 for M6, with the Claude API skill (2.1.314) and live docs. Prices for Opus 5.5, Sonnet 5.5 and Haiku 5.5 match the table below. Fallback is at `build-with-claude/refusals-and-fallback`; the older URL returns 404. Token counting accepts base64 PDFs and images, and the count is an estimate. The structured outputs page says nothing about fallback, and the fallback page says only that an entry can override `output_config`, so the combination is unconfirmed until a real run. anthropic 1.15.0 (2026-10-15) is the highest eligible; 1.16.0 and 1.17.0 are from 2026-10-20 and 2.0.0 from 2026-10-21. 1.15.0 sends API version `2023-06-01`.
+
 Native packages at the versions below have wheels for Python 3.15 on Windows and Linux x86-64 (pydantic-core, SQLAlchemy, psycopg-binary, Pillow directly; argon2-cffi-bindings by abi3; pypdfium2 by py3-none). Source: PyPI JSON API.
 
 Image digests observed, to be re-read and pinned in M1:
@@ -162,7 +168,7 @@ All three have a 1M-token context window and 128K max output. Haiku 5.5 costs $0
 
 ### Model behaviour relevant to this project
 
-From the bundled skill, to be re-verified in M6:
+From the bundled skill, re-checked against skill version 2.1.314 on 2026-11-01:
 
 - On Opus 5.5 and Sonnet 5.5, forced `tool_choice` returns a 400, so forced tool use is not an option. Structured outputs are the right route.
 - Opus 5.5 thinking cannot be disabled; depth is set with `output_config.effort`, whose default is `medium`.

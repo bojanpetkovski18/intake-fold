@@ -9,6 +9,7 @@ import structlog
 from intakefold.clock import SystemClock
 from intakefold.db.engine import build_engine
 from intakefold.documents.storage import Storage
+from intakefold.extraction.factory import build_extractor
 from intakefold.logging import configure_logging
 from intakefold.settings import ConfigurationError, load_settings
 from intakefold.worker.handlers import build_handlers, fail_documents_of_dead_jobs
@@ -36,7 +37,8 @@ def run() -> None:
 
     engine = build_engine(settings)
     clock = SystemClock()
-    handlers = build_handlers(engine, Storage(settings.storage_dir), clock)
+    storage = Storage(settings.storage_dir)
+    handlers = build_handlers(engine, storage, clock, build_extractor(settings, engine))
     log.info("worker_started")
     Worker(
         engine,

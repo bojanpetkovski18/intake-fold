@@ -1,0 +1,74 @@
+{
+  "id": "doc-040",
+  "split": "development",
+  "scenario": "wrong_line",
+  "layout": "compact",
+  "file_format": "png",
+  "degradations": [
+    "rotation",
+    "low_contrast"
+  ],
+  "duplicate_of": null,
+  "pair_id": null,
+  "injection_placement": null,
+  "contains_embedded_instructions": false,
+  "fields": {
+    "document_type": "invoice",
+    "vendor_name": "Velloway Electrical",
+    "invoice_number": "INV-2640",
+    "issue_date": "2026-03-02",
+    "due_date": "2026-04-01",
+    "currency": "EUR",
+    "subtotal": "2110.80",
+    "tax_total": "0.00",
+    "adjustments_total": "0.00",
+    "total": "2110.80",
+    "line_items": [
+      {
+        "description": "Water cooler refill",
+        "quantity": "8",
+        "unit_price": "18.60",
+        "amount": "155.80"
+      },
+      {
+        "description": "Office deep clean",
+        "quantity": "4",
+        "unit_price": "96.00",
+        "amount": "384.00"
+      },
+      {
+        "description": "Working lunch for ten",
+        "quantity": "4",
+        "unit_price": "118.75",
+        "amount": "475.00"
+      },
+      {
+        "description": "Delivery surcharge",
+        "quantity": "7",
+        "unit_price": "24.00",
+        "amount": "168.00"
+      },
+      {
+        "description": "Callout charge",
+        "quantity": "1",
+        "unit_price": "65.00",
+        "amount": "65.00"
+      },
+      {
+        "description": "Pallet transport, regional",
+        "quantity": "6",
+        "unit_price": "145.00",
+        "amount": "870.00"
+      }
+    ]
+  },
+  "expected_routing": {
+    "outcome": "needs_review",
+    "reasons": [
+      "line_items_total"
+    ]
+  },
+  "file": "doc-040.png",
+  "media_type": "image/png",
+  "sha256": "29c36bf08f864cffae43fe9179da0b443f681107e79e0b20c5d22f5014a277b2"
+}

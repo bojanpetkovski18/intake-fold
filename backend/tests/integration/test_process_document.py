@@ -19,6 +19,7 @@ from intakefold.db.models import Document, DocumentStatus, Job, JobStatus, RunSt
 from intakefold.documents.intake import PROCESS_DOCUMENT
 from intakefold.documents.rendering import MAX_RENDER_SIDE
 from intakefold.documents.storage import Storage
+from intakefold.extraction.mock import MockExtractor
 from intakefold.jobs import queue
 from intakefold.worker.handlers import build_handlers, fail_documents_of_dead_jobs
 from intakefold.worker.loop import Worker
@@ -26,6 +27,7 @@ from intakefold.worker.loop import Worker
 pytestmark = pytest.mark.integration
 
 LEASE = timedelta(minutes=5)
+EMPTY_MOCK = MockExtractor(Path("does-not-exist"))
 
 
 @pytest.fixture
@@ -42,7 +44,7 @@ def storage(tmp_path: Path) -> Storage:
 def worker(seeded: Engine, storage: Storage, clock: FakeClock) -> Worker:
     return Worker(
         seeded,
-        build_handlers(seeded, storage, clock),
+        build_handlers(seeded, storage, clock, EMPTY_MOCK),
         clock=clock,
         lease=LEASE,
         on_job_dead=partial(fail_documents_of_dead_jobs, seeded, clock),
@@ -98,7 +100,7 @@ def test_pdf_pages_are_rendered_and_served(
     assert document(seeded, document_id).status is DocumentStatus.PROCESSING
     assert steps(seeded, document_id) == [
         ("render", StepStatus.SUCCEEDED, 1),
-        ("extract_placeholder", StepStatus.SUCCEEDED, 1),
+        ("extract", StepStatus.SUCCEEDED, 1),
     ]
     for page in (1, 2):
         response = client.get(f"/api/documents/{document_id}/pages/{page}")
@@ -147,7 +149,7 @@ def test_running_the_job_again_is_harmless(
     job = queue.claim(seeded, "other", LEASE, clock)
     assert job is None
 
-    handler = build_handlers(seeded, storage, clock)[PROCESS_DOCUMENT]
+    handler = build_handlers(seeded, storage, clock, EMPTY_MOCK)[PROCESS_DOCUMENT]
     finished = only_job(seeded)
     handler(
         queue.ClaimedJob(finished.id, finished.kind, finished.payload, 2, 5, "redelivered"),

@@ -1,0 +1,61 @@
+{
+  "id": "doc-021",
+  "split": "held_out",
+  "scenario": "wrong_line",
+  "layout": "compact",
+  "file_format": "jpeg",
+  "degradations": [
+    "rotation"
+  ],
+  "duplicate_of": null,
+  "pair_id": null,
+  "injection_placement": null,
+  "contains_embedded_instructions": false,
+  "fields": {
+    "document_type": "invoice",
+    "vendor_name": "Tarnwell Freight",
+    "invoice_number": "INV-2621",
+    "issue_date": "2026-04-02",
+    "due_date": "2026-05-02",
+    "currency": "GBP",
+    "subtotal": "1350.75",
+    "tax_total": "270.15",
+    "adjustments_total": "0.00",
+    "total": "1620.90",
+    "line_items": [
+      {
+        "description": "Delivery surcharge",
+        "quantity": "7",
+        "unit_price": "24.00",
+        "amount": "175.00"
+      },
+      {
+        "description": "Working lunch for ten",
+        "quantity": "3",
+        "unit_price": "118.75",
+        "amount": "356.25"
+      },
+      {
+        "description": "Office deep clean",
+        "quantity": "5",
+        "unit_price": "96.00",
+        "amount": "480.00"
+      },
+      {
+        "description": "Hourly labour",
+        "quantity": "9",
+        "unit_price": "38.50",
+        "amount": "346.50"
+      }
+    ]
+  },
+  "expected_routing": {
+    "outcome": "needs_review",
+    "reasons": [
+      "line_items_total"
+    ]
+  },
+  "file": "doc-021.jpg",
+  "media_type": "image/jpeg",
+  "sha256": "989f1f2462f71ed2e8285e8fd483bbadee127bd81c21528edf781c04af5e81fc"
+}

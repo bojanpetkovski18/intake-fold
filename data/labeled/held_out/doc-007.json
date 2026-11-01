@@ -1,0 +1,68 @@
+{
+  "id": "doc-007",
+  "split": "held_out",
+  "scenario": "due_before_issue",
+  "layout": "ledger",
+  "file_format": "jpeg",
+  "degradations": [
+    "rotation",
+    "low_contrast"
+  ],
+  "duplicate_of": null,
+  "pair_id": null,
+  "injection_placement": null,
+  "contains_embedded_instructions": false,
+  "fields": {
+    "document_type": "invoice",
+    "vendor_name": "Tarnwell Freight",
+    "invoice_number": "INV-2607",
+    "issue_date": "2026-05-03",
+    "due_date": "2026-04-23",
+    "currency": "EUR",
+    "subtotal": "2390.40",
+    "tax_total": "119.52",
+    "adjustments_total": "0.00",
+    "total": "2509.92",
+    "line_items": [
+      {
+        "description": "Oak shelf, fitted",
+        "quantity": "9",
+        "unit_price": "189.90",
+        "amount": "1709.10"
+      },
+      {
+        "description": "Printer paper, 500 sheets",
+        "quantity": "6",
+        "unit_price": "12.50",
+        "amount": "75.00"
+      },
+      {
+        "description": "Office deep clean",
+        "quantity": "5",
+        "unit_price": "96.00",
+        "amount": "480.00"
+      },
+      {
+        "description": "Toner cartridge",
+        "quantity": "1",
+        "unit_price": "54.30",
+        "amount": "54.30"
+      },
+      {
+        "description": "Delivery surcharge",
+        "quantity": "3",
+        "unit_price": "24.00",
+        "amount": "72.00"
+      }
+    ]
+  },
+  "expected_routing": {
+    "outcome": "needs_review",
+    "reasons": [
+      "date_plausible"
+    ]
+  },
+  "file": "doc-007.jpg",
+  "media_type": "image/jpeg",
+  "sha256": "6a848825a646d1c711845209b625777cec617d7055b50d890b1999c11291149b"
+}

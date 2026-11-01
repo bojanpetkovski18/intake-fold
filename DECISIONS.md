@@ -73,7 +73,7 @@ Numbered and never renumbered. A reversal is a new entry. The owner approved Pha
 ## D-011 Money as strings in the model schema
 - **Date:** 2026-10-31. **Status:** approved with Phase 0.
 - **Decision:** the model-facing schema uses decimal strings with a simple pattern, and converts to `Decimal` afterwards. The API also carries money as strings.
-- **Why:** floats corrupt money, and the API rejects lookahead patterns and numeric constraints. Pydantic's own `Decimal` schema is expected to include a lookahead; this is to be confirmed in M6.
+- **Why:** floats corrupt money, and the API rejects lookahead patterns and numeric constraints. **Checked in M6:** the expected lookahead is not there. The SDK's `transform_schema` turns a Pydantic `Decimal` into a union of number and string, so the model could answer with a float, and a test records this. That confirms the decision for a different reason. The SDK also moves `pattern` into the field description, so the API does not enforce it, and Pydantic plus the repair loop do.
 - **Trade-offs:** an extra conversion step, which doubles as a validation point.
 
 ## D-012 Confidence is a signal that can only lower trust
@@ -302,3 +302,52 @@ Numbered and never renumbered. A reversal is a new entry. The owner approved Pha
 - **Decision:** `BATCH_TOKEN_CAP` defaults to 2,000,000. It is stored on each batch and enforced from M6.
 - **Why:** the column is required now and the spec gives no number. This is a placeholder, not a measured value.
 - **Trade-offs:** M6 sets it from real document sizes.
+
+## D-049 The labeled set is committed, and injection pairs are extra
+- **Date:** 2026-11-01. **Status:** decided in M5.
+- **Decision:** `data/labeled/` holds 76 documents and their labels: 20 development, 40 held out and 16 injection, as 8 clean and injected twins. Quillbrook is replaced by Brindlecote Stationers. Each pair is one split of its own, so injection never changes the accuracy of the 60.
+- **Why:** SPEC section 13 says the set "also has" the pairs. The mock finds documents by SHA-256, so those exact bytes must reach a fresh clone, and the Docker image will not carry reportlab.
+- **Trade-offs:** 4.9 MB of binary files in history, more with each regeneration. A database seeded before M5 keeps its Quillbrook row until reset.
+
+## D-050 Reproducible per platform
+- **Date:** 2026-11-01. **Status:** decided in M5.
+- **Decision:** PDFs use reportlab's `invariant` mode with an embedded Vera font, and noise comes from a private seeded generator. The same seed gives identical labels everywhere, and identical files on one platform. The committed files are the source of truth for hashes.
+- **Why:** a comparison found 118 of 152 files differing between Windows and Linux, with PDF lengths differing too. The likely cause is that CPython's Windows build uses zlib-ng, which was not proved. Forcing identical compression would add work and no value, since nothing regenerates the set at run time.
+- **Trade-offs:** regenerating on another platform changes the hashes, so the set should be regenerated only deliberately, and all at once.
+
+## D-051 What a label says
+- **Date:** 2026-11-01. **Status:** decided in M5.
+- **Decision:** labels hold what is printed, right or wrong, plus `expected_routing` computed from those printed values with SPEC section 7's rule names and a fixed date of 2026-10-01. `reportlab` is a dev dependency. Duplicates come after their originals in the same split, so `not_duplicate` depends on processing in label order.
+- **Why:** a wrong total must be labeled as the wrong number on the page, because extraction is scored on reading, and rules are scored on catching it. A label should not change with the day it is read.
+- **Trade-offs:** `labels.py` repeats the rules' logic in small form. M7 must test its rules against these labels, and any disagreement is a bug in one of them. `overall_confidence` is not labeled; M6 decides what the mock returns.
+
+## D-052 anthropic 1.15.0 until 2.x clears the floor
+- **Date:** 2026-11-01. **Status:** decided in M6, for owner review.
+- **Decision:** pin 1.15.0, the highest eligible. Move to 2.x before any real run, once 2.0.0 clears the floor on 2026-11-04 and is re-checked.
+- **Why:** D-008 chose 2.x only if eligible, and it misses by three days. Every test here runs against a fake transport, so the API version cannot affect a result yet.
+- **Alternatives:** a floor exception for 2.x, which has no security reason behind it, or waiting three days with all work stopped.
+- **Trade-offs:** an SDK major and an API version change remain to do. The code avoids the parameters 2.x removes, and M15's brief carries the step.
+
+## D-053 Direct create with our own validation, not parse
+- **Date:** 2026-11-01. **Status:** decided in M6. Refines D-010.
+- **Decision:** `client.beta.messages.create` with `output_config.format` from `transform_schema`, then `ExtractedDocument.model_validate`.
+- **Why:** on invalid output the parsing helper raises, which loses `usage`, `stop_reason` and the serving model, and those drive cost, refusal handling and repair.
+- **Trade-offs:** a few lines of parsing. The request is typed as `dict[str, Any]` in one place, with a comment, and tests inspect the bytes sent.
+
+## D-054 Refusal fallback on by default, unconfirmed
+- **Date:** 2026-11-01. **Status:** decided in M6. Settles D-024 as far as can be done without a real call.
+- **Decision:** send `fallbacks: "default"` with `server-side-fallback-2026-07-01`, switched by `CLAUDE_REFUSAL_FALLBACK`. Log and price from `response.model`. An unknown model is priced at the highest listed rate.
+- **Why:** Anthropic recommends it, and it saves a document from a false refusal.
+- **Trade-offs:** no document confirms it works with structured outputs, and the transport fake cannot. M15 must test it first, and the switch turns it off if it fails. Cost uses top-level `usage`, so a billed declined attempt in `usage.iterations` is not counted.
+
+## D-055 Extraction limits and retry ownership
+- **Date:** 2026-11-01. **Status:** decided in M6, provisional.
+- **Decision:** `MAX_INPUT_TOKENS_PER_DOC` is 60,000, `EXTRACTION_MAX_TOKENS` is 16,000, and effort is `medium`. Each attempt reserves input plus `max_tokens`, then settles to actual use. The SDK's own retries are off, because the job queue owns retrying.
+- **Why:** 60,000 keeps Haiku under its 100K pricing step. Reserving the most an attempt could use means concurrent workers cannot pass the cap. Two retry layers would multiply attempts.
+- **Trade-offs:** none of these numbers is measured. A worker killed mid-call leaves its reservation in place, which errs toward stopping early. M15 replaces them with real figures.
+
+## D-056 What extraction does to a document
+- **Date:** 2026-11-01. **Status:** decided in M6.
+- **Decision:** a failed extraction sends the document to `needs_review` with its reason at once. A successful one stores `extractions`, `invoices` and `line_items` and stays `processing` until M7 routes it. A job redelivered after success reuses the stored result for the same prompt version. The mock returns `overall_confidence: high` for labeled documents.
+- **Why:** SPEC section 6 sets the failure routes, and rules are out of scope here. A redelivery must not pay twice.
+- **Trade-offs:** until M7 merges, successful documents stop at `processing`.

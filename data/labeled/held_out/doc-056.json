@@ -1,0 +1,64 @@
+{
+  "id": "doc-056",
+  "split": "held_out",
+  "scenario": "duplicate",
+  "layout": "banded",
+  "file_format": "jpeg",
+  "degradations": [
+    "rotation",
+    "blur",
+    "low_contrast",
+    "noise"
+  ],
+  "duplicate_of": "doc-011",
+  "pair_id": null,
+  "injection_placement": null,
+  "contains_embedded_instructions": false,
+  "fields": {
+    "document_type": "invoice",
+    "vendor_name": "Velloway Electrical",
+    "invoice_number": "INV-2611",
+    "issue_date": "2026-02-21",
+    "due_date": "2026-03-23",
+    "currency": "EUR",
+    "subtotal": "1576.40",
+    "tax_total": "315.28",
+    "adjustments_total": "-78.82",
+    "total": "1812.86",
+    "line_items": [
+      {
+        "description": "Oak shelf, fitted",
+        "quantity": "6",
+        "unit_price": "189.90",
+        "amount": "1139.40"
+      },
+      {
+        "description": "Hourly labour",
+        "quantity": "7",
+        "unit_price": "38.50",
+        "amount": "269.50"
+      },
+      {
+        "description": "Callout charge",
+        "quantity": "2",
+        "unit_price": "65.00",
+        "amount": "130.00"
+      },
+      {
+        "description": "Printer paper, 500 sheets",
+        "quantity": "3",
+        "unit_price": "12.50",
+        "amount": "37.50"
+      }
+    ]
+  },
+  "expected_routing": {
+    "outcome": "needs_review",
+    "reasons": [
+      "not_duplicate"
+    ]
+  },
+  "file": "doc-056.jpg",
+  "media_type": "image/jpeg",
+  "sha256": "6b54ed41a0f1ebb77ba2ee442f932f439a041225a62d675cc8c8ec2e07f5b15d"
+}

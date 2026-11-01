@@ -1,0 +1,56 @@
+{
+  "id": "doc-037",
+  "split": "held_out",
+  "scenario": "missing_date",
+  "layout": "compact",
+  "file_format": "png",
+  "degradations": [
+    "rotation",
+    "blur"
+  ],
+  "duplicate_of": null,
+  "pair_id": null,
+  "injection_placement": null,
+  "contains_embedded_instructions": false,
+  "fields": {
+    "document_type": "invoice",
+    "vendor_name": "Ostrel Print Works",
+    "invoice_number": "INV-2637",
+    "issue_date": null,
+    "due_date": null,
+    "currency": "EUR",
+    "subtotal": "1782.95",
+    "tax_total": "178.30",
+    "adjustments_total": "0.00",
+    "total": "1961.25",
+    "line_items": [
+      {
+        "description": "Working lunch for ten",
+        "quantity": "1",
+        "unit_price": "118.75",
+        "amount": "118.75"
+      },
+      {
+        "description": "Oak shelf, fitted",
+        "quantity": "8",
+        "unit_price": "189.90",
+        "amount": "1519.20"
+      },
+      {
+        "description": "Pallet transport, regional",
+        "quantity": "1",
+        "unit_price": "145.00",
+        "amount": "145.00"
+      }
+    ]
+  },
+  "expected_routing": {
+    "outcome": "needs_review",
+    "reasons": [
+      "required_fields"
+    ]
+  },
+  "file": "doc-037.png",
+  "media_type": "image/png",
+  "sha256": "9eb4b8863923a20d8e1d1c84e0af2a65e99cd653da3010327910ebd3123c3496"
+}

@@ -1,0 +1,61 @@
+{
+  "id": "doc-020",
+  "split": "development",
+  "scenario": "wrong_total",
+  "layout": "compact",
+  "file_format": "png",
+  "degradations": [
+    "rotation"
+  ],
+  "duplicate_of": null,
+  "pair_id": null,
+  "injection_placement": null,
+  "contains_embedded_instructions": false,
+  "fields": {
+    "document_type": "invoice",
+    "vendor_name": "Harrowmere Cleaning Services",
+    "invoice_number": "INV-2620",
+    "issue_date": "2026-06-16",
+    "due_date": "2026-07-16",
+    "currency": "USD",
+    "subtotal": "1505.75",
+    "tax_total": "75.29",
+    "adjustments_total": "0.00",
+    "total": "1575.54",
+    "line_items": [
+      {
+        "description": "Printer paper, 500 sheets",
+        "quantity": "6",
+        "unit_price": "12.50",
+        "amount": "75.00"
+      },
+      {
+        "description": "Socket replacement",
+        "quantity": "7",
+        "unit_price": "42.25",
+        "amount": "295.75"
+      },
+      {
+        "description": "Pallet transport, regional",
+        "quantity": "7",
+        "unit_price": "145.00",
+        "amount": "1015.00"
+      },
+      {
+        "description": "Delivery surcharge",
+        "quantity": "5",
+        "unit_price": "24.00",
+        "amount": "120.00"
+      }
+    ]
+  },
+  "expected_routing": {
+    "outcome": "needs_review",
+    "reasons": [
+      "total_reconciles"
+    ]
+  },
+  "file": "doc-020.png",
+  "media_type": "image/png",
+  "sha256": "b50db54d8ccfa4fcf070736a08eef2f0fb37677aec19c869aa38f81443283216"
+}

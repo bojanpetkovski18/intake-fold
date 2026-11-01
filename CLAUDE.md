@@ -99,7 +99,7 @@ Keep the milestone report and PR description short: about half the length feels 
 
 ## Repository layout
 
-`api/`, `identity/`, `documents/`, `worker/`, `jobs/`, `audit/`, `db/`, `migrations/` and `frontend/src/` exist. The rest is planned; update this as code lands.
+`api/`, `identity/`, `documents/`, `extraction/`, `worker/`, `jobs/`, `audit/`, `db/`, `generator/`, `migrations/`, `data/labeled/` and `frontend/src/` exist. The rest is planned; update this as code lands.
 
 ```
 backend/
@@ -144,6 +144,7 @@ uv run pyright
 uv run pytest
 uv run pytest -m "not integration"   # no Docker needed
 uv run python -m intakefold.worker
+uv run python -m intakefold.generator --out ../data/labeled   # only to change the set: D-050
 uv run uvicorn --factory intakefold.api.app:create_app --host 127.0.0.1 --port 8100 --no-proxy-headers
 uv run --env-file ../.env alembic upgrade head
 uv run --env-file ../.env alembic check            # models and migrations agree

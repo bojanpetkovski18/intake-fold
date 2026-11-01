@@ -1,0 +1,59 @@
+{
+  "id": "doc-055",
+  "split": "held_out",
+  "scenario": "duplicate",
+  "layout": "receipt",
+  "file_format": "pdf",
+  "degradations": [],
+  "duplicate_of": "doc-003",
+  "pair_id": null,
+  "injection_placement": null,
+  "contains_embedded_instructions": false,
+  "fields": {
+    "document_type": "receipt",
+    "vendor_name": "Tarnwell Freight",
+    "invoice_number": "RCT-2603",
+    "issue_date": "2026-03-02",
+    "due_date": null,
+    "currency": "GBP",
+    "subtotal": "2984.70",
+    "tax_total": "0.00",
+    "adjustments_total": "-149.24",
+    "total": "2835.46",
+    "line_items": [
+      {
+        "description": "Brochure run, two colour",
+        "quantity": "3",
+        "unit_price": "264.40",
+        "amount": "793.20"
+      },
+      {
+        "description": "Toner cartridge",
+        "quantity": "8",
+        "unit_price": "54.30",
+        "amount": "434.40"
+      },
+      {
+        "description": "Delivery surcharge",
+        "quantity": "2",
+        "unit_price": "24.00",
+        "amount": "48.00"
+      },
+      {
+        "description": "Oak shelf, fitted",
+        "quantity": "9",
+        "unit_price": "189.90",
+        "amount": "1709.10"
+      }
+    ]
+  },
+  "expected_routing": {
+    "outcome": "needs_review",
+    "reasons": [
+      "not_duplicate"
+    ]
+  },
+  "file": "doc-055.pdf",
+  "media_type": "application/pdf",
+  "sha256": "e24536d2617b807df78e763736ae7245aee68b3dfe0a58032374bee2756c5255"
+}

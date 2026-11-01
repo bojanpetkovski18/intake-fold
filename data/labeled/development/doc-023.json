@@ -1,0 +1,76 @@
+{
+  "id": "doc-023",
+  "split": "development",
+  "scenario": "future_date",
+  "layout": "classic",
+  "file_format": "jpeg",
+  "degradations": [
+    "rotation",
+    "blur",
+    "low_contrast",
+    "noise"
+  ],
+  "duplicate_of": null,
+  "pair_id": null,
+  "injection_placement": null,
+  "contains_embedded_instructions": false,
+  "fields": {
+    "document_type": "invoice",
+    "vendor_name": "Morrowfen Catering",
+    "invoice_number": "INV-2623",
+    "issue_date": "2099-06-01",
+    "due_date": "2099-07-01",
+    "currency": "GBP",
+    "subtotal": "2253.90",
+    "tax_total": "225.39",
+    "adjustments_total": "0.00",
+    "total": "2479.29",
+    "line_items": [
+      {
+        "description": "Office deep clean",
+        "quantity": "6",
+        "unit_price": "96.00",
+        "amount": "576.00"
+      },
+      {
+        "description": "Delivery surcharge",
+        "quantity": "3",
+        "unit_price": "24.00",
+        "amount": "72.00"
+      },
+      {
+        "description": "Toner cartridge",
+        "quantity": "9",
+        "unit_price": "54.30",
+        "amount": "488.70"
+      },
+      {
+        "description": "Pallet transport, regional",
+        "quantity": "7",
+        "unit_price": "145.00",
+        "amount": "1015.00"
+      },
+      {
+        "description": "Water cooler refill",
+        "quantity": "2",
+        "unit_price": "18.60",
+        "amount": "37.20"
+      },
+      {
+        "description": "Callout charge",
+        "quantity": "1",
+        "unit_price": "65.00",
+        "amount": "65.00"
+      }
+    ]
+  },
+  "expected_routing": {
+    "outcome": "needs_review",
+    "reasons": [
+      "date_plausible"
+    ]
+  },
+  "file": "doc-023.jpg",
+  "media_type": "image/jpeg",
+  "sha256": "f5f59f314528c53b76a8e054a84356c413dec1626df5193e4d2f9dc28b4d2c25"
+}
