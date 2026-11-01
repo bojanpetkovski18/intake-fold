@@ -1,0 +1,50 @@
+{
+  "id": "doc-009",
+  "split": "development",
+  "scenario": "old_date",
+  "layout": "classic",
+  "file_format": "jpeg",
+  "degradations": [
+    "rotation",
+    "blur"
+  ],
+  "duplicate_of": null,
+  "pair_id": null,
+  "injection_placement": null,
+  "contains_embedded_instructions": false,
+  "fields": {
+    "document_type": "invoice",
+    "vendor_name": "Tarnwell Freight",
+    "invoice_number": "INV-2609",
+    "issue_date": "2019-03-14",
+    "due_date": "2019-04-13",
+    "currency": "USD",
+    "subtotal": "1924.40",
+    "tax_total": "384.88",
+    "adjustments_total": "0.00",
+    "total": "2309.28",
+    "line_items": [
+      {
+        "description": "Brochure run, two colour",
+        "quantity": "6",
+        "unit_price": "264.40",
+        "amount": "1586.40"
+      },
+      {
+        "description": "Socket replacement",
+        "quantity": "8",
+        "unit_price": "42.25",
+        "amount": "338.00"
+      }
+    ]
+  },
+  "expected_routing": {
+    "outcome": "needs_review",
+    "reasons": [
+      "date_plausible"
+    ]
+  },
+  "file": "doc-009.jpg",
+  "media_type": "image/jpeg",
+  "sha256": "021a0ae12e44e5570b4aa075771d3db54e239572dacfad1e1b9d78e1d4f8e463"
+}

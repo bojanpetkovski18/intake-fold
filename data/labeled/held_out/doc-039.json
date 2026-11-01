@@ -1,0 +1,65 @@
+{
+  "id": "doc-039",
+  "split": "held_out",
+  "scenario": "wrong_total",
+  "layout": "classic",
+  "file_format": "pdf",
+  "degradations": [],
+  "duplicate_of": null,
+  "pair_id": null,
+  "injection_placement": null,
+  "contains_embedded_instructions": false,
+  "fields": {
+    "document_type": "invoice",
+    "vendor_name": "Harrowmere Cleaning Services",
+    "invoice_number": "INV-2639",
+    "issue_date": "2026-03-18",
+    "due_date": "2026-04-17",
+    "currency": "EUR",
+    "subtotal": "2868.75",
+    "tax_total": "143.44",
+    "adjustments_total": "0.00",
+    "total": "3022.19",
+    "line_items": [
+      {
+        "description": "Printer paper, 500 sheets",
+        "quantity": "9",
+        "unit_price": "12.50",
+        "amount": "112.50"
+      },
+      {
+        "description": "Brochure run, two colour",
+        "quantity": "5",
+        "unit_price": "264.40",
+        "amount": "1322.00"
+      },
+      {
+        "description": "Working lunch for ten",
+        "quantity": "9",
+        "unit_price": "118.75",
+        "amount": "1068.75"
+      },
+      {
+        "description": "Hourly labour",
+        "quantity": "7",
+        "unit_price": "38.50",
+        "amount": "269.50"
+      },
+      {
+        "description": "Delivery surcharge",
+        "quantity": "4",
+        "unit_price": "24.00",
+        "amount": "96.00"
+      }
+    ]
+  },
+  "expected_routing": {
+    "outcome": "needs_review",
+    "reasons": [
+      "total_reconciles"
+    ]
+  },
+  "file": "doc-039.pdf",
+  "media_type": "application/pdf",
+  "sha256": "9dffb4979cc7e8057e6c331274d11344aa689a6b77e3c2fc5cadb646b95ade71"
+}

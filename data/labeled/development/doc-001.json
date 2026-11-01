@@ -1,0 +1,52 @@
+{
+  "id": "doc-001",
+  "split": "development",
+  "scenario": "wrong_line",
+  "layout": "classic",
+  "file_format": "jpeg",
+  "degradations": [
+    "rotation",
+    "blur",
+    "low_contrast",
+    "noise"
+  ],
+  "duplicate_of": null,
+  "pair_id": null,
+  "injection_placement": null,
+  "contains_embedded_instructions": false,
+  "fields": {
+    "document_type": "invoice",
+    "vendor_name": "Brindlecote Stationers",
+    "invoice_number": "INV-2601",
+    "issue_date": "2026-03-26",
+    "due_date": "2026-04-25",
+    "currency": "GBP",
+    "subtotal": "2659.10",
+    "tax_total": "531.82",
+    "adjustments_total": "0.00",
+    "total": "3190.92",
+    "line_items": [
+      {
+        "description": "Oak shelf, fitted",
+        "quantity": "9",
+        "unit_price": "189.90",
+        "amount": "1716.10"
+      },
+      {
+        "description": "Working lunch for ten",
+        "quantity": "8",
+        "unit_price": "118.75",
+        "amount": "950.00"
+      }
+    ]
+  },
+  "expected_routing": {
+    "outcome": "needs_review",
+    "reasons": [
+      "line_items_total"
+    ]
+  },
+  "file": "doc-001.jpg",
+  "media_type": "image/jpeg",
+  "sha256": "40b773320888a81962bedab9311f0058388c872f228631056e8bc85e2c6be3e5"
+}

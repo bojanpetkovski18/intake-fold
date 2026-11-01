@@ -1,0 +1,47 @@
+{
+  "id": "doc-022",
+  "split": "development",
+  "scenario": "wrong_total",
+  "layout": "receipt",
+  "file_format": "pdf",
+  "degradations": [],
+  "duplicate_of": null,
+  "pair_id": null,
+  "injection_placement": null,
+  "contains_embedded_instructions": false,
+  "fields": {
+    "document_type": "receipt",
+    "vendor_name": "Morrowfen Catering",
+    "invoice_number": "RCT-2622",
+    "issue_date": "2026-05-18",
+    "due_date": null,
+    "currency": "EUR",
+    "subtotal": "1292.50",
+    "tax_total": "64.62",
+    "adjustments_total": "0.00",
+    "total": "1351.62",
+    "line_items": [
+      {
+        "description": "Working lunch for ten",
+        "quantity": "6",
+        "unit_price": "118.75",
+        "amount": "712.50"
+      },
+      {
+        "description": "Pallet transport, regional",
+        "quantity": "4",
+        "unit_price": "145.00",
+        "amount": "580.00"
+      }
+    ]
+  },
+  "expected_routing": {
+    "outcome": "needs_review",
+    "reasons": [
+      "total_reconciles"
+    ]
+  },
+  "file": "doc-022.pdf",
+  "media_type": "application/pdf",
+  "sha256": "9d4d6635b8ee465c8599a0e42f27d7e5d9a65dd0cd97791740ad50788df2922c"
+}

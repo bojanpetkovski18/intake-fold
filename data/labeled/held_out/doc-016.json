@@ -1,0 +1,67 @@
+{
+  "id": "doc-016",
+  "split": "held_out",
+  "scenario": "old_date",
+  "layout": "banded",
+  "file_format": "png",
+  "degradations": [
+    "rotation"
+  ],
+  "duplicate_of": null,
+  "pair_id": null,
+  "injection_placement": null,
+  "contains_embedded_instructions": false,
+  "fields": {
+    "document_type": "invoice",
+    "vendor_name": "Tarnwell Freight",
+    "invoice_number": "INV-2616",
+    "issue_date": "2019-03-14",
+    "due_date": "2019-04-13",
+    "currency": "EUR",
+    "subtotal": "3655.00",
+    "tax_total": "365.50",
+    "adjustments_total": "-182.75",
+    "total": "3837.75",
+    "line_items": [
+      {
+        "description": "Water cooler refill",
+        "quantity": "9",
+        "unit_price": "18.60",
+        "amount": "167.40"
+      },
+      {
+        "description": "Brochure run, two colour",
+        "quantity": "8",
+        "unit_price": "264.40",
+        "amount": "2115.20"
+      },
+      {
+        "description": "Oak shelf, fitted",
+        "quantity": "5",
+        "unit_price": "189.90",
+        "amount": "949.50"
+      },
+      {
+        "description": "Callout charge",
+        "quantity": "4",
+        "unit_price": "65.00",
+        "amount": "260.00"
+      },
+      {
+        "description": "Toner cartridge",
+        "quantity": "3",
+        "unit_price": "54.30",
+        "amount": "162.90"
+      }
+    ]
+  },
+  "expected_routing": {
+    "outcome": "needs_review",
+    "reasons": [
+      "date_plausible"
+    ]
+  },
+  "file": "doc-016.png",
+  "media_type": "image/png",
+  "sha256": "10063c54ccc904f95b6a18b21384cf95e8523f8a37475e55697407b47ba6285d"
+}

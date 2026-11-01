@@ -26,6 +26,7 @@ dev = [
     "pip-audit==2.10.1",
     "pyright==1.1.414",
     "pytest==9.1.1",
+    "reportlab==5.0.1",
     "ruff==0.17.1",
     "testcontainers==4.15.0",
 ]

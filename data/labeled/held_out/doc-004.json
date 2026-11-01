@@ -1,0 +1,74 @@
+{
+  "id": "doc-004",
+  "split": "held_out",
+  "scenario": "wrong_line",
+  "layout": "ledger",
+  "file_format": "png",
+  "degradations": [
+    "rotation",
+    "low_contrast"
+  ],
+  "duplicate_of": null,
+  "pair_id": null,
+  "injection_placement": null,
+  "contains_embedded_instructions": false,
+  "fields": {
+    "document_type": "invoice",
+    "vendor_name": "Pellandine Water Supply",
+    "invoice_number": "INV-2604",
+    "issue_date": "2026-03-03",
+    "due_date": "2026-04-02",
+    "currency": "GBP",
+    "subtotal": "1644.35",
+    "tax_total": "0.00",
+    "adjustments_total": "0.00",
+    "total": "1644.35",
+    "line_items": [
+      {
+        "description": "Office deep clean",
+        "quantity": "3",
+        "unit_price": "96.00",
+        "amount": "295.00"
+      },
+      {
+        "description": "Hourly labour",
+        "quantity": "3",
+        "unit_price": "38.50",
+        "amount": "115.50"
+      },
+      {
+        "description": "Socket replacement",
+        "quantity": "1",
+        "unit_price": "42.25",
+        "amount": "42.25"
+      },
+      {
+        "description": "Pallet transport, regional",
+        "quantity": "7",
+        "unit_price": "145.00",
+        "amount": "1015.00"
+      },
+      {
+        "description": "Water cooler refill",
+        "quantity": "6",
+        "unit_price": "18.60",
+        "amount": "111.60"
+      },
+      {
+        "description": "Delivery surcharge",
+        "quantity": "3",
+        "unit_price": "24.00",
+        "amount": "72.00"
+      }
+    ]
+  },
+  "expected_routing": {
+    "outcome": "needs_review",
+    "reasons": [
+      "line_items_total"
+    ]
+  },
+  "file": "doc-004.png",
+  "media_type": "image/png",
+  "sha256": "498dc72dfa863371b42e512415cbd4c1d13df5d74daa077383090311f00061e9"
+}

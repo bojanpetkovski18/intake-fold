@@ -1,0 +1,63 @@
+{
+  "id": "doc-047",
+  "split": "development",
+  "scenario": "missing_currency",
+  "layout": "ledger",
+  "file_format": "png",
+  "degradations": [
+    "rotation",
+    "blur",
+    "low_contrast"
+  ],
+  "duplicate_of": null,
+  "pair_id": null,
+  "injection_placement": null,
+  "contains_embedded_instructions": false,
+  "fields": {
+    "document_type": "invoice",
+    "vendor_name": "Morrowfen Catering",
+    "invoice_number": "INV-2647",
+    "issue_date": "2026-09-24",
+    "due_date": "2026-10-24",
+    "currency": null,
+    "subtotal": "1056.35",
+    "tax_total": "211.27",
+    "adjustments_total": "-52.82",
+    "total": "1214.80",
+    "line_items": [
+      {
+        "description": "Hourly labour",
+        "quantity": "7",
+        "unit_price": "38.50",
+        "amount": "269.50"
+      },
+      {
+        "description": "Working lunch for ten",
+        "quantity": "5",
+        "unit_price": "118.75",
+        "amount": "593.75"
+      },
+      {
+        "description": "Toner cartridge",
+        "quantity": "2",
+        "unit_price": "54.30",
+        "amount": "108.60"
+      },
+      {
+        "description": "Socket replacement",
+        "quantity": "2",
+        "unit_price": "42.25",
+        "amount": "84.50"
+      }
+    ]
+  },
+  "expected_routing": {
+    "outcome": "needs_review",
+    "reasons": [
+      "required_fields"
+    ]
+  },
+  "file": "doc-047.png",
+  "media_type": "image/png",
+  "sha256": "19b4fdf1f1f380b02289f6f46627cedc91b80b435e56c050a821138a0b67eac1"
+}
