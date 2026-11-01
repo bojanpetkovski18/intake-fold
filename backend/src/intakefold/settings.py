@@ -1,3 +1,4 @@
+from decimal import Decimal
 from ipaddress import IPv4Network, IPv6Network
 from pathlib import Path
 from typing import Annotated, Literal, Self
@@ -62,6 +63,11 @@ class Settings(BaseSettings):
     extraction_max_repairs: int = Field(default=2, ge=0, le=5)
     extraction_max_tokens: int = Field(default=16_000, gt=0)
     max_input_tokens_per_doc: int = Field(default=60_000, gt=0)
+
+    rule_line_tolerance: Decimal = Field(default=Decimal("0.01"), ge=0)
+    rule_total_tolerance: Decimal = Field(default=Decimal("0.02"), ge=0)
+    rule_future_days: int = Field(default=1, ge=0)
+    rule_max_age_days: int = Field(default=5 * 365, gt=0)
 
     # Read by the seed only.
     demo_reviewer_password: DemoPassword | None = None
