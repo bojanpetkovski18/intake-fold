@@ -121,7 +121,7 @@ backend/
   tests/                 unit/ and integration/
 frontend/                React, TypeScript, Vite; nginx config
   src/api/               client, hooks, types written by hand (D-060)
-  src/screens/           one file per screen, tests beside them
+  src/screens/           one file per screen, tests beside them; review/ for the review screen
   src/components/        shared pieces
 data/labeled/            generated documents and ground truth
 reports/eval/            dated evaluation reports
@@ -133,7 +133,7 @@ compose.yaml             db now; api, worker, sink and web in M14
 
 ## Commands
 
-Add a command only after running it, with the date. All verified 2026-10-31 on Windows from Git Bash or PowerShell, unless noted.
+Add a command only after running it, with the date. Verified 2026-10-31 to 2026-11-02 on Windows from Git Bash or PowerShell, unless noted.
 
 ```bash
 # Everything CI runs, chained. A failure stops it. Needs Docker, uv, Node and Git Bash on Windows.

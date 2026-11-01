@@ -396,3 +396,21 @@ Numbered and never renumbered. A reversal is a new entry. The owner approved Pha
 - **Why:** browsers log every 4xx response themselves, and script cannot suppress that. AC-23 requires the 401. A separate public session route would change the spec's route table.
 - **Alternatives:** a public `GET /auth/session` that returns 200 with `null`.
 - **Trade-offs:** the console is not literally empty when signed out. Across three widths, all 14 messages were these two kinds, with no app errors.
+
+## D-064 A version on documents
+- **Date:** 2026-11-02. **Status:** decided in M9.
+- **Decision:** `documents.version` (migration `0002`) goes up on each saved correction, approval and rejection, and every write names the version it saw. A stale write gets `409`. The row is locked while checking, so two writes cannot pass together. A save with no changes costs no version.
+- **Why:** the brief asks for optimistic concurrency, and without it the second reviewer silently overwrites the first.
+- **Trade-offs:** one column the spec's data model table does not list. The table names "key columns", so it was left alone, for the owner to add if wanted.
+
+## D-065 Corrections never approve
+- **Date:** 2026-11-02. **Status:** decided in M9, for owner review.
+- **Decision:** a correction re-runs the rules and updates the reasons, and the document stays `needs_review` until a person acts. "A required rule fails" means any rule with outcome `fail`, and an override reason then lets the reviewer approve. Model signals such as low confidence or the injection flag do not block a person. Unsaved edits are saved first when approving or rejecting. A failed extraction can be keyed in by hand, as an invoice with low confidence. Approved, rejected and auto-approved documents cannot be edited.
+- **Why:** routing distrusts the model, but a reviewer has seen the page. Spec section 11 does not define which rules are "required".
+- **Trade-offs:** a reviewer can approve a flagged injection with no reason, relying on the warning shown. Requiring a reason there would be a one-line change.
+
+## D-066 Review keyboard shortcuts
+- **Date:** 2026-11-02. **Status:** decided in M9.
+- **Decision:** Tab moves between fields, and Alt+Shift+S, A, R and N save, approve, reject and go to the next document. They match on physical key codes, and work while an input has focus. Next document is the newest other document in review.
+- **Why:** plain letters would type into fields, and single-Alt combinations clash with browser menus.
+- **Trade-offs:** some screen readers and keyboard layouts may claim these keys. Every action is also a real button in the tab order, so the shortcuts are never the only way.
