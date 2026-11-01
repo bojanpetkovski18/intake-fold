@@ -24,3 +24,5 @@
 **Acceptance criteria:** AC-28. Every published number has a method, model, date and machine. Weak results are reported as they are.
 
 **Before committing reports:** check they contain no API key, and no prompt or response bodies beyond what is intended.
+
+**Before any paid call:** move to `anthropic` 2.x (D-052), then test refusal fallback with structured outputs on one document (D-054), and replace the limits in D-048 and D-055 with measured figures.

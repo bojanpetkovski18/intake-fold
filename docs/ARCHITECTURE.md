@@ -28,6 +28,7 @@ browser
 ## Boundaries
 
 - `Extractor` is the seam between the pipeline and the model. Tests and the default demo use the mock.
+- Tokens are reserved per batch before a model call, in one SQL statement, then settled to actual use.
 - Model output is proposed data. It crosses into the domain only after Pydantic validation.
 - Rules and routing are pure functions over domain objects, so they are tested without a database or a model.
 - Every external call happens outside a database transaction.
