@@ -410,3 +410,20 @@ def test_vendor_normalization_is_not_fuzzy() -> None:
 @pytest.mark.parametrize("number", ["INV-2601", "inv 2601", "INV_2601", "INV/2601", " inv.2601 "])
 def test_invoice_number_normalization(number: str) -> None:
     assert normalize_invoice_number(number) == "INV2601"
+
+
+def test_messages_show_amounts_the_way_people_write_them() -> None:
+    stored = LineFacts(Decimal("8.0000"), Decimal("18.6000"), Decimal("155.8000"))
+    facts = replace(FACTS, lines=(stored,), subtotal=Decimal("155.8000"))
+
+    result = line_items_total(facts, LIMITS)
+
+    assert result.detail == "Line 1: 8.00 x 18.60 is 148.80, not 155.80."
+
+
+def test_messages_keep_real_precision() -> None:
+    facts = replace(FACTS, total=Decimal("1234.5678"))
+
+    result = total_reconciles(facts, LIMITS)
+
+    assert result.detail == "Subtotal, tax and adjustments come to 110.00, not the total 1234.5678."

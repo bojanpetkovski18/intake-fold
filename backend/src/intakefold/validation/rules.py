@@ -13,6 +13,7 @@ TOTAL_RECONCILES = "total_reconciles"
 DATE_PLAUSIBLE = "date_plausible"
 NOT_DUPLICATE = "not_duplicate"
 KNOWN_VENDOR = "known_vendor"
+TWO_PLACES = Decimal("0.01")
 
 
 @dataclass(frozen=True)
@@ -62,6 +63,12 @@ def thresholds_from(settings: Settings) -> Thresholds:
     )
 
 
+def amount_text(value: Decimal) -> str:
+    """Two places unless more are real: NUMERIC(14,4) would otherwise read 110.0000."""
+    rounded = value.quantize(TWO_PLACES)
+    return f"{rounded if rounded == value else value.normalize():f}"
+
+
 def passed(rule: str) -> RuleResult:
     return RuleResult(rule, RuleOutcome.PASS)
 
@@ -104,15 +111,16 @@ def line_items_total(facts: InvoiceFacts, limits: Thresholds) -> RuleResult:
             return failed(
                 LINE_ITEMS_TOTAL,
                 "line_amount_mismatch",
-                f"Line {number}: {line.quantity} x {line.unit_price} is {expected}, "
-                f"not {line.amount}.",
+                f"Line {number}: {amount_text(line.quantity)} x {amount_text(line.unit_price)} "
+                f"is {amount_text(expected)}, not {amount_text(line.amount)}.",
             )
     amounts = sum((line.amount for line in facts.lines if line.amount is not None), Decimal(0))
     if abs(amounts - facts.subtotal) > limits.total_tolerance:
         return failed(
             LINE_ITEMS_TOTAL,
             "subtotal_mismatch",
-            f"Line amounts sum to {amounts}, not the subtotal {facts.subtotal}.",
+            f"Line amounts sum to {amount_text(amounts)}, "
+            f"not the subtotal {amount_text(facts.subtotal)}.",
         )
     return passed(LINE_ITEMS_TOTAL)
 
@@ -127,7 +135,8 @@ def total_reconciles(facts: InvoiceFacts, limits: Thresholds) -> RuleResult:
         return failed(
             TOTAL_RECONCILES,
             "total_mismatch",
-            f"Subtotal, tax and adjustments come to {expected}, not the total {facts.total}.",
+            f"Subtotal, tax and adjustments come to {amount_text(expected)}, "
+            f"not the total {amount_text(facts.total)}.",
         )
     return passed(TOTAL_RECONCILES)
 

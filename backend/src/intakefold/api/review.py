@@ -26,6 +26,7 @@ from intakefold.documents.review import (
     reject_document,
 )
 from intakefold.extraction.schema import CURRENCY_PATTERN, DECIMAL_PATTERN, to_decimal
+from intakefold.validation.rules import amount_text
 
 router = APIRouter(prefix="/documents")
 
@@ -33,7 +34,6 @@ Reviewer = Annotated[Principal, Depends(require_role(Role.REVIEWER))]
 MoneyText = Annotated[str, Field(pattern=DECIMAL_PATTERN, max_length=24)]
 NAME_LENGTH = 200
 REASON_LENGTH = 2000
-TWO_PLACES = Decimal("0.01")
 
 
 class LineItemBody(ApiModel):
@@ -91,11 +91,7 @@ class RejectBody(ApiModel):
 
 
 def money_text(value: Decimal | None) -> str | None:
-    """NUMERIC(14,4) comes back as 110.0000, which nobody wants to read or retype."""
-    if value is None:
-        return None
-    rounded = value.quantize(TWO_PLACES)
-    return f"{rounded if rounded == value else value.normalize():f}"
+    return None if value is None else amount_text(value)
 
 
 def line_body(line: LineItem) -> LineItemBody:
