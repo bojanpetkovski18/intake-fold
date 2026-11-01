@@ -31,8 +31,17 @@ ROUTE_TABLE: dict[tuple[str, str], str | Role] = {
     ("POST", "/api/auth/login"): PUBLIC,
     ("POST", "/api/auth/logout"): SIGNED_IN,
     ("GET", "/api/auth/me"): SIGNED_IN,
+    ("POST", "/api/documents"): Role.REVIEWER,
+    ("GET", "/api/documents"): Role.REVIEWER,
+    ("GET", "/api/documents/{document_id}"): Role.REVIEWER,
+    ("GET", "/api/documents/{document_id}/pages/{page}"): Role.REVIEWER,
 }
-PROTECTED = [route for route, access in ROUTE_TABLE.items() if access != PUBLIC]
+PATH_VALUES = {"document_id": "00000000-0000-7000-8000-000000000000", "page": 1}
+PROTECTED = [
+    (method, path.format(**PATH_VALUES))
+    for (method, path), access in ROUTE_TABLE.items()
+    if access != PUBLIC
+]
 UNSAFE_PROTECTED = [route for route in PROTECTED if route[0] != "GET"]
 
 

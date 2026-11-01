@@ -4,13 +4,14 @@ from contextlib import asynccontextmanager
 import structlog
 from fastapi import Depends, FastAPI
 
-from intakefold.api import auth, health
+from intakefold.api import auth, documents, health
 from intakefold.api.access import enforce_access
 from intakefold.api.middleware import RequestContextMiddleware
 from intakefold.api.problems import register_problem_handlers
-from intakefold.api.rate_limit import SignInLimiter
+from intakefold.api.rate_limit import RateLimiter
 from intakefold.clock import Clock, SystemClock
 from intakefold.db.engine import build_engine
+from intakefold.documents.storage import Storage
 from intakefold.logging import configure_logging
 from intakefold.settings import ConfigurationError, Settings, load_settings
 
@@ -35,11 +36,14 @@ def build_app(settings: Settings, clock: Clock | None = None) -> FastAPI:
     app.state.settings = settings
     app.state.clock = clock or SystemClock()
     app.state.engine = build_engine(settings)
-    app.state.sign_in_limiter = SignInLimiter(settings.sign_in_rate_limit)
+    app.state.storage = Storage(settings.storage_dir)
+    app.state.sign_in_limiter = RateLimiter(settings.sign_in_rate_limit)
+    app.state.upload_limiter = RateLimiter(settings.upload_rate_limit)
     app.add_middleware(RequestContextMiddleware, hsts=settings.environment == "production")
     register_problem_handlers(app)
     app.include_router(health.router, prefix="/api")
     app.include_router(auth.router, prefix="/api")
+    app.include_router(documents.router, prefix="/api")
     return app
 
 
