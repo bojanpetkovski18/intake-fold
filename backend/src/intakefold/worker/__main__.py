@@ -1,17 +1,18 @@
 import signal
 import sys
 import threading
+from functools import partial
 from types import FrameType
 
 import structlog
 
 from intakefold.clock import SystemClock
 from intakefold.db.engine import build_engine
+from intakefold.documents.storage import Storage
 from intakefold.logging import configure_logging
 from intakefold.settings import ConfigurationError, load_settings
-from intakefold.worker.loop import Handler, Worker
-
-HANDLERS: dict[str, Handler] = {}  # Real handlers arrive in M4.
+from intakefold.worker.handlers import build_handlers, fail_documents_of_dead_jobs
+from intakefold.worker.loop import Worker
 
 
 def run() -> None:
@@ -34,8 +35,15 @@ def run() -> None:
         signal.signal(signal.SIGBREAK, request_stop)
 
     engine = build_engine(settings)
+    clock = SystemClock()
+    handlers = build_handlers(engine, Storage(settings.storage_dir), clock)
     log.info("worker_started")
-    Worker(engine, HANDLERS, clock=SystemClock()).run(stop)
+    Worker(
+        engine,
+        handlers,
+        clock=clock,
+        on_job_dead=partial(fail_documents_of_dead_jobs, engine, clock),
+    ).run(stop)
     engine.dispose()
     log.info("worker_stopped")
 

@@ -124,7 +124,7 @@ Numbered and never renumbered. A reversal is a new entry. The owner approved Pha
 
 ## D-019 slowapi with in-memory limits
 - **Date:** 2026-10-31. **Status:** approved with Phase 0.
-- **Decision:** slowapi, one API process, keyed by user, or by client IP on sign-in.
+- **Decision:** slowapi, one API process, keyed by user, or by client IP on sign-in. D-038 replaces the library; the in-memory approach stands.
 - **Why:** no Redis, and one process is all the demo runs.
 - **Trade-offs:** limits reset on restart and would not span instances. Behind nginx, the client IP must be read only from the trusted proxy.
 
@@ -232,5 +232,73 @@ Numbered and never renumbered. A reversal is a new entry. The owner approved Pha
 
 ## D-037 Seeded users cannot sign in until M3
 - **Date:** 2026-10-31. **Status:** decided in M2.
+- **Superseded in M3:** the seed now hashes passwords from `DEMO_REVIEWER_PASSWORD` and `DEMO_ADMIN_PASSWORD`, and refuses to run without them.
 - **Decision:** the seed stores an unusable `!` as the password hash. Four vendors are seeded now; M5 adds the rest.
 - **Why:** hashing arrives with M3, and a plain or weak placeholder should never exist.
+
+## D-038 The limits library instead of slowapi
+- **Date:** 2026-10-31. **Status:** decided in M3.
+- **Decision:** use `limits`, which slowapi wraps, from a small FastAPI dependency, with an in-memory moving window.
+- **Why:** slowapi's decorator raises a deprecation error on Python 3.15 under `filterwarnings = error`, the call is removed in 3.16, and the decorator fails strict pyright. A dependency also suits M4's per-user upload limit.
+- **Trade-offs:** about 20 lines of our own. The window uses the library's clock, not the injectable one, so its expiry test waits for real time.
+
+## D-039 The CSRF token is derived from the session token
+- **Date:** 2026-10-31. **Status:** decided in M3.
+- **Decision:** the CSRF token is an HMAC of the session token, and `csrf_token_hash` stores its SHA-256.
+- **Why:** `/auth/me` must return the token while the database holds only hashes, and rotating it there would break other tabs. A database leak yields neither token.
+- **Trade-offs:** the token lasts as long as the session.
+
+## D-040 Access is enforced by one global dependency
+- **Date:** 2026-10-31. **Status:** decided in M3.
+- **Decision:** `enforce_access` runs on every route: Origin on unsafe methods, then session and CSRF unless the route is in `PUBLIC_ROUTES`. `require_role` is added per route. Admin outranks reviewer.
+- **Why:** a route that forgets to protect itself is still protected, and a test proves it.
+- **Trade-offs:** `PUBLIC_ROUTES` matches the request path, because FastAPI 0.143 keeps included routers lazy and the matched route omits their prefix. A public route with path parameters would need a different check. The route-table test reads the OpenAPI schema for the same reason, so a route hidden from the schema would escape it.
+
+## D-041 Session and sign-in limits
+- **Date:** 2026-10-31. **Status:** decided in M3, for owner review.
+- **Decision:** sessions last 12 hours with no sliding renewal. The cookie is HttpOnly, Secure, `SameSite=Strict` and scoped to `/api`. Sign-in allows 10 attempts per minute per client IP, counting successes. Unsafe requests with no `Origin` are refused. Argon2 uses the library's default parameters.
+- **Why:** the spec sets none of these. They are the simplest strict choices for a same-origin app.
+- **Trade-offs:** a reviewer signs in again after 12 hours, and scripts must send `Origin`. `ALLOW_INSECURE_COOKIES` must be on for browsers that refuse Secure cookies over local http; M14 decides this for the Docker demo.
+
+## D-042 Only our code reads forwarded headers
+- **Date:** 2026-10-31. **Status:** decided in M3.
+- **Decision:** `client_ip` trusts `X-Forwarded-For` only from peers in `TRUSTED_PROXIES`, walking from the right. Uvicorn runs with `--no-proxy-headers`.
+- **Why:** on a real server with default flags, uvicorn trusted the header from loopback, and a forged value dodged the limit six times out of six. With the flag, the limit held.
+- **Trade-offs:** the flag lives in the run command, not in code, so the M14 image must carry it.
+
+## D-043 pypdf 6.21.4 below the floor
+- **Date:** 2026-10-31. **Status:** approved by the owner.
+- **Decision:** take pypdf 6.21.4 through `exclude-newer-package`. The floor still holds for everything else.
+- **Why:** 6.21.0, the highest eligible, has 11 advisories for loops, memory use and long runtimes on crafted PDFs, plus one that calls arbitrary image parsers. pypdf reads untrusted uploads in the API.
+- **Alternatives:** replacing pypdf with PDFium, which would put a native parser in the API process, or waiting until 2026-11-11.
+- **Trade-offs:** three days of soak time instead of fourteen. The entry can go once `exclude-newer` passes 2026-10-29.
+
+## D-044 The upload route reads its own body
+- **Date:** 2026-10-31. **Status:** decided in M4.
+- **Decision:** `POST /documents` declares no file parameters and calls `request.form()` after the access checks. It requires `Content-Length`, capped at the batch maximum, and handles one file at a time.
+- **Why:** FastAPI parses declared form fields before it runs dependencies, so an anonymous caller could spool files to disk. The server holds a body to its declared length, which bounds what is read.
+- **Trade-offs:** clients must send `Content-Length`, and browsers do. `nginx` should set a matching limit in M14.
+
+## D-045 One response per file, and deduplication on uploaded bytes
+- **Date:** 2026-10-31. **Status:** decided in M4.
+- **Decision:** a batch keeps its good files and reports each refused one. The response is `201` if anything new was created, `200` if everything was already known, and `422` with `errors` if nothing was accepted. More files than the cap refuses the whole request with `400`. A batch row exists only if a document does. SHA-256 is taken before re-encoding.
+- **Why:** M8 shows per-file errors, and the spec says refused uploads never become documents. Hashing the uploaded bytes makes a repeat match without decoding it again.
+- **Trade-offs:** the cap's `400` comes from the multipart parser, so it has no per-file detail. A crash between storing a file and committing leaves an orphan file.
+
+## D-046 Every dead job fails its document through one path
+- **Date:** 2026-10-31. **Status:** decided in M4.
+- **Decision:** the worker calls `fail_documents_of_dead_jobs` after any job goes dead, including at reclaim. It copies the job's safe error code into `status_reasons`.
+- **Why:** a PDFium crash on the last attempt kills the worker, so no handler can record the failure, and the document would stay `processing`.
+- **Trade-offs:** M8's requeue must also return the document to `queued`.
+
+## D-047 Rendering
+- **Date:** 2026-10-31. **Status:** decided in M4.
+- **Decision:** PDFium runs only in the worker, at 150 DPI with the longest side capped at 2400 px. Images get a PNG page too, so there is one preview path. If PDFium and pypdf disagree on the page count, the document fails. The placeholder step leaves documents `processing` until M6.
+- **Why:** a PDF states its own page size, so rendering must be bounded. A crash here costs a job attempt, not the API.
+- **Trade-offs:** a very large page renders below 150 DPI. M6 must check whether the cap suits extraction. There is no time limit on a single PDFium call.
+
+## D-048 Default batch token cap
+- **Date:** 2026-10-31. **Status:** decided in M4, provisional.
+- **Decision:** `BATCH_TOKEN_CAP` defaults to 2,000,000. It is stored on each batch and enforced from M6.
+- **Why:** the column is required now and the spec gives no number. This is a placeholder, not a measured value.
+- **Trade-offs:** M6 sets it from real document sizes.

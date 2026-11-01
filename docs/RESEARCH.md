@@ -56,6 +56,10 @@ All pins above and below were confirmed by resolving with the floor in place. Ch
 | Node | 24 LTS to 2028-04; 26 became LTS 2026-10-28 | [endoflife.date](https://endoflife.date/nodejs) |
 | PostgreSQL | 18.6 (2026-08-11), supported to 2030-11 | [endoflife.date](https://endoflife.date/postgresql) |
 
+Re-checked 2026-10-31 for M3 on the PyPI JSON API: argon2-cffi 25.1.0 and limits 5.8.0 are the highest eligible. slowapi 0.1.10 was dropped: on Python 3.15 its decorator calls `asyncio.iscoroutinefunction`, deprecated with removal in 3.16, and it fails strict pyright (D-038).
+
+Re-checked 2026-10-31 for M4 on the PyPI JSON API: python-multipart 0.0.32 (0.0.33 is under the floor until 2026-11-14), Pillow 13.0.0 and pypdfium2 5.14.0 are the highest eligible. pypdf 6.21.0 is the highest eligible but `pip-audit` lists 11 advisories fixed by 6.21.1 to 6.21.4, so 6.21.4 (2026-10-28) is taken as an approved exception (D-043).
+
 Native packages at the versions below have wheels for Python 3.15 on Windows and Linux x86-64 (pydantic-core, SQLAlchemy, psycopg-binary, Pillow directly; argon2-cffi-bindings by abi3; pypdfium2 by py3-none). Source: PyPI JSON API.
 
 Image digests observed, to be re-read and pinned in M1:
@@ -85,9 +89,9 @@ Highest stable release published on or before 2026-10-17, from the PyPI JSON API
 | python-multipart | 0.0.32 | 0.0.33 | 2026-06-04 | Apache-2.0 |
 | structlog | 26.1.0 | 26.1.0 | 2026-06-06 | MIT or Apache-2.0 |
 | argon2-cffi | 25.1.0 | 25.1.0 | 2025-06-03 | MIT |
-| slowapi | 0.1.10 | 0.1.10 | 2026-06-13 | MIT |
+| limits | not pinned here | 5.8.0 | 2026-02-05 | MIT |
 | pillow | 13.0.0 | 13.0.0 | 2026-10-16 | MIT-CMU |
-| pypdf | 6.21.0 | 6.21.4 | 2026-10-16 | BSD-3 |
+| pypdf | 6.21.4 (D-043) | 6.21.4 | 2026-10-28 | BSD-3 |
 | pypdfium2 | 5.14.0 | 5.14.0 | 2026-10-04 | BSD-3 or Apache-2.0 |
 | reportlab | 5.0.1 | 5.1.0 | 2026-08-20 | BSD |
 | pytest | 9.1.1 | 9.2.0 | 2026-06-19 | MIT |
