@@ -312,6 +312,16 @@ progress {
   margin-top: var(--space-3);
 }
 
+.trail {
+  margin: 0 0 var(--space-6);
+  padding-left: var(--space-6);
+}
+
+.trail > li {
+  margin-bottom: var(--space-3);
+  overflow-wrap: anywhere;
+}
+
 .review-heading {
   display: flex;
   flex-wrap: wrap;

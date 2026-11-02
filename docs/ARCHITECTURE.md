@@ -39,7 +39,7 @@ browser
 
 - At-least-once jobs with idempotent handlers, leases, backoff and a dead state.
 - Delivery jobs are written in the approval transaction, and sent with no database connection held.
-- Run steps are written as work happens, so a crash leaves a trace.
+- Run steps are written as work happens, so a crash leaves a trace. Metrics are read from them and from document status, in SQL.
 
 ## To be written from the code
 

@@ -90,8 +90,9 @@ def record_batch(
     clock: Clock,
     settings: Settings,
     *,
-    user_id: uuid.UUID,
+    user_id: uuid.UUID | None,
     prepared: list[Prepared],
+    source: BatchSource = BatchSource.UPLOAD,
 ) -> tuple[uuid.UUID | None, list[FileResult]]:
     """Commits documents and their jobs together, so a document always has its job."""
     results: list[FileResult] = []
@@ -104,7 +105,7 @@ def record_batch(
                 Batch(
                     id=batch_id,
                     created_by=user_id,
-                    source=BatchSource.UPLOAD,
+                    source=source,
                     doc_cap=settings.max_batch_files,
                     token_cap=settings.batch_token_cap,
                 )
@@ -130,7 +131,7 @@ def record_batch(
 
 
 def insert_document(
-    session: Session, clock: Clock, batch_id: uuid.UUID, item: Stored, user_id: uuid.UUID
+    session: Session, clock: Clock, batch_id: uuid.UUID, item: Stored, user_id: uuid.UUID | None
 ) -> uuid.UUID | None:
     document_id = session.scalar(
         insert(Document)

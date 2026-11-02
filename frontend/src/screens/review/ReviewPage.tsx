@@ -193,6 +193,7 @@ function Workspace({ document: initial }: { document: ReviewDocument }) {
     <>
       <div className="review-heading">
         <h1>{document.filename}</h1>
+        <Link to={`/documents/${document.id}/log`}>Document log</Link>
         <span className={`status status-${document.status}`}>{STATUS_LABELS[document.status]}</span>
       </div>
       <p ref={statusRef} role="status" tabIndex={-1} className="status-message">

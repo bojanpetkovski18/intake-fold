@@ -120,10 +120,11 @@ class ConfigurationError(Exception):
     """A required setting is missing or invalid. The message never contains a value."""
 
 
-def load_settings() -> Settings:
+def load_settings(**overrides: object) -> Settings:
+    """From the environment. `overrides` win, for command-line tools that take their own flags."""
     try:
         # pyright cannot see that BaseSettings fills required fields from the environment.
-        return Settings()  # pyright: ignore[reportCallIssue]
+        return Settings(**overrides)  # pyright: ignore[reportCallIssue, reportArgumentType]
     except ValidationError as error:
         # Pydantic's own message echoes the input, and these inputs can be secrets.
         problems = [

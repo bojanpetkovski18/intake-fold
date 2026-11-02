@@ -78,6 +78,64 @@ export interface ReviewDocument extends DocumentSummary {
   ruleResults: RuleView[];
 }
 
+export interface RunStepView {
+  step: string;
+  attempt: number;
+  status: "running" | "succeeded" | "failed";
+  startedAt: string;
+  finishedAt: string | null;
+  durationMs: number | null;
+  extractor: string | null;
+  model: string | null;
+  inputTokens: number | null;
+  outputTokens: number | null;
+  cacheReadTokens: number | null;
+  cacheWriteTokens: number | null;
+  estimatedCostUsd: string | null;
+  errorCode: string | null;
+}
+
+export interface AuditEventView {
+  action: string;
+  field: string | null;
+  oldValue: string | null;
+  newValue: string | null;
+  actorName: string | null;
+  createdAt: string;
+}
+
+export interface RunLog {
+  steps: RunStepView[];
+  events: AuditEventView[];
+}
+
+export interface DeliveryView {
+  target: string;
+  eventId: string;
+  status: "pending" | "delivered" | "dead";
+  createdAt: string;
+  attempts: {
+    attempt: number;
+    statusCode: number | null;
+    durationMs: number | null;
+    errorCode: string | null;
+    createdAt: string;
+  }[];
+}
+
+/** Shares and seconds are exact decimal strings. */
+export interface MetricsRow {
+  extractor: string;
+  processed: number;
+  autoApproved: number;
+  wentToReview: number;
+  failed: number;
+  autoApprovedShare: string;
+  reviewShare: string;
+  failureShare: string;
+  averageSeconds: string | null;
+}
+
 export interface Page<T> {
   items: T[];
   nextCursor: string | null;

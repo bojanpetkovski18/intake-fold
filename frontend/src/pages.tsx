@@ -1,14 +1,5 @@
 import { Link } from "react-router";
 
-export function MetricsPage() {
-  return (
-    <>
-      <h1>Metrics</h1>
-      <p className="muted">No documents have been processed yet.</p>
-    </>
-  );
-}
-
 export function NotFoundPage() {
   return (
     <>
