@@ -197,6 +197,7 @@ select {
   margin-top: var(--space-6);
 }
 
+.review-fields h2,
 .demo-accounts h2 {
   font-size: 1.125rem;
   margin: 0;
