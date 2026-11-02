@@ -99,7 +99,7 @@ Keep the milestone report and PR description short: about half the length feels 
 
 ## Repository layout
 
-`api/`, `identity/`, `documents/`, `extraction/`, `validation/`, `delivery/`, `eval/`, `worker/`, `jobs/`, `audit/`, `db/`, `generator/`, `migrations/`, `data/labeled/`, `frontend/src/api/`, `frontend/src/screens/`, `frontend/src/components/`, `frontend/e2e/`, `frontend/nginx.conf`, both Dockerfiles, `.devcontainer/`, `docs/AUDIT.md`, `docs/portfolio/` and `docs/screenshots/` exist, and demo mode lives in `intakefold/demo.py`. `reports/eval/` appears when an evaluation runs; update this as code lands.
+`api/`, `identity/`, `documents/`, `extraction/`, `validation/`, `delivery/`, `eval/`, `worker/`, `jobs/`, `audit/`, `db/`, `generator/`, `migrations/`, `data/labeled/`, `frontend/src/api/`, `frontend/src/screens/`, `frontend/src/components/`, `frontend/e2e/`, `frontend/nginx.conf`, both Dockerfiles, `.devcontainer/`, `docs/AUDIT.md`, `docs/REVIEW.md`, `docs/portfolio/` and `docs/screenshots/` exist, and demo mode lives in `intakefold/demo.py`. `reports/eval/` appears when an evaluation runs; update this as code lands.
 
 ```
 backend/
@@ -128,7 +128,7 @@ frontend/                React, TypeScript, Vite; nginx config; Dockerfile for t
   e2e/                   Playwright journey, run by scripts/e2e.sh against the built stack (D-083)
 data/labeled/            generated documents and ground truth
 reports/eval/            dated evaluation reports
-docs/                    SPEC, ARCHITECTURE, RESEARCH, AUDIT, portfolio/, screenshots/
+docs/                    SPEC, ARCHITECTURE, RESEARCH, AUDIT, REVIEW, portfolio/, screenshots/
 prompts/                 session starter and milestone briefs
 scripts/                 check.sh (all CI checks), e2e.sh, install-tools.sh (pinned, checksummed
                          tools), portfolio-count.mjs (field limits)
@@ -200,6 +200,8 @@ Updating dependencies: move `exclude-newer` in `backend/pyproject.toml` and pass
 Checked 2026-10-31 on the owner's Windows 11 machine. Other projects use host ports 5432, 5433, 5434, 8080, 8025 and 1025. Look at what is on a port before assuming it is free. Scratch runs use a separate Compose project name, port and volume.
 
 jsdom applies no CSS, so focus and layout need a real browser. M8 found a focus bug that way that every unit test passed. The M14 journey found two more bugs that every other test passed (D-083).
+
+The agent's editing and shell tools can turn a `\uXXXX` escape into the character itself (M16). Write source that needs such an escape with a small script that builds the backslash, then check the bytes; `scripts/check.sh repository` fails on bidirectional controls.
 
 The CI runner (`ubuntu-24.04`) has Docker 28.0.4 and Compose 2.38.2; this machine has Docker 29.8.2 and Compose 5.5.1. Compose behaviour can differ between them, as `up --wait` did in M14 (D-080), so read the Compose source at the runner's version before relying on a Compose feature.
 

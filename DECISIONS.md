@@ -583,3 +583,11 @@ Numbered and never renumbered. A reversal is a new entry. The owner approved Pha
   - Phone numbers: only the fictional 555-01xx range. Local paths: none.
   - The old name: D-001 and `docs/RESEARCH.md` record the rename, and name real products found during the name check (filefold.com, `TerryHank/FilefoldAI`, FileFolder, Fold & File). They are research notes, not sample data.
 - **Trade-offs:** no history was rewritten, and none is needed for the findings above.
+
+## D-087 Full-codebase review (M16)
+- **Date:** 2026-11-03. **Status:** done in M16; one question for the owner.
+- **Decision:** the owner's review brief ran as M16, numbered after M15, which stays owner-gated. Ten findings were fixed, each with a regression test shown failing first; `docs/REVIEW.md` lists them with coverage and the reasons for what was left.
+  - Extracted vendor names and invoice numbers are limited to their column sizes after the response, like amounts, and `SCHEMA_VERSION` moved to `2026-11-03.1`. Earlier extractions keep the old version.
+  - The repository check now fails on bidirectional control characters in tracked text files.
+- **For the owner:** when a reviewer corrects the first of two copies of one invoice, the rules run again and flag that first copy as a duplicate of the second. This follows SPEC section 7 ("no other non-rejected document"); D-057 covers only first routing. Keeping the first copy unflagged would mean comparing only with documents received earlier, a spec change.
+- **Trade-offs:** the generator was read at the level of its entry point and plan, not line by line; its tests cover reproducibility.

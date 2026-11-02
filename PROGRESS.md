@@ -1,6 +1,6 @@
 # Progress
 
-Last updated 2026-11-02. **M14 is pushed for review. Next: the owner merges, click-tests Codespaces, and decides on M15 and the release.**
+Last updated 2026-11-02. **M16, the full-codebase review, is pushed for review. Next: the owner merges, answers D-087, and decides on M15 and the release.**
 
 ## Milestones
 
@@ -22,8 +22,9 @@ Estimates are planning guesses, not measurements. Total: about 104 hours.
 | 11 | Run log, audit trail and metrics | 9, 10 | 6 h | Merged |
 | 12 | Evaluation harness | 7 | 6 h | Merged; `dev` now contains `main` |
 | 13 | Polish, accessibility and demo mode | 11, 12 | 8 h | Merged |
-| 14 | End-to-end test, Docker, README and portfolio kit | 13 | 9 h | Pushed for review |
+| 14 | End-to-end test, Docker, README and portfolio kit | 13 | 9 h | Merged |
 | 15 | Real-model measurement (owner-gated) | 12 | 3 h plus API spend | Blocked until the owner authorizes it; blocks nothing |
+| 16 | Full-codebase review (playbook Phase 9) | 14 | not estimated | Pushed for review; `docs/REVIEW.md` |
 
 ## Changes from the owner's expected plan
 
@@ -76,4 +77,4 @@ Every number used in the README or portfolio kit must have a row here. None of t
 
 ## Next step
 
-Owner opens a PR for `#0014-e2e-docker-readme-and-portfolio-kit` against `dev`, checks CI (now including the e2e job), and merges. Then, owner actions: open the repository in Codespaces once, and decide on M15 (real-model measurement) and the release steps in the playbook's section 16.
+Owner opens a PR for `#0016-full-codebase-review` against `dev`, checks CI, merges, and answers the duplicate question in D-087. Then, owner actions: open the repository in Codespaces once, and decide on M15 (real-model measurement) and the release steps in the playbook.
