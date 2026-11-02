@@ -468,6 +468,7 @@ dependencies = [
     { name = "anthropic" },
     { name = "argon2-cffi" },
     { name = "fastapi" },
+    { name = "httpx2" },
     { name = "limits" },
     { name = "pillow" },
     { name = "psycopg", extra = ["binary"] },
@@ -483,7 +484,6 @@ dependencies = [
 
 [package.dev-dependencies]
 dev = [
-    { name = "httpx2" },
     { name = "hypothesis" },
     { name = "pip-audit" },
     { name = "pyright" },
@@ -499,6 +499,7 @@ requires-dist = [
     { name = "anthropic", specifier = "==1.15.0" },
     { name = "argon2-cffi", specifier = "==25.1.0" },
     { name = "fastapi", specifier = "==0.143.3" },
+    { name = "httpx2", specifier = "==2.13.1" },
     { name = "limits", specifier = "==5.8.0" },
     { name = "pillow", specifier = "==13.0.0" },
     { name = "psycopg", extras = ["binary"], specifier = "==3.3.6" },
@@ -514,7 +515,6 @@ requires-dist = [
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "httpx2", specifier = "==2.13.1" },
     { name = "hypothesis", specifier = "==6.170.1" },
     { name = "pip-audit", specifier = "==2.10.1" },
     { name = "pyright", specifier = "==1.1.414" },

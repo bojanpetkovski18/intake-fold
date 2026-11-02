@@ -8,6 +8,7 @@ import {
 } from "@tanstack/react-query";
 import {
   ApiError,
+  getDocument,
   getSession,
   listDeadJobs,
   listDocuments,
@@ -80,6 +81,10 @@ export function useDocuments(status: DocumentStatus | null) {
       return items.some((item) => ACTIVE_STATUSES.includes(item.status)) ? ACTIVE_POLL_MS : false;
     },
   });
+}
+
+export function useDocument(id: string) {
+  return useQuery({ queryKey: ["document", id], queryFn: () => getDocument(id) });
 }
 
 export function useDeadJobs() {

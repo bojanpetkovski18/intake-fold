@@ -1,18 +1,9 @@
-import { useSearchParams } from "react-router";
+import { Link, useSearchParams } from "react-router";
 import { useDocuments } from "../api/hooks";
+import { STATUS_LABELS } from "../api/labels";
 import { DOCUMENT_STATUSES, type DocumentStatus } from "../api/types";
 import { BusyButton, ErrorNotice, Loading } from "../components/feedback";
 import { UploadPanel } from "./UploadPanel";
-
-const STATUS_LABELS: Record<DocumentStatus, string> = {
-  queued: "Queued",
-  processing: "Processing",
-  auto_approved: "Auto-approved",
-  needs_review: "Needs review",
-  approved: "Approved",
-  rejected: "Rejected",
-  failed: "Failed",
-};
 
 function isStatus(value: string | null): value is DocumentStatus {
   return DOCUMENT_STATUSES.some((status) => status === value);
@@ -61,7 +52,7 @@ function DocumentList({ status }: { status: DocumentStatus | null }) {
           {items.map((item) => (
             <tr key={item.id}>
               <th scope="row" className="filename">
-                {item.filename}
+                <Link to={`/documents/${item.id}`}>{item.filename}</Link>
               </th>
               <td data-label="Status">
                 <span className={`status status-${item.status}`}>{STATUS_LABELS[item.status]}</span>

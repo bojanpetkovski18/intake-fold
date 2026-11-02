@@ -5,7 +5,10 @@ from typing import Annotated, Literal, Self
 
 from limits import parse
 from pydantic import (
+    AnyHttpUrl,
+    BaseModel,
     BeforeValidator,
+    ConfigDict,
     Field,
     SecretStr,
     ValidationError,
@@ -15,6 +18,17 @@ from pydantic import (
 from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 MIB = 1024 * 1024
+TARGET_NAME = r"^[a-z0-9][a-z0-9-]{0,63}$"
+
+
+class WebhookTarget(BaseModel):
+    """From configuration only. No API can set or change a target."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    name: str = Field(pattern=TARGET_NAME)
+    url: AnyHttpUrl
+    secret: SecretStr = Field(min_length=32)
 
 
 def split_commas(value: object) -> object:
@@ -69,6 +83,9 @@ class Settings(BaseSettings):
     rule_future_days: int = Field(default=1, ge=0)
     rule_max_age_days: int = Field(default=5 * 365, gt=0)
 
+    webhook_targets: tuple[WebhookTarget, ...] = ()
+    webhook_timeout_seconds: float = Field(default=10.0, gt=0, le=60)
+
     # Read by the seed only.
     demo_reviewer_password: DemoPassword | None = None
     demo_admin_password: DemoPassword | None = None
@@ -81,6 +98,16 @@ class Settings(BaseSettings):
         except ValueError:
             raise ValueError("expected a rate such as 10/minute") from None
         return value
+
+    @field_validator("webhook_targets")
+    @classmethod
+    def target_names_are_unique(
+        cls, targets: tuple[WebhookTarget, ...]
+    ) -> tuple[WebhookTarget, ...]:
+        names = [target.name for target in targets]
+        if len(names) != len(set(names)):
+            raise ValueError("target names must be unique")
+        return targets
 
     @model_validator(mode="after")
     def claude_needs_a_key(self) -> Self:

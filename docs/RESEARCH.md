@@ -70,6 +70,8 @@ Re-checked 2026-11-01 for M7 on the PyPI JSON API: hypothesis 6.170.1 (2026-10-1
 
 Re-checked 2026-11-01 for M8 on the npm registry: @tanstack/react-query 5.104.4 (2026-10-17) is the highest eligible, and react-router stays at 8.4.0. openapi-typescript 7.13.0 declares a peer of TypeScript 5, so it was not used (D-060). Playwright 1.64.1 (2026-10-14) was used for browser checks from outside the repository.
 
+Re-checked 2026-11-02 for M10: httpx2 2.13.1, already locked as a dependency of `anthropic`, is now a direct runtime dependency for webhooks. 2.15.x (2026-10-19) and 2.16.0 (2026-10-21) are under the floor. `pip-audit` reports no known vulnerabilities in 2.13.1.
+
 Native packages at the versions below have wheels for Python 3.15 on Windows and Linux x86-64 (pydantic-core, SQLAlchemy, psycopg-binary, Pillow directly; argon2-cffi-bindings by abi3; pypdfium2 by py3-none). Source: PyPI JSON API.
 
 Image digests observed, to be re-read and pinned in M1:

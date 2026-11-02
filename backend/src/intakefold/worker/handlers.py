@@ -19,6 +19,8 @@ from intakefold.db.models import (
     JobStatus,
     LineItem,
 )
+from intakefold.delivery.events import DELIVER_WEBHOOK
+from intakefold.delivery.sender import WebhookSender, mark_dead_deliveries
 from intakefold.documents.intake import PROCESS_DOCUMENT
 from intakefold.documents.rendering import RenderFailed, render_pages
 from intakefold.documents.storage import Storage
@@ -50,11 +52,19 @@ FAILURE_REASONS = {
 
 
 def build_handlers(
-    engine: Engine, storage: Storage, clock: Clock, extractor: Extractor, settings: Settings
+    engine: Engine,
+    storage: Storage,
+    clock: Clock,
+    extractor: Extractor,
+    settings: Settings,
+    sender: WebhookSender | None = None,
 ) -> dict[str, Handler]:
-    return {
+    handlers: dict[str, Handler] = {
         PROCESS_DOCUMENT: partial(process_document, engine, storage, clock, extractor, settings)
     }
+    if sender is not None:
+        handlers[DELIVER_WEBHOOK] = sender
+    return handlers
 
 
 def process_document(
@@ -231,6 +241,11 @@ def replace_invoice(
         )
         for position, item in enumerate(data.line_items, start=1)
     )
+
+
+def on_job_dead(engine: Engine, clock: Clock) -> None:
+    fail_documents_of_dead_jobs(engine, clock)
+    mark_dead_deliveries(engine)
 
 
 def fail_documents_of_dead_jobs(engine: Engine, clock: Clock) -> None:

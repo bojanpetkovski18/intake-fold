@@ -175,6 +175,8 @@ class Document(Base):
     storage_key: Mapped[str] = mapped_column(String(255), unique=True)
     status: Mapped[DocumentStatus] = mapped_column(stored_enum(DocumentStatus))
     status_reasons: Mapped[list[str]] = mapped_column(JSONB, server_default=text("'[]'"))
+    # Every reviewer action names the version it saw, so two reviewers cannot overwrite each other.
+    version: Mapped[int] = mapped_column(Integer, server_default=text("1"))
     received_at: Mapped[datetime] = mapped_column(Timestamp, server_default=func.now())
     finished_at: Mapped[datetime | None] = mapped_column(Timestamp)
 

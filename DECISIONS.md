@@ -396,3 +396,52 @@ Numbered and never renumbered. A reversal is a new entry. The owner approved Pha
 - **Why:** browsers log every 4xx response themselves, and script cannot suppress that. AC-23 requires the 401. A separate public session route would change the spec's route table.
 - **Alternatives:** a public `GET /auth/session` that returns 200 with `null`.
 - **Trade-offs:** the console is not literally empty when signed out. Across three widths, all 14 messages were these two kinds, with no app errors.
+
+## D-064 A version on documents
+- **Date:** 2026-11-02. **Status:** decided in M9.
+- **Decision:** `documents.version` (migration `0002`) goes up on each saved correction, approval and rejection, and every write names the version it saw. A stale write gets `409`. The row is locked while checking, so two writes cannot pass together. A save with no changes costs no version.
+- **Why:** the brief asks for optimistic concurrency, and without it the second reviewer silently overwrites the first.
+- **Trade-offs:** one column the spec's data model table does not list. The table names "key columns", so it was left alone, for the owner to add if wanted.
+
+## D-065 Corrections never approve
+- **Date:** 2026-11-02. **Status:** decided in M9, for owner review.
+- **Decision:** a correction re-runs the rules and updates the reasons, and the document stays `needs_review` until a person acts. "A required rule fails" means any rule with outcome `fail`, and an override reason then lets the reviewer approve. Model signals such as low confidence or the injection flag do not block a person. Unsaved edits are saved first when approving or rejecting. A failed extraction can be keyed in by hand, as an invoice with low confidence. Approved, rejected and auto-approved documents cannot be edited.
+- **Why:** routing distrusts the model, but a reviewer has seen the page. Spec section 11 does not define which rules are "required".
+- **Trade-offs:** a reviewer can approve a flagged injection with no reason, relying on the warning shown. Requiring a reason there would be a one-line change.
+
+## D-066 Review keyboard shortcuts
+- **Date:** 2026-11-02. **Status:** decided in M9.
+- **Decision:** Tab moves between fields, and Alt+Shift+S, A, R and N save, approve, reject and go to the next document. They match on physical key codes, and work while an input has focus. Next document is the newest other document in review.
+- **Why:** plain letters would type into fields, and single-Alt combinations clash with browser menus.
+- **Trade-offs:** some screen readers and keyboard layouts may claim these keys. Every action is also a real button in the tab order, so the shortcuts are never the only way.
+
+## D-067 One event per approval, one delivery per target
+- **Date:** 2026-11-02. **Status:** decided in M10.
+- **Decision:** auto-approval and manual approval each create, in their own transaction, one `invoice.approved` event. Its `event_id` is shared by every target, with a delivery row and a `deliver_webhook` job per target. The payload is stored with the delivery, so a retry sends the same bytes. It says `approved_by: rules` or `reviewer`, and money is a string.
+- **Why:** SPEC section 8 puts delivery jobs in the approval transaction, so an approval can never lose its delivery. One event ID per approval lets a receiver deduplicate across retries.
+- **Trade-offs:** later edits to the invoice are not in the payload. Approved documents cannot be edited anyway (D-065).
+
+## D-068 Sending
+- **Date:** 2026-11-02. **Status:** decided in M10.
+- **Decision:** httpx2, with a timeout from `WEBHOOK_TIMEOUT_SECONDS`, redirects not followed, and no database connection held during the call. Each attempt is a `delivery_attempts` row with status code, duration and a code (`http_503`, `timeout`, `connection_error`). Failures retry through the job queue, and when the job dies the delivery is marked dead. A target removed from configuration fails at once with `unknown_target`. Targets are validated at start-up: unique names, an http or https URL, and a secret of at least 32 characters.
+- **Why:** targets come only from configuration, so following a redirect would let a target send traffic somewhere unconfigured.
+- **Trade-offs:** a downstream that answers 2xx after a redirect would need its configured URL updated.
+
+## D-069 The sink
+- **Date:** 2026-11-02. **Status:** decided in M10.
+- **Decision:** `intakefold_sink` is a separate package in the same project, with no database. It imports only the signing module. It keeps received events and seen IDs in memory, can fail the first N attempts of each event, and shows events on an escaped HTML page with its own CSP.
+- **Why:** it is a demo receiver, and sharing the verifier keeps the signature format defined once.
+- **Trade-offs:** a restart forgets seen IDs, so a redelivery after a restart would be processed again. A real receiver would store them.
+
+## D-070 CSV export
+- **Date:** 2026-11-02. **Status:** decided in M10.
+- **Decision:** approved and auto-approved documents, by approval date in UTC with an inclusive `to`. One row per line item, or one row for an invoice with none. The response is streamed in batches of 500 rows. Text cells starting with `=`, `+`, `-`, `@`, tab or carriage return get a leading `'`. Money is written from `Decimal` and never neutralized.
+- **Why:** SPEC section 9, and "filtered by date" most usefully means when it was approved.
+- **Trade-offs:** no byte-order mark, so some spreadsheet programs may need the encoding chosen by hand.
+
+## D-071 One gitleaks finding is a known false positive
+- **Date:** 2026-11-02. **Status:** decided in M10, for owner review.
+- **Decision:** `.gitleaksignore` lists one fingerprint: the fictional webhook secret on line 45 of `backend/tests/integration/test_delivery.py` in commit `db0954d`. Every other finding still fails the build.
+- **Why:** gitleaks matched its generic API key rule on a test value. The commit was not pushed, but removing it from history would mean rewriting history, which needs the owner's approval. The fingerprint names one commit, file, rule and line, so nothing else is hidden.
+- **Alternatives:** with the owner's approval, amend the unpushed commit and drop the ignore file.
+- **Trade-offs:** an ignore file to review. Future test secrets should look obviously fake to the scanner, or carry `gitleaks:allow` from the start.
