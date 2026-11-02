@@ -445,3 +445,20 @@ Numbered and never renumbered. A reversal is a new entry. The owner approved Pha
 - **Why:** gitleaks matched its generic API key rule on a test value. The commit was not pushed, but removing it from history would mean rewriting history, which needs the owner's approval. The fingerprint names one commit, file, rule and line, so nothing else is hidden.
 - **Alternatives:** with the owner's approval, amend the unpushed commit and drop the ignore file.
 - **Trade-offs:** an ignore file to review. Future test secrets should look obviously fake to the scanner, or carry `gitleaks:allow` from the start.
+
+## D-072 What the metrics measure
+- **Date:** 2026-11-02. **Status:** decided in M11, for owner review.
+- **Decision:** one row per extractor, taken from each document's latest extraction, or `none` if it was never extracted.
+  - Processed: documents that are not queued or processing.
+  - Shares out of processed: auto-approved; sent to review, meaning needs review, approved or rejected; and failed. They add up to 1.
+  - Average time: from upload to the end of the last pipeline step.
+  - Evaluation batches are left out.
+  - Everything is computed in SQL, with shares as exact `NUMERIC` sent as strings.
+- **Why:** the spec names the five measures but does not define them. Counting review by the path taken, not the current status, keeps a later approval from looking like an auto-approval. Review time would swamp processing time, so it is left out and the page says so.
+- **Trade-offs:** no total across extractors, because mixing mock and model results would mislead. With no processed documents there are no rows, so nothing is divided by zero.
+
+## D-073 The document log
+- **Date:** 2026-11-02. **Status:** decided in M11.
+- **Decision:** `GET /documents/{id}/run-log` returns steps and audit events, with the actor's display name or nothing for the system. The screen adds deliveries from the M10 route. Every pipeline step already wrote `run_steps`, so no gap needed filling. Mock steps show no tokens or cost, rather than zeros.
+- **Why:** a zero would claim a measurement that did not happen.
+- **Trade-offs:** audit times come from the database clock, step times from the injectable one. Both are UTC.
