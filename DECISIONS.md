@@ -414,3 +414,27 @@ Numbered and never renumbered. A reversal is a new entry. The owner approved Pha
 - **Decision:** Tab moves between fields, and Alt+Shift+S, A, R and N save, approve, reject and go to the next document. They match on physical key codes, and work while an input has focus. Next document is the newest other document in review.
 - **Why:** plain letters would type into fields, and single-Alt combinations clash with browser menus.
 - **Trade-offs:** some screen readers and keyboard layouts may claim these keys. Every action is also a real button in the tab order, so the shortcuts are never the only way.
+
+## D-067 One event per approval, one delivery per target
+- **Date:** 2026-11-02. **Status:** decided in M10.
+- **Decision:** auto-approval and manual approval each create, in their own transaction, one `invoice.approved` event. Its `event_id` is shared by every target, with a delivery row and a `deliver_webhook` job per target. The payload is stored with the delivery, so a retry sends the same bytes. It says `approved_by: rules` or `reviewer`, and money is a string.
+- **Why:** SPEC section 8 puts delivery jobs in the approval transaction, so an approval can never lose its delivery. One event ID per approval lets a receiver deduplicate across retries.
+- **Trade-offs:** later edits to the invoice are not in the payload. Approved documents cannot be edited anyway (D-065).
+
+## D-068 Sending
+- **Date:** 2026-11-02. **Status:** decided in M10.
+- **Decision:** httpx2, with a timeout from `WEBHOOK_TIMEOUT_SECONDS`, redirects not followed, and no database connection held during the call. Each attempt is a `delivery_attempts` row with status code, duration and a code (`http_503`, `timeout`, `connection_error`). Failures retry through the job queue, and when the job dies the delivery is marked dead. A target removed from configuration fails at once with `unknown_target`. Targets are validated at start-up: unique names, an http or https URL, and a secret of at least 32 characters.
+- **Why:** targets come only from configuration, so following a redirect would let a target send traffic somewhere unconfigured.
+- **Trade-offs:** a downstream that answers 2xx after a redirect would need its configured URL updated.
+
+## D-069 The sink
+- **Date:** 2026-11-02. **Status:** decided in M10.
+- **Decision:** `intakefold_sink` is a separate package in the same project, with no database. It imports only the signing module. It keeps received events and seen IDs in memory, can fail the first N attempts of each event, and shows events on an escaped HTML page with its own CSP.
+- **Why:** it is a demo receiver, and sharing the verifier keeps the signature format defined once.
+- **Trade-offs:** a restart forgets seen IDs, so a redelivery after a restart would be processed again. A real receiver would store them.
+
+## D-070 CSV export
+- **Date:** 2026-11-02. **Status:** decided in M10.
+- **Decision:** approved and auto-approved documents, by approval date in UTC with an inclusive `to`. One row per line item, or one row for an invoice with none. The response is streamed in batches of 500 rows. Text cells starting with `=`, `+`, `-`, `@`, tab or carriage return get a leading `'`. Money is written from `Decimal` and never neutralized.
+- **Why:** SPEC section 9, and "filtered by date" most usefully means when it was approved.
+- **Trade-offs:** no byte-order mark, so some spreadsheet programs may need the encoding chosen by hand.
