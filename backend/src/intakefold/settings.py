@@ -86,9 +86,11 @@ class Settings(BaseSettings):
     webhook_targets: tuple[WebhookTarget, ...] = ()
     webhook_timeout_seconds: float = Field(default=10.0, gt=0, le=60)
 
-    # Read by the seed only.
+    # Read by the seed, and in demo mode shown on the sign-in page.
     demo_reviewer_password: DemoPassword | None = None
     demo_admin_password: DemoPassword | None = None
+    # Publishes the demo passwords and allows a full reset. Never with real data.
+    demo_mode: bool = False
 
     @field_validator("sign_in_rate_limit", "upload_rate_limit")
     @classmethod
@@ -113,6 +115,15 @@ class Settings(BaseSettings):
     def claude_needs_a_key(self) -> Self:
         if self.extractor == "claude" and self.anthropic_api_key is None:
             raise ValueError("EXTRACTOR=claude needs ANTHROPIC_API_KEY")
+        return self
+
+    @model_validator(mode="after")
+    def demo_mode_is_mock_with_accounts(self) -> Self:
+        # A reset re-runs the seed batch, which must never cost money.
+        if self.demo_mode and self.extractor != "mock":
+            raise ValueError("DEMO_MODE=true needs EXTRACTOR=mock")
+        if self.demo_mode and None in (self.demo_reviewer_password, self.demo_admin_password):
+            raise ValueError("DEMO_MODE=true needs DEMO_REVIEWER_PASSWORD and DEMO_ADMIN_PASSWORD")
         return self
 
 
