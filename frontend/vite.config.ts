@@ -10,6 +10,8 @@ export default defineConfig({
   },
   test: {
     environment: "jsdom",
+    // e2e/ is Playwright's, run against the built stack by scripts/e2e.sh.
+    include: ["src/**/*.test.{ts,tsx}"],
     setupFiles: ["./src/test-setup.ts"],
     restoreMocks: true,
   },

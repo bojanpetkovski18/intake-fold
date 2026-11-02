@@ -3,13 +3,25 @@ import reactHooks from "eslint-plugin-react-hooks";
 import globals from "globals";
 import tseslint from "typescript-eslint";
 
-export default tseslint.config({ ignores: ["dist", "coverage"] }, js.configs.recommended, {
-  files: ["src/**/*.{ts,tsx}", "vite.config.ts"],
-  extends: [tseslint.configs.strictTypeChecked, tseslint.configs.stylisticTypeChecked],
-  languageOptions: {
-    globals: globals.browser,
-    parserOptions: { projectService: true, tsconfigRootDir: import.meta.dirname },
+export default tseslint.config(
+  { ignores: ["dist", "coverage", "test-results", "playwright-report"] },
+  js.configs.recommended,
+  {
+    files: ["src/**/*.{ts,tsx}", "vite.config.ts"],
+    extends: [tseslint.configs.strictTypeChecked, tseslint.configs.stylisticTypeChecked],
+    languageOptions: {
+      globals: globals.browser,
+      parserOptions: { projectService: true, tsconfigRootDir: import.meta.dirname },
+    },
+    plugins: { "react-hooks": reactHooks },
+    rules: reactHooks.configs.recommended.rules,
   },
-  plugins: { "react-hooks": reactHooks },
-  rules: reactHooks.configs.recommended.rules,
-});
+  {
+    files: ["e2e/**/*.ts", "playwright.config.ts"],
+    extends: [tseslint.configs.strictTypeChecked, tseslint.configs.stylisticTypeChecked],
+    languageOptions: {
+      globals: globals.node,
+      parserOptions: { projectService: true, tsconfigRootDir: import.meta.dirname },
+    },
+  },
+);
