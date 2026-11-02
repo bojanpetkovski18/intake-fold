@@ -417,6 +417,26 @@ def test_override_reason_approves_and_is_audited(
     assert event.actor_user_id is not None
 
 
+def test_a_flagged_injection_needs_an_override_reason_even_when_rules_pass(
+    reviewer: tuple[TestClient, str], seeded: Engine, storage: Storage, clock: FakeClock
+) -> None:
+    flagged = Fixed(total="110.00", contains_embedded_instructions=True)
+    document_id = in_review(reviewer, seeded, storage, clock, flagged)
+    assert all(rule["outcome"] != "fail" for rule in detail(reviewer, document_id)["ruleResults"])
+
+    refused = post(reviewer, document_id, "approve", {"version": 1, "overrideReason": None})
+    approved = post(
+        reviewer, document_id, "approve", {"version": 1, "overrideReason": "Instructions ignored."}
+    )
+
+    assert refused.status_code == 422
+    assert "embedded instructions" in refused.json()["detail"]
+    assert approved.status_code == 200
+    event = events(seeded, document_id, "document_approved")[0]
+    assert event.field == "override_reason"
+    assert event.new_value == "Instructions ignored."
+
+
 def test_clean_document_is_approved_without_a_reason(
     reviewer: tuple[TestClient, str], seeded: Engine, document_id: uuid.UUID
 ) -> None:
@@ -431,15 +451,16 @@ def test_clean_document_is_approved_without_a_reason(
     assert event.new_value is None
 
 
-def test_model_signals_alone_do_not_block_a_person(
+def test_low_confidence_alone_does_not_block_a_person(
     reviewer: tuple[TestClient, str], seeded: Engine, storage: Storage, clock: FakeClock
 ) -> None:
+    # The injection flag used to be included here; since D-065 was revised it needs a reason.
     document_id = in_review(
         reviewer,
         seeded,
         storage,
         clock,
-        Fixed(total="110.00", overall_confidence="low", contains_embedded_instructions=True),
+        Fixed(total="110.00", overall_confidence="low", uncertain_fields=["total"]),
     )
 
     response = post(reviewer, document_id, "approve", {"version": 1})

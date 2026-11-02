@@ -381,6 +381,34 @@ describe("decisions", () => {
     });
   });
 
+  it("asks for an override reason when the document has embedded instructions", async () => {
+    const flagged = { ...CLEAN, containsEmbeddedInstructions: true };
+    const { calls } = open({
+      "GET /documents/d1": { body: flagged },
+      "POST /documents/d1/approve": { body: { ...flagged, status: "approved" } },
+      [QUEUE]: EMPTY_QUEUE,
+      "GET /documents": EMPTY_QUEUE,
+    });
+    const user = userEvent.setup();
+
+    await user.click(await screen.findByRole("button", { name: "Approve" }));
+
+    const reason = await screen.findByLabelText(
+      "The document has embedded instructions. Why approve anyway?",
+    );
+    expect(reason).toHaveFocus();
+    expect(calls.some((call) => call.key.includes("approve"))).toBe(false);
+
+    await user.type(reason, "Instructions ignored.");
+    await user.click(screen.getByRole("button", { name: "Approve with override" }));
+
+    await screen.findByRole("heading", { level: 1, name: "Inbox" });
+    expect(bodyOf(calls, "POST /documents/d1/approve")).toEqual({
+      version: 3,
+      overrideReason: "Instructions ignored.",
+    });
+  });
+
   it("saves unsaved edits before approving, with the new version", async () => {
     const { calls } = open({
       "GET /documents/d1": { body: review() },

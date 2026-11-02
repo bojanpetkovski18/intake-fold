@@ -72,7 +72,9 @@ class NotReviewable(Exception):
 
 
 class OverrideRequired(Exception):
-    pass
+    def __init__(self, *, injection: bool) -> None:
+        super().__init__()
+        self.injection = injection
 
 
 class NothingToApprove(Exception):
@@ -284,7 +286,7 @@ def approve_document(
 ) -> None:
     with Session(engine) as session, session.begin():
         document = lock_for_review(session, document_id, version)
-        invoice = session.scalar(select(Invoice.id).where(Invoice.document_id == document_id))
+        invoice = session.scalar(select(Invoice).where(Invoice.document_id == document_id))
         if invoice is None:
             raise NothingToApprove
         failed = session.scalars(
@@ -292,8 +294,10 @@ def approve_document(
                 RuleResult.document_id == document_id, RuleResult.outcome == RuleOutcome.FAIL
             )
         ).first()
-        if failed is not None and not override_reason:
-            raise OverrideRequired
+        # D-065: a flagged injection needs a written reason too, even when every rule passes.
+        overridden = failed is not None or invoice.contains_embedded_instructions
+        if overridden and not override_reason:
+            raise OverrideRequired(injection=failed is None)
         document.status = DocumentStatus.APPROVED
         document.finished_at = clock.now()
         document.version += 1
@@ -303,10 +307,10 @@ def approve_document(
             document_id=document_id,
             actor_user_id=actor,
             action="document_approved",
-            field="override_reason" if failed is not None else None,
-            new_value=override_reason if failed is not None else None,
+            field="override_reason" if overridden else None,
+            new_value=override_reason if overridden else None,
         )
-    log.info("document_approved", document_id=str(document_id), overridden=failed is not None)
+    log.info("document_approved", document_id=str(document_id), overridden=overridden)
 
 
 def reject_document(

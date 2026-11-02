@@ -404,10 +404,10 @@ Numbered and never renumbered. A reversal is a new entry. The owner approved Pha
 - **Trade-offs:** one column the spec's data model table does not list. The table names "key columns", so it was left alone, for the owner to add if wanted.
 
 ## D-065 Corrections never approve
-- **Date:** 2026-11-02. **Status:** decided in M9, for owner review.
-- **Decision:** a correction re-runs the rules and updates the reasons, and the document stays `needs_review` until a person acts. "A required rule fails" means any rule with outcome `fail`, and an override reason then lets the reviewer approve. Model signals such as low confidence or the injection flag do not block a person. Unsaved edits are saved first when approving or rejecting. A failed extraction can be keyed in by hand, as an invoice with low confidence. Approved, rejected and auto-approved documents cannot be edited.
+- **Date:** 2026-11-02. **Status:** decided in M9; revised by the owner in M13.
+- **Decision:** a correction re-runs the rules and updates the reasons, and the document stays `needs_review` until a person acts. "A required rule fails" means any rule with outcome `fail`, and an override reason then lets the reviewer approve. Since M13, the injection flag also needs an override reason, recorded the same way. Low confidence and uncertain fields do not block a person. Unsaved edits are saved first when approving or rejecting. A failed extraction can be keyed in by hand, as an invoice with low confidence. Approved, rejected and auto-approved documents cannot be edited.
 - **Why:** routing distrusts the model, but a reviewer has seen the page. Spec section 11 does not define which rules are "required".
-- **Trade-offs:** a reviewer can approve a flagged injection with no reason, relying on the warning shown. Requiring a reason there would be a one-line change.
+- **Trade-offs:** one more step on a flagged document. The flag comes from the model, so a compromised model could leave it off; the rules, not the flag, are what stop a bad auto-approval (AC-10).
 
 ## D-066 Review keyboard shortcuts
 - **Date:** 2026-11-02. **Status:** decided in M9.

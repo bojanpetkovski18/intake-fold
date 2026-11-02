@@ -185,6 +185,12 @@ def problem_for(error: Exception) -> HTTPException:
             )
         case NotReviewable():
             return HTTPException(status_code=409, detail="This document is no longer in review.")
+        case OverrideRequired(injection=True):
+            return HTTPException(
+                status_code=422,
+                detail="The document has embedded instructions, so approving needs an override "
+                "reason.",
+            )
         case OverrideRequired():
             return HTTPException(
                 status_code=422, detail="A rule failed, so approving needs an override reason."
