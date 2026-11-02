@@ -438,3 +438,10 @@ Numbered and never renumbered. A reversal is a new entry. The owner approved Pha
 - **Decision:** approved and auto-approved documents, by approval date in UTC with an inclusive `to`. One row per line item, or one row for an invoice with none. The response is streamed in batches of 500 rows. Text cells starting with `=`, `+`, `-`, `@`, tab or carriage return get a leading `'`. Money is written from `Decimal` and never neutralized.
 - **Why:** SPEC section 9, and "filtered by date" most usefully means when it was approved.
 - **Trade-offs:** no byte-order mark, so some spreadsheet programs may need the encoding chosen by hand.
+
+## D-071 One gitleaks finding is a known false positive
+- **Date:** 2026-11-02. **Status:** decided in M10, for owner review.
+- **Decision:** `.gitleaksignore` lists one fingerprint: the fictional webhook secret on line 45 of `backend/tests/integration/test_delivery.py` in commit `db0954d`. Every other finding still fails the build.
+- **Why:** gitleaks matched its generic API key rule on a test value. The commit was not pushed, but removing it from history would mean rewriting history, which needs the owner's approval. The fingerprint names one commit, file, rule and line, so nothing else is hidden.
+- **Alternatives:** with the owner's approval, amend the unpushed commit and drop the ignore file.
+- **Trade-offs:** an ignore file to review. Future test secrets should look obviously fake to the scanner, or carry `gitleaks:allow` from the start.
