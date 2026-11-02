@@ -524,6 +524,7 @@ Numbered and never renumbered. A reversal is a new entry. The owner approved Pha
   - `ALLOWED_ORIGINS` comes from `WEB_ORIGINS`, by default both `http://127.0.0.1:8180` and `http://localhost:8180`.
   - nginx gets a fixed address on a fixed /24 network, and `TRUSTED_PROXIES` names only that address (D-042). `NETWORK_PREFIX` moves the network if it clashes.
   - The worker has no health check. It serves nothing to probe; a crash ends the container and `restart: unless-stopped` starts it again.
+  - Health checks live in `compose.yaml`, per role, not in the shared image. The first CI run showed why: with a `HEALTHCHECK` in the image and `disable: true` on the worker, the container still carries a check (`Test: NONE`) but no health data, and Compose 2.38.2 on the runner fails `up --wait` with "has no healthcheck configured". Compose 5.5.1, used locally, accepted it.
 - **Why:** the spec requires the stack to run from a fresh clone with no key. Separate variable names keep a developer's `.env`, written for host-run tools, from changing the Docker demo.
 - **Alternatives:** require `cp .env.example .env` first; or trust the whole Compose network, which would include the gateway that host traffic arrives from.
 - **Trade-offs:** the default passwords are public, which is the point of a demo and why demo mode refuses a real model. A fixed subnet can clash with another Docker network; the e2e stack uses its own prefix.

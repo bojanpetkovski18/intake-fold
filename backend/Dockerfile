@@ -34,8 +34,8 @@ ENV PATH=/app/.venv/bin:$PATH \
 WORKDIR /app
 USER 10001:10001
 EXPOSE 8100
-# For the API. Compose gives the sink its own check and turns this off for the worker.
-HEALTHCHECK --interval=10s --timeout=3s --start-period=10s --retries=3 \
-    CMD ["python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8100/api/health', timeout=2)"]
+# No HEALTHCHECK here: the image runs as API, worker, sink and setup, and compose.yaml gives each
+# role its own. A check disabled per service still counts as configured, and Compose 2.38 then
+# fails `up --wait` on the worker.
 # --no-proxy-headers: uvicorn would otherwise trust X-Forwarded-For from any local peer (D-042).
 CMD ["uvicorn", "--factory", "intakefold.api.app:create_app", "--host", "0.0.0.0", "--port", "8100", "--no-proxy-headers"]

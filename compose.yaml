@@ -45,8 +45,6 @@ services:
     <<: *backend
     restart: "no"
     command: ["sh", "-c", "alembic upgrade head && python -m intakefold.db.seed"]
-    healthcheck:
-      disable: true
     depends_on:
       db:
         condition: service_healthy
@@ -61,6 +59,12 @@ services:
       ALLOW_INSECURE_COOKIES: ${WEB_INSECURE_COOKIES:-true}
       # Only the web container may say who it forwarded for (D-042).
       TRUSTED_PROXIES: ${NETWORK_PREFIX:-172.31.80}.10/32
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8100/api/health', timeout=2)"]
+      interval: 10s
+      timeout: 3s
+      start_period: 10s
+      retries: 3
     depends_on:
       setup:
         condition: service_completed_successfully
@@ -68,9 +72,8 @@ services:
   worker:
     <<: *backend
     command: ["python", "-m", "intakefold.worker"]
-    # It serves nothing to probe. A crash ends the process, and restart brings it back.
-    healthcheck:
-      disable: true
+    # No health check: it serves nothing to probe. A crash ends the process, and restart brings
+    # it back. `up --wait` waits for it to be running.
     depends_on:
       setup:
         condition: service_completed_successfully

@@ -201,6 +201,8 @@ Checked 2026-10-31 on the owner's Windows 11 machine. Other projects use host po
 
 jsdom applies no CSS, so focus and layout need a real browser. M8 found a focus bug that way that every unit test passed. The M14 journey found two more bugs that every other test passed (D-083).
 
+The CI runner (`ubuntu-24.04`) has Docker 28.0.4 and Compose 2.38.2; this machine has Docker 29.8.2 and Compose 5.5.1. Compose behaviour can differ between them, as `up --wait` did in M14 (D-080), so read the Compose source at the runner's version before relying on a Compose feature.
+
 The repository's Compose project is `intakefold`; scratch and e2e runs use other project names, ports and `NETWORK_PREFIX`, so they never touch the owner's volumes. In Git Bash, `MSYS_NO_PATHCONV=1` on a single `docker run` stops container paths such as `/work` being rewritten; set on a whole script it breaks Windows paths. Test the dev container with `@devcontainers/cli` 0.89.0 from scratch space, never added to the repository.
 
 Windows can hide Linux-only failures, such as pyright errors on platform-specific code. Before pushing a change that touches platform code, also run the checks in a Linux container. Do not pipe a check through `tail` when its exit code matters.
