@@ -1,6 +1,6 @@
 # Progress
 
-Last updated 2026-11-02. **M12 is pushed for review. Next: M13, after the owner merges into `dev`.**
+Last updated 2026-11-02. **M13 is pushed for review. Next: M14, after the owner merges into `dev`.**
 
 ## Milestones
 
@@ -19,9 +19,9 @@ Estimates are planning guesses, not measurements. Total: about 104 hours.
 | 8 | Sign-in and inbox screens | 3, 4 | 6 h | Merged |
 | 9 | Review screen | 7, 8 | 9 h | Merged with M10 |
 | 10 | Webhook delivery, sink and CSV export | 7 | 7 h | Merged |
-| 11 | Run log, audit trail and metrics | 9, 10 | 6 h | Merged into `main`; CI green. `dev` still needs it |
-| 12 | Evaluation harness | 7 | 6 h | Pushed; CI result unknown until a PR exists |
-| 13 | Polish, accessibility and demo mode | 11, 12 | 8 h | Not started |
+| 11 | Run log, audit trail and metrics | 9, 10 | 6 h | Merged |
+| 12 | Evaluation harness | 7 | 6 h | Merged; `dev` now contains `main` |
+| 13 | Polish, accessibility and demo mode | 11, 12 | 8 h | Pushed for review |
 | 14 | End-to-end test, Docker, README and portfolio kit | 13 | 9 h | Not started |
 | 15 | Real-model measurement (owner-gated) | 12 | 3 h plus API spend | Blocked until the owner authorizes it; blocks nothing |
 
@@ -49,19 +49,19 @@ None yet. Every number used in the README or portfolio kit must have a row here.
 | `minimatch` advisory (moderate, 11 npm audit lines, dev tooling only) | Re-check at each milestone start. Remove when ESLint moves to a fixed version, or take an override with owner approval. See D-028 |
 | Python 3.15.0 is behind 3.15.1 and 3.15.2 | Check their release notes, and bump after 2026-11-04 |
 | Local `.env` files need the new `DEMO_*_PASSWORD` values before seeding | Copy them from `.env.example` and change them |
-| Session cookie defaults to Secure, and the local http demo may need `ALLOW_INSECURE_COOKIES` | Decide in M14 (D-041) |
-| `main` lacks M6 and later, because PRs #1, #4 and #6 went there and #7 went to `dev` | A release brings `main` up to date. Setting `dev` as the default branch prevents repeats |
+| Session cookie defaults to Secure, and the local http demo needs `ALLOW_INSECURE_COOKIES` (the M13 audit used it) | Decide in M14; D-041 itself is kept by the owner |
+| `main` lacks M12 and M13; `dev` contains everything on `main` | A release brings `main` up to date. Setting `dev` as the default branch prevents PRs landing on `main` |
 | The Vite dev server needs `ALLOW_INSECURE_COOKIES=true` and its origin in `ALLOWED_ORIGINS` | Local setup only |
 | No time limit on a single PDFium render | Revisit in M6 (D-047) |
-| PR #11 (M11) went to `main`, so `dev` is behind, and M12 branches from `main` | Owner updates `dev` from `main`, then opens the M12 PR against `dev` |
 | Move to `anthropic` 2.x before any real run | After 2026-11-04, in M15 (D-052) |
 | Fallback with structured outputs is unconfirmed | First test in M15, with a switch to turn it off (D-054) |
 | Extraction limits and the batch token cap are not measured | Replace with real figures in M15 (D-048, D-055) |
 | Local databases need migration `0002` | `alembic upgrade head` |
 | The sink forgets seen event IDs on restart | Demo only (D-069) |
 | The API key is not needed until M15 | Owner stores it in local `.env` when authorizing a run |
-| `TRUNCATE` bypasses the audit trigger, by design for the demo reset | Owner to confirm the reading of AC-18 in D-034 |
+| No page scores or load test yet (playbook Phase 7) | M14, with the built stack and the Playwright journey |
+| Screen readers, Firefox and Safari not run in the M13 audit | Chromium plus axe only; see `docs/AUDIT.md` |
 
 ## Next step
 
-Owner updates `dev` from `main`, opens a PR for `#0012-evaluation-harness` against `dev`, checks CI, and merges. Then M13.
+Owner opens a PR for `#0013-polish-accessibility-and-demo-mode` against `dev`, checks CI, and merges. Then M14.
