@@ -95,6 +95,31 @@ def record_batch(
     source: BatchSource = BatchSource.UPLOAD,
 ) -> tuple[uuid.UUID | None, list[FileResult]]:
     """Commits documents and their jobs together, so a document always has its job."""
+    try:
+        batch_id, results, discarded = _record(
+            engine, clock, settings, user_id=user_id, prepared=prepared, source=source
+        )
+    except Exception:
+        # The files were written before the transaction. Without their rows nothing points at
+        # them, so they go too.
+        for item in prepared:
+            if isinstance(item, Stored):
+                storage.delete(item.storage_key)
+        raise
+    for key in discarded:
+        storage.delete(key)
+    return batch_id, results
+
+
+def _record(
+    engine: Engine,
+    clock: Clock,
+    settings: Settings,
+    *,
+    user_id: uuid.UUID | None,
+    prepared: list[Prepared],
+    source: BatchSource,
+) -> tuple[uuid.UUID | None, list[FileResult], list[str]]:
     results: list[FileResult] = []
     batch_id: uuid.UUID | None = None
     discarded: list[str] = []
@@ -125,9 +150,7 @@ def record_batch(
                 results.append(Accepted(item.filename, winner, deduplicated=True))
             else:
                 results.append(Accepted(item.filename, document_id, deduplicated=False))
-    for key in discarded:
-        storage.delete(key)
-    return batch_id, results
+    return batch_id, results, discarded
 
 
 def insert_document(
