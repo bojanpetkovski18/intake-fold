@@ -6,7 +6,11 @@ import { documentRow, renderApp, session, SIGNED_OUT, stubApi, type Reply } from
 const EMPTY = { body: { items: [], nextCursor: null } };
 
 function signedIn() {
-  return stubApi({ "GET /auth/me": { body: session() }, "GET /documents": EMPTY });
+  return stubApi({
+    "GET /auth/me": { body: session() },
+    "GET /documents": EMPTY,
+    "GET /metrics": { body: { rows: [] } },
+  });
 }
 
 describe("app shell", () => {

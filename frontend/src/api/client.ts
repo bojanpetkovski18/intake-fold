@@ -2,8 +2,11 @@ import type {
   DeadJob,
   DocumentStatus,
   DocumentSummary,
+  DeliveryView,
+  MetricsRow,
   Page,
   ReviewDocument,
+  RunLog,
   ReviewFields,
   Session,
   UploadedFile,
@@ -159,6 +162,18 @@ export function rejectDocument(
 export async function nextInReview(currentId: string): Promise<string | null> {
   const page = await listDocuments({ status: "needs_review", cursor: null });
   return page.items.find((item) => item.id !== currentId)?.id ?? null;
+}
+
+export function getRunLog(id: string): Promise<RunLog> {
+  return request<RunLog>(`/documents/${id}/run-log`);
+}
+
+export function getDeliveries(id: string): Promise<DeliveryView[]> {
+  return request<DeliveryView[]>(`/documents/${id}/deliveries`);
+}
+
+export function getMetrics(): Promise<{ rows: MetricsRow[] }> {
+  return request<{ rows: MetricsRow[] }>("/metrics");
 }
 
 export function listDeadJobs(cursor: string | null): Promise<Page<DeadJob>> {

@@ -1,6 +1,8 @@
 import type { RouteObject } from "react-router";
 import { AppLayout } from "./AppLayout";
-import { MetricsPage, NotFoundPage } from "./pages";
+import { NotFoundPage } from "./pages";
+import { LogPage } from "./screens/LogPage";
+import { MetricsPage } from "./screens/MetricsPage";
 import { DeadLettersPage } from "./screens/DeadLettersPage";
 import { InboxPage } from "./screens/InboxPage";
 import { RequireSession } from "./screens/RequireSession";
@@ -17,6 +19,7 @@ export const routes: RouteObject[] = [
         children: [
           { path: "/", element: <InboxPage /> },
           { path: "/documents/:id", element: <ReviewPage /> },
+          { path: "/documents/:id/log", element: <LogPage /> },
           { path: "/dead-letters", element: <DeadLettersPage /> },
           { path: "/metrics", element: <MetricsPage /> },
         ],
