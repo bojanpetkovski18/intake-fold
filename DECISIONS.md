@@ -7,7 +7,7 @@ Numbered and never renumbered. A reversal is a new entry. The owner approved Pha
 - **Decision:** rename the project from Filefold to Intakefold, Python package `intakefold`.
 - **Why:** filefold.com is a live product in the same space, a client document portal with AI retrieval. Intakefold is free on PyPI and npm, has no GitHub repositories, and no product was found.
 - **Alternatives:** Slipfold, Foliowise, keeping Filefold.
-- **Trade-offs:** the GitHub repository is still called `file-fold`, and renaming it is the owner's action. No trademark search was done.
+- **Trade-offs:** the GitHub repository was called `file-fold`; the owner renamed it `intake-fold` on 2026-10-31. No trademark search was done.
 
 ## D-002 Minimal sign-in with two roles
 - **Date:** 2026-10-31. **Status:** decided by the owner.
@@ -140,7 +140,7 @@ Numbered and never renumbered. A reversal is a new entry. The owner approved Pha
 - **Why:** 5432 to 5434 and 8080 are in use by the owner's other projects. All are overridable from `.env`.
 
 ## D-022 No hosting; Docker demo
-- **Date:** 2026-10-31. **Status:** approved with Phase 0.
+- **Date:** 2026-10-31. **Status:** approved with Phase 0; the owner added the dev container in M14 (D-081).
 - **Decision:** one-command Docker run, per the brief's V2 list. A pinned Codespaces dev container is decided at M14.
 - **Why:** a hosted demo is out of the MVP.
 
@@ -255,7 +255,7 @@ Numbered and never renumbered. A reversal is a new entry. The owner approved Pha
 - **Trade-offs:** `PUBLIC_ROUTES` matches the request path, because FastAPI 0.143 keeps included routers lazy and the matched route omits their prefix. A public route with path parameters would need a different check. The route-table test reads the OpenAPI schema for the same reason, so a route hidden from the schema would escape it.
 
 ## D-041 Session and sign-in limits
-- **Date:** 2026-10-31. **Status:** decided in M3; kept by the owner in M13.
+- **Date:** 2026-10-31. **Status:** decided in M3; kept by the owner in M13. The Docker demo's cookie setting is D-080.
 - **Decision:** sessions last 12 hours with no sliding renewal. The cookie is HttpOnly, Secure, `SameSite=Strict` and scoped to `/api`. Sign-in allows 10 attempts per minute per client IP, counting successes. Unsafe requests with no `Origin` are refused. Argon2 uses the library's default parameters.
 - **Why:** the spec sets none of these. They are the simplest strict choices for a same-origin app.
 - **Trade-offs:** a reviewer signs in again after 12 hours, and scripts must send `Origin`. `ALLOW_INSECURE_COOKIES` must be on for browsers that refuse Secure cookies over local http; M14 decides this for the Docker demo.
@@ -516,3 +516,69 @@ Numbered and never renumbered. A reversal is a new entry. The owner approved Pha
 - **Why:** unit runs catch names, roles and structure on every commit; only a browser can judge colour and layout.
 - **Alternatives:** `vitest-axe` or `jest-axe`, which add a wrapper over the same engine.
 - **Trade-offs:** contrast is checked only when the audit is run by hand, until M14's Playwright journey runs axe on each page in CI.
+
+## D-080 The Compose demo runs from a fresh clone with no .env
+- **Date:** 2026-11-02. **Status:** decided in M14.
+- **Decision:** every value in `compose.yaml` has a fictional, local-only default, so `docker compose up --build` needs no `.env` and no key. A `setup` service runs migrations and the seed, then exits; `api` and `worker` wait for it. The stack is always demo mode with the mock extractor, and no API key is passed in.
+  - `ALLOW_INSECURE_COOKIES` is on for the stack, through its own variable `WEB_INSECURE_COOKIES`, because the demo is plain http on 127.0.0.1 and some browsers refuse Secure cookies there. The setting's default stays off (D-041). Codespaces serves https and turns it off (D-081).
+  - `ALLOWED_ORIGINS` comes from `WEB_ORIGINS`, by default both `http://127.0.0.1:8180` and `http://localhost:8180`.
+  - nginx gets a fixed address on a fixed /24 network, and `TRUSTED_PROXIES` names only that address (D-042). `NETWORK_PREFIX` moves the network if it clashes.
+  - The worker has no health check. It serves nothing to probe; a crash ends the container and `restart: unless-stopped` starts it again.
+- **Why:** the spec requires the stack to run from a fresh clone with no key. Separate variable names keep a developer's `.env`, written for host-run tools, from changing the Docker demo.
+- **Alternatives:** require `cp .env.example .env` first; or trust the whole Compose network, which would include the gateway that host traffic arrives from.
+- **Trade-offs:** the default passwords are public, which is the point of a demo and why demo mode refuses a real model. A fixed subnet can clash with another Docker network; the e2e stack uses its own prefix.
+
+## D-081 Codespaces dev container
+- **Date:** 2026-11-02. **Status:** decided by the owner in M14.
+- **Decision:** `.devcontainer/` uses `mcr.microsoft.com/devcontainers/base:2-bookworm` and the docker-in-docker feature 4.1.3, both pinned by digest. On each start, `.devcontainer/start.sh` runs `docker compose up --build --detach --wait`. In Codespaces it sets `WEB_ORIGINS` to the forwarded https address and turns insecure cookies off.
+- **Why:** the playbook's no-hosting option, so a visitor can try the demo without installing Docker.
+- **Verified:** with the dev container CLI 0.89.0 from a fresh clone, the container started the stack and the sign-in worked. With the Codespaces variables set by hand, the API accepted the forwarded origin, refused the local one, and set a Secure cookie. Not yet clicked through on GitHub: the owner's step after merge.
+- **Trade-offs:** the feature installs the Docker engine and Compose at their latest versions from their own signed sources, not pinned by checksum. The first start builds the images, which takes minutes.
+
+## D-082 CSV export on the inbox
+- **Date:** 2026-11-02. **Status:** decided in M14, for owner review.
+- **Decision:** the inbox gains an Export panel: optional "Approved from" and "Approved to" dates and an "Export CSV" button. It fetches `GET /exports/invoices.csv` through the API client and saves the text as `approved-invoices.csv`, with busy, error and success states.
+- **Why:** F-10 and the role table give reviewers CSV export, and the M14 journey must export, but no screen offered it. Fetching rather than linking shows a refused export (for example, a reversed date range) as an error on the page, not a downloaded error file.
+- **Alternatives:** a plain link, which cannot show errors; or a separate export screen.
+- **Trade-offs:** the whole CSV is held in memory before saving, which is fine at demo scale. SPEC section 12 still lists the inbox without export; changing it is the owner's call.
+
+## D-083 The end-to-end journey
+- **Date:** 2026-11-02. **Status:** decided in M14.
+- **Decision:** `scripts/e2e.sh` builds the stack under its own project name, ports and network, ignoring any `.env`, then runs one Playwright journey three times in a row with no retries (AC-24):
+  - sign in with the account shown on the page, including one wrong password;
+  - upload a PNG generated per run, which the mock has no label for, so it arrives with empty fields;
+  - correct every field, see the rules pass, approve;
+  - see the signed delivery and the corrections on the document log;
+  - export and read the CSV, read the metrics;
+  - requeue a dead delivery and see focus move to the result.
+
+  Each page gets axe with every rule. The journey fails on any console error or warning, page error or CSP violation, except the browser's own 401 lines for `/api/auth/me` and `/api/auth/login` (D-063).
+  - Before each run, the script turns one delivered webhook into a dead job and dead delivery with SQL, as an outage would leave them. No API creates dead jobs, and a real outage takes minutes of backoff.
+  - After the runs, the script replaces the API container while a placeholder holds its old address, and checks `/api/health` through nginx (D-085).
+  - CI runs Playwright in `mcr.microsoft.com/playwright:v1.64.1-noble`, pinned by digest, on the host network. Locally it runs from `frontend/node_modules`.
+- **Why:** the brief's journey and AC-24. A generated file avoids duplicates without resetting between runs.
+- **Trade-offs:** the dead-job fixture writes to the database directly. The journey runs at desktop width only; the M13 audit covers the other widths.
+- **Found:** the first runs found two bugs, each now covered by a regression test. Requeuing a dead webhook delivery reset the job but left the delivery dead, so it was never sent again (fixed in `jobs/dead_letters.py`). nginx kept proxying to a replaced API container's old address (D-085).
+
+## D-084 Licence
+- **Date:** 2026-11-02. **Status:** decided by the owner in M14.
+- **Decision:** MIT, in `LICENSE`, copyright the owner.
+- **Why:** short, permissive and widely understood for a portfolio project.
+- **Alternatives:** Apache-2.0, or no licence.
+
+## D-085 nginx resolves the API at request time
+- **Date:** 2026-11-02. **Status:** decided in M14.
+- **Decision:** `frontend/nginx.conf` sets `resolver 127.0.0.11 valid=10s` (Docker's DNS) and proxies to a variable, so the API's address is looked up again after 10 seconds.
+- **Why:** with a literal host, nginx resolved `api` once at start. When `docker compose up` recreated the API container, it got a new address and every API request answered 502 until nginx restarted. The e2e script showed this failing before the fix.
+- **Trade-offs:** the config now works only on a Docker network with the embedded DNS, which is how it ships.
+
+## D-086 Pre-release scan
+- **Date:** 2026-11-02. **Status:** done in M14; findings for the owner.
+- **Method:** gitleaks (pinned and checksum-verified by `scripts/install-tools.sh`) over all 75 commits, and over an export of the tracked files. Searches of the tracked files and of `git log -p --all` for emails outside the `example` domain, phone numbers, local paths, the owner's name and username, and the old project name.
+- **Findings:**
+  - Secrets: none in the history. The working tree had the fictional test secret from D-071, on a line the ignore file no longer matched; it is now marked `gitleaks:allow`.
+  - Emails: none outside the reserved domain. Commit author and committer emails are GitHub `noreply` addresses; the author name, Bojan Petkovski, is in every commit.
+  - The GitHub username appears in `docs/RESEARCH.md`, merge commit messages and the README's clone link.
+  - Phone numbers: only the fictional 555-01xx range. Local paths: none.
+  - The old name: D-001 and `docs/RESEARCH.md` record the rename, and name real products found during the name check (filefold.com, `TerryHank/FilefoldAI`, FileFolder, Fold & File). They are research notes, not sample data.
+- **Trade-offs:** no history was rewritten, and none is needed for the findings above.
