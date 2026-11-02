@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Runs everything CI runs. Any failure stops the script, so it can guard a push.
 #   scripts/check.sh            all checks
-#   scripts/check.sh backend    one group: backend, frontend or repository
+#   scripts/check.sh backend    one group: backend, frontend, e2e or repository
 set -euo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -35,6 +35,11 @@ frontend() {
   npm audit --audit-level=high
 }
 
+e2e() {
+  # Needs frontend/node_modules (the frontend group installs it) and Playwright's Chromium.
+  bash "$root/scripts/e2e.sh"
+}
+
 repository() {
   cd "$root"
   bash scripts/install-tools.sh
@@ -47,9 +52,10 @@ case "$group" in
   all)
     (backend)
     (frontend)
+    (e2e)
     (repository)
     ;;
-  backend | frontend | repository) ("$group") ;;
+  backend | frontend | e2e | repository) ("$group") ;;
   *)
     echo "Unknown group: $group" >&2
     exit 2
