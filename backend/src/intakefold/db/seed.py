@@ -25,6 +25,11 @@ def demo_passwords(settings: Settings) -> dict[Role, SecretStr]:
 
 
 def seed(session: Session, passwords: dict[Role, SecretStr]) -> None:
+    seed_vendors(session)
+    seed_users(session, passwords)
+
+
+def seed_vendors(session: Session) -> None:
     for vendor in KNOWN_VENDORS:
         session.execute(
             insert(Vendor)
@@ -36,6 +41,9 @@ def seed(session: Session, passwords: dict[Role, SecretStr]) -> None:
             )
             .on_conflict_do_nothing(index_elements=[Vendor.normalized_name])
         )
+
+
+def seed_users(session: Session, passwords: dict[Role, SecretStr]) -> None:
     for email, display_name, role in USERS:
         password_hash = hash_password(passwords[role].get_secret_value())
         # Updates on conflict, so a changed password applies to an existing database.
