@@ -11,6 +11,7 @@ from intakefold.audit.records import record_audit_event
 from intakefold.clock import Clock
 from intakefold.db.models import Document, DocumentStatus, Invoice, LineItem, Vendor
 from intakefold.db.models import RuleResult as RuleResultRow
+from intakefold.delivery.events import enqueue_deliveries
 from intakefold.settings import Settings
 from intakefold.validation.normalize import normalize_vendor
 from intakefold.validation.routing import Decision, Signals, route
@@ -143,6 +144,8 @@ def validate_document(
         document.status = decision.status
         document.status_reasons = decision.reasons
         document.finished_at = clock.now()
+        if decision.status is DocumentStatus.AUTO_APPROVED:
+            enqueue_deliveries(session, clock, settings, document, approved_by="rules")
         record_audit_event(
             session,
             document_id=document_id,

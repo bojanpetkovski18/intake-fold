@@ -21,6 +21,7 @@ from intakefold.db.models import (
     RuleOutcome,
     RuleResult,
 )
+from intakefold.delivery.events import enqueue_deliveries
 from intakefold.settings import Settings
 from intakefold.validation.apply import evaluate
 from intakefold.validation.normalize import normalize_invoice_number, normalize_vendor
@@ -274,6 +275,7 @@ def correct_document(
 def approve_document(
     engine: Engine,
     clock: Clock,
+    settings: Settings,
     *,
     document_id: uuid.UUID,
     version: int,
@@ -295,6 +297,7 @@ def approve_document(
         document.status = DocumentStatus.APPROVED
         document.finished_at = clock.now()
         document.version += 1
+        enqueue_deliveries(session, clock, settings, document, approved_by="reviewer")
         record_audit_event(
             session,
             document_id=document_id,

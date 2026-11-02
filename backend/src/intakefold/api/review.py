@@ -241,6 +241,7 @@ def approve(
         approve_document(
             engine,
             request.app.state.clock,
+            request.app.state.settings,
             document_id=document_id,
             version=body.version,
             override_reason=(body.override_reason or "").strip() or None,
