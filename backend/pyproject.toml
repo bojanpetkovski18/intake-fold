@@ -8,6 +8,7 @@ dependencies = [
     "anthropic==1.15.0",
     "argon2-cffi==25.1.0",
     "fastapi==0.143.3",
+    "httpx2==2.13.1",
     "limits==5.8.0",
     "pillow==13.0.0",
     "psycopg[binary]==3.3.6",
@@ -23,7 +24,6 @@ dependencies = [
 
 [dependency-groups]
 dev = [
-    "httpx2==2.13.1",
     "hypothesis==6.170.1",
     "pip-audit==2.10.1",
     "pyright==1.1.414",
@@ -32,6 +32,9 @@ dev = [
     "ruff==0.17.1",
     "testcontainers==4.15.0",
 ]
+
+[tool.uv.build-backend]
+module-name = ["intakefold", "intakefold_sink"]
 
 [build-system]
 requires = ["uv_build==0.13.1"]
