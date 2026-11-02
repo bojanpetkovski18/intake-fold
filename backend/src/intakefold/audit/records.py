@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 
 from intakefold.clock import Clock
 from intakefold.db.models import AuditEvent, RunStep, StepStatus, new_id
+from intakefold.worker.loop import PermanentJobError
 
 
 def record_audit_event(
@@ -106,7 +107,12 @@ def run_step(
 
     try:
         yield details
+    except PermanentJobError as error:
+        # Its code is safe to store by contract, and says more than the type.
+        finish(StepStatus.FAILED, error.code)
+        raise
     except Exception as error:
+        # The type only: a message could quote the document.
         finish(StepStatus.FAILED, type(error).__name__)
         raise
     finish(StepStatus.SUCCEEDED, None)

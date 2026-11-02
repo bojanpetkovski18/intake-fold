@@ -25,6 +25,7 @@ from intakefold.db.models import (
 from intakefold.db.seed import demo_passwords, seed
 from intakefold.identity.passwords import verify_password
 from intakefold.settings import ConfigurationError, Settings
+from intakefold.worker.loop import PermanentJobError
 
 pytestmark = pytest.mark.integration
 
@@ -101,6 +102,21 @@ def test_failed_step_records_the_error_type_and_reraises(
     assert row.status is StepStatus.FAILED
     assert row.error_code == "ValueError"
     assert row.attempt == 2
+
+
+def test_a_permanent_failure_records_its_code_not_its_type(
+    engine: Engine, document_id: uuid.UUID
+) -> None:
+    # The document log shows this, and "PermanentJobError" would not say what went wrong.
+    with (
+        pytest.raises(PermanentJobError),
+        run_step(
+            engine, FakeClock(), document_id=document_id, job_id=None, attempt=1, step="render"
+        ),
+    ):
+        raise PermanentJobError("render_failed")
+
+    assert only_step(engine).error_code == "render_failed"
 
 
 def test_step_without_a_model_has_no_usage(engine: Engine, document_id: uuid.UUID) -> None:
