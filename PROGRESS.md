@@ -1,6 +1,6 @@
 # Progress
 
-Last updated 2026-11-02. **M10 is pushed for review, stacked on M9. Next: M11, after the owner merges both into `dev`.**
+Last updated 2026-11-02. **M9 and M10 are pushed for review as one PR. Next: M11, after the owner merges it into `dev`.**
 
 ## Milestones
 
@@ -17,8 +17,8 @@ Estimates are planning guesses, not measurements. Total: about 104 hours.
 | 6 | Extraction: mock, Claude, schema, repair, injection defense | 4, 5 | 10 h | Merged |
 | 7 | Validation rules and routing | 6 | 6 h | Merged |
 | 8 | Sign-in and inbox screens | 3, 4 | 6 h | Merged |
-| 9 | Review screen | 7, 8 | 9 h | Pushed; CI result unknown until a PR exists |
-| 10 | Webhook delivery, sink and CSV export | 7 | 7 h | Pushed, stacked on M9; CI result unknown until a PR exists |
+| 9 | Review screen | 7, 8 | 9 h | Pushed with M10 as one PR; CI result unknown until it opens |
+| 10 | Webhook delivery, sink and CSV export | 7 | 7 h | Pushed with M9 as one PR; CI result unknown until it opens |
 | 11 | Run log, audit trail and metrics | 9, 10 | 6 h | Not started |
 | 12 | Evaluation harness | 7 | 6 h | Not started |
 | 13 | Polish, accessibility and demo mode | 11, 12 | 8 h | Not started |
@@ -58,11 +58,11 @@ None yet. Every number used in the README or portfolio kit must have a row here.
 | Fallback with structured outputs is unconfirmed | First test in M15, with a switch to turn it off (D-054) |
 | Extraction limits and the batch token cap are not measured | Replace with real figures in M15 (D-048, D-055) |
 | Local databases need migration `0002` | `alembic upgrade head` |
-| M10 is stacked on the unmerged M9 branch | Merge M9 first; the M10 PR then shows only M10 |
+| The `#0009-review-screen` branch is now part of the M10 branch | Owner may delete it after the merge |
 | The sink forgets seen event IDs on restart | Demo only (D-069) |
 | The API key is not needed until M15 | Owner stores it in local `.env` when authorizing a run |
 | `TRUNCATE` bypasses the audit trigger, by design for the demo reset | Owner to confirm the reading of AC-18 in D-034 |
 
 ## Next step
 
-Owner opens and merges the M9 PR (`#0009-review-screen`), then the M10 PR (`#0010-webhook-delivery-sink-and-csv`), both against `dev`. Then M11.
+Owner opens one PR from `#0010-webhook-delivery-sink-and-csv` into `dev`, covering M9 and M10, checks CI, and merges. Then M11.
