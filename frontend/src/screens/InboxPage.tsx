@@ -3,6 +3,7 @@ import { useDocuments } from "../api/hooks";
 import { STATUS_LABELS } from "../api/labels";
 import { DOCUMENT_STATUSES, type DocumentStatus } from "../api/types";
 import { BusyButton, ErrorNotice, Loading } from "../components/feedback";
+import { ExportPanel } from "./ExportPanel";
 import { UploadPanel } from "./UploadPanel";
 
 function isStatus(value: string | null): value is DocumentStatus {
@@ -88,6 +89,7 @@ export function InboxPage() {
     <>
       <h1>Inbox</h1>
       <UploadPanel />
+      <ExportPanel />
       <section aria-labelledby="documents-heading">
         <div className="section-heading">
           <h2 id="documents-heading">Documents</h2>

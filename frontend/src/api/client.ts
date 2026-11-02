@@ -64,6 +64,11 @@ function parseProblem(text: string): Problem {
 }
 
 async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
+  const text = await send(path, init);
+  return (text ? JSON.parse(text) : undefined) as T;
+}
+
+async function send(path: string, init: RequestInit = {}): Promise<string> {
   const headers = new Headers(init.headers);
   if (init.method && csrfToken) {
     headers.set("X-CSRF-Token", csrfToken);
@@ -78,7 +83,7 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   if (!response.ok) {
     throw new ApiError(response.status, parseProblem(text));
   }
-  return (text ? JSON.parse(text) : undefined) as T;
+  return text;
 }
 
 export async function getSession(): Promise<Session | null> {
@@ -180,6 +185,15 @@ export function getRunLog(id: string): Promise<RunLog> {
 
 export function getDeliveries(id: string): Promise<DeliveryView[]> {
   return request<DeliveryView[]>(`/documents/${id}/deliveries`);
+}
+
+/** Approved invoices as CSV text, by approval date in UTC, both ends inclusive (D-070). */
+export function exportInvoices(from: string, to: string): Promise<string> {
+  const params = new URLSearchParams();
+  if (from) params.set("from", from);
+  if (to) params.set("to", to);
+  const query = params.toString();
+  return send(`/exports/invoices.csv${query ? `?${query}` : ""}`);
 }
 
 export function getMetrics(): Promise<{ rows: MetricsRow[] }> {
