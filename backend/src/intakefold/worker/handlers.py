@@ -35,7 +35,7 @@ from intakefold.extraction.types import (
 from intakefold.jobs.queue import ClaimedJob
 from intakefold.settings import Settings
 from intakefold.validation.apply import validate_document
-from intakefold.validation.normalize import normalize_invoice_number, normalize_vendor
+from intakefold.validation.normalize import invoice_keys
 from intakefold.worker.loop import Handler, PermanentJobError
 
 log = structlog.get_logger()
@@ -207,6 +207,9 @@ def replace_invoice(
     data: ExtractedDocument,
 ) -> None:
     session.execute(delete(Invoice).where(Invoice.document_id == document_id))
+    normalized_vendor, normalized_invoice_number = invoice_keys(
+        data.vendor_name, data.invoice_number
+    )
     invoice = Invoice(
         document_id=document_id,
         extraction_id=extraction_id,
@@ -223,10 +226,8 @@ def replace_invoice(
         overall_confidence=Confidence(data.overall_confidence),
         uncertain_fields=[field.value for field in data.uncertain_fields],
         contains_embedded_instructions=data.contains_embedded_instructions,
-        normalized_vendor=normalize_vendor(data.vendor_name) if data.vendor_name else None,
-        normalized_invoice_number=(
-            normalize_invoice_number(data.invoice_number) if data.invoice_number else None
-        ),
+        normalized_vendor=normalized_vendor,
+        normalized_invoice_number=normalized_invoice_number,
     )
     session.add(invoice)
     session.flush()
