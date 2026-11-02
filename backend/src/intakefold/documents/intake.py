@@ -20,7 +20,9 @@ log = structlog.get_logger()
 
 PROCESS_DOCUMENT = "process_document"
 FILENAME_LENGTH = 255
-UNSAFE_FILENAME_CHARACTERS = re.compile(r"[\x00-\x1f\x7f]")
+# Control characters, and the bidirectional marks and overrides that can make a name read as
+# something else on screen, such as "invoice‮fdp.exe" showing as "invoiceexe.pdf".
+UNSAFE_FILENAME_CHARACTERS = re.compile(r"[\x00-\x1f\x7f؜‎‏‪-‮⁦-⁩]")
 
 
 @dataclass(frozen=True)
