@@ -80,3 +80,19 @@ for run in 1 2 3; do
 done
 
 echo "The journey passed three times in a row."
+
+# A replaced API container gets a new address. The web container must find it without a
+# restart. A placeholder holds the old address, so the new container cannot reuse it.
+echo "Replacing the API container..."
+compose rm --stop --force api >/dev/null 2>&1
+placeholder="$(docker run -d --rm --network "${project}_default" --entrypoint sleep intakefold-backend:local 300)"
+compose up --detach --wait --no-deps api >/dev/null 2>&1
+status=""
+for _ in $(seq 1 20); do
+  status="$(curl -s -o /dev/null -w '%{http_code}' "$E2E_BASE_URL/api/health" || true)"
+  [ "$status" = 200 ] && break
+  sleep 1
+done
+docker rm -f "$placeholder" >/dev/null
+[ "$status" = 200 ] || { echo "Through the web container, /api/health answered $status after the API was replaced." >&2; exit 1; }
+echo "The web container reached the replaced API."

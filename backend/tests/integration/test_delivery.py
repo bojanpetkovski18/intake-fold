@@ -45,7 +45,7 @@ from intakefold_sink.app import build_sink
 
 pytestmark = pytest.mark.integration
 
-SECRET = "whsec_integration_secret_0123456789"  # noqa: S105 - fictional test secret
+SECRET = "whsec_integration_secret_0123456789"  # noqa: S105 - fictional test secret, gitleaks:allow
 CLEAN: dict[str, Any] = {
     "document_type": "invoice",
     "vendor_name": "Tarnwell Freight",
