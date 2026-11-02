@@ -235,7 +235,12 @@ export function uploadDocuments(
     };
     xhr.onload = () => {
       if (xhr.status >= 200 && xhr.status < 300) {
-        resolve(JSON.parse(xhr.responseText) as UploadResult);
+        try {
+          resolve(JSON.parse(xhr.responseText) as UploadResult);
+        } catch {
+          // Thrown here, it would escape the handler and leave the upload pending forever.
+          reject(new ApiError(xhr.status, {}));
+        }
         return;
       }
       const error = new ApiError(xhr.status, parseProblem(xhr.responseText));
