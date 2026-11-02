@@ -73,7 +73,7 @@ Numbered and never renumbered. A reversal is a new entry. The owner approved Pha
 ## D-011 Money as strings in the model schema
 - **Date:** 2026-10-31. **Status:** approved with Phase 0.
 - **Decision:** the model-facing schema uses decimal strings with a simple pattern, and converts to `Decimal` afterwards. The API also carries money as strings.
-- **Why:** floats corrupt money, and the API rejects lookahead patterns and numeric constraints. Pydantic's own `Decimal` schema is expected to include a lookahead; this is to be confirmed in M6.
+- **Why:** floats corrupt money, and the API rejects lookahead patterns and numeric constraints. **Checked in M6:** the expected lookahead is not there. The SDK's `transform_schema` turns a Pydantic `Decimal` into a union of number and string, so the model could answer with a float, and a test records this. That confirms the decision for a different reason. The SDK also moves `pattern` into the field description, so the API does not enforce it, and Pydantic plus the repair loop do.
 - **Trade-offs:** an extra conversion step, which doubles as a validation point.
 
 ## D-012 Confidence is a signal that can only lower trust
@@ -320,3 +320,145 @@ Numbered and never renumbered. A reversal is a new entry. The owner approved Pha
 - **Decision:** labels hold what is printed, right or wrong, plus `expected_routing` computed from those printed values with SPEC section 7's rule names and a fixed date of 2026-10-01. `reportlab` is a dev dependency. Duplicates come after their originals in the same split, so `not_duplicate` depends on processing in label order.
 - **Why:** a wrong total must be labeled as the wrong number on the page, because extraction is scored on reading, and rules are scored on catching it. A label should not change with the day it is read.
 - **Trade-offs:** `labels.py` repeats the rules' logic in small form. M7 must test its rules against these labels, and any disagreement is a bug in one of them. `overall_confidence` is not labeled; M6 decides what the mock returns.
+
+## D-052 anthropic 1.15.0 until 2.x clears the floor
+- **Date:** 2026-11-01. **Status:** decided in M6, for owner review.
+- **Decision:** pin 1.15.0, the highest eligible. Move to 2.x before any real run, once 2.0.0 clears the floor on 2026-11-04 and is re-checked.
+- **Why:** D-008 chose 2.x only if eligible, and it misses by three days. Every test here runs against a fake transport, so the API version cannot affect a result yet.
+- **Alternatives:** a floor exception for 2.x, which has no security reason behind it, or waiting three days with all work stopped.
+- **Trade-offs:** an SDK major and an API version change remain to do. The code avoids the parameters 2.x removes, and M15's brief carries the step.
+
+## D-053 Direct create with our own validation, not parse
+- **Date:** 2026-11-01. **Status:** decided in M6. Refines D-010.
+- **Decision:** `client.beta.messages.create` with `output_config.format` from `transform_schema`, then `ExtractedDocument.model_validate`.
+- **Why:** on invalid output the parsing helper raises, which loses `usage`, `stop_reason` and the serving model, and those drive cost, refusal handling and repair.
+- **Trade-offs:** a few lines of parsing. The request is typed as `dict[str, Any]` in one place, with a comment, and tests inspect the bytes sent.
+
+## D-054 Refusal fallback on by default, unconfirmed
+- **Date:** 2026-11-01. **Status:** decided in M6. Settles D-024 as far as can be done without a real call.
+- **Decision:** send `fallbacks: "default"` with `server-side-fallback-2026-07-01`, switched by `CLAUDE_REFUSAL_FALLBACK`. Log and price from `response.model`. An unknown model is priced at the highest listed rate.
+- **Why:** Anthropic recommends it, and it saves a document from a false refusal.
+- **Trade-offs:** no document confirms it works with structured outputs, and the transport fake cannot. M15 must test it first, and the switch turns it off if it fails. Cost uses top-level `usage`, so a billed declined attempt in `usage.iterations` is not counted.
+
+## D-055 Extraction limits and retry ownership
+- **Date:** 2026-11-01. **Status:** decided in M6, provisional.
+- **Decision:** `MAX_INPUT_TOKENS_PER_DOC` is 60,000, `EXTRACTION_MAX_TOKENS` is 16,000, and effort is `medium`. Each attempt reserves input plus `max_tokens`, then settles to actual use. The SDK's own retries are off, because the job queue owns retrying.
+- **Why:** 60,000 keeps Haiku under its 100K pricing step. Reserving the most an attempt could use means concurrent workers cannot pass the cap. Two retry layers would multiply attempts.
+- **Trade-offs:** none of these numbers is measured. A worker killed mid-call leaves its reservation in place, which errs toward stopping early. M15 replaces them with real figures.
+
+## D-056 What extraction does to a document
+- **Date:** 2026-11-01. **Status:** decided in M6.
+- **Decision:** a failed extraction sends the document to `needs_review` with its reason at once. A successful one stores `extractions`, `invoices` and `line_items` and stays `processing` until M7 routes it. A job redelivered after success reuses the stored result for the same prompt version. The mock returns `overall_confidence: high` for labeled documents.
+- **Why:** SPEC section 6 sets the failure routes, and rules are out of scope here. A redelivery must not pay twice.
+- **Trade-offs:** until M7 merges, successful documents stop at `processing`.
+
+## D-057 Duplicates are decided in routing order
+- **Date:** 2026-11-01. **Status:** decided in M7.
+- **Decision:** routing takes a transaction-scoped advisory lock on the normalized vendor, then compares only against documents already routed: not `queued`, `processing` or `rejected`. The first of two copies passes and the second is flagged.
+- **Why:** invoices are stored before rules run, so two copies in flight would otherwise each see the other, and both get flagged, or with no comparison both pass. A test runs four copies at once.
+- **Alternatives:** a unique index, which cannot express "non-rejected, or same date and total when there is no number".
+- **Trade-offs:** routing is serial per vendor, and the lock is held only for this short transaction. A hash collision between vendors only makes one wait.
+
+## D-058 Routing reasons and thresholds
+- **Date:** 2026-11-01. **Status:** decided in M7.
+- **Decision:** `status_reasons` holds failed rule names plus `embedded_instructions`, `confidence_not_high`, `uncertain_fields` and `unsupported_document_type`. A missing tax or adjustment counts as zero in `total_reconciles`. A line with no quantity or unit price is summed but not multiplied, and a line with no amount fails. "5 years" is 1,825 days, `RULE_MAX_AGE_DAYS`. Every routing writes a system audit event.
+- **Why:** the spec names the conditions but not these codes or edge cases. The rules read stored invoices, not model output, so M9 can re-run them on corrections.
+- **Trade-offs:** normalization removes punctuation, so `INV-1` and `INV1` count as one number. Clean labels are dated up to 2026-09 and stay plausible until about 2031.
+
+## D-059 Injection twins are duplicates of each other
+- **Date:** 2026-11-01. **Status:** decided in M7. Refines D-051.
+- **Decision:** the injected twin's label now has `duplicate_of` and expects `not_duplicate`. Eight label files changed, and no document bytes.
+- **Why:** running all 76 documents through the worker showed the code was right and the labels were wrong: twins share a vendor and number, so the second is a real duplicate. M5's unit tests could not see this.
+- **Trade-offs:** M12 must process twins so that this does not count as a routing miss, or compare fields only for pairs.
+
+## D-060 API types are written by hand
+- **Date:** 2026-11-01. **Status:** decided in M8. Follows up D-031.
+- **Decision:** `frontend/src/api/types.ts` holds the types, by hand.
+- **Why:** openapi-typescript declares a peer of TypeScript 5 and this project is on 6, so generating them would mean forcing a peer dependency. The surface is small.
+- **Alternatives:** generation with `--legacy-peer-deps`, or a runtime schema library, which adds a dependency for a same-origin API.
+- **Trade-offs:** the types can drift from the API. Component tests would not notice; the M14 browser journey would.
+
+## D-061 Session handling in the browser
+- **Date:** 2026-11-01. **Status:** decided in M8.
+- **Decision:** the CSRF token lives in a module variable, never in web storage. The session query is the source of truth, and any 401 clears it. Sign-out removes all other cached data. `/auth/me` also returns `extractor`, which drives the mock banner. Uploads use `XMLHttpRequest`, because `fetch` cannot report upload progress. Busy buttons use `aria-disabled` and ignore presses.
+- **Why:** a script injected into the page must not find a token in storage. The next person on a shared machine must not see the last person's documents.
+- **Trade-offs:** a reload refetches the token through `/auth/me`.
+
+## D-062 Requeue reopens the document
+- **Date:** 2026-11-01. **Status:** decided in M8. Settles the follow-up in D-046.
+- **Decision:** `POST /jobs/{id}/retry` runs one transaction: the job goes back to `queued`, the document returns to `queued` with its reasons cleared, and an audit event names the admin. It returns `202`, or `409` if the job is not dead.
+- **Why:** a requeued job with a document still marked `failed` would show two different stories.
+- **Trade-offs:** `queue.requeue` keeps its own transaction for the queue's tests, so both share `requeue_statement`.
+
+## D-063 Expected 401s reach the browser console
+- **Date:** 2026-11-01. **Status:** decided in M8, for owner review.
+- **Decision:** accept the browser's own "Failed to load resource" line for `/auth/me` when signed out and for a wrong password. The M14 journey allows exactly those two.
+- **Why:** browsers log every 4xx response themselves, and script cannot suppress that. AC-23 requires the 401. A separate public session route would change the spec's route table.
+- **Alternatives:** a public `GET /auth/session` that returns 200 with `null`.
+- **Trade-offs:** the console is not literally empty when signed out. Across three widths, all 14 messages were these two kinds, with no app errors.
+
+## D-064 A version on documents
+- **Date:** 2026-11-02. **Status:** decided in M9.
+- **Decision:** `documents.version` (migration `0002`) goes up on each saved correction, approval and rejection, and every write names the version it saw. A stale write gets `409`. The row is locked while checking, so two writes cannot pass together. A save with no changes costs no version.
+- **Why:** the brief asks for optimistic concurrency, and without it the second reviewer silently overwrites the first.
+- **Trade-offs:** one column the spec's data model table does not list. The table names "key columns", so it was left alone, for the owner to add if wanted.
+
+## D-065 Corrections never approve
+- **Date:** 2026-11-02. **Status:** decided in M9, for owner review.
+- **Decision:** a correction re-runs the rules and updates the reasons, and the document stays `needs_review` until a person acts. "A required rule fails" means any rule with outcome `fail`, and an override reason then lets the reviewer approve. Model signals such as low confidence or the injection flag do not block a person. Unsaved edits are saved first when approving or rejecting. A failed extraction can be keyed in by hand, as an invoice with low confidence. Approved, rejected and auto-approved documents cannot be edited.
+- **Why:** routing distrusts the model, but a reviewer has seen the page. Spec section 11 does not define which rules are "required".
+- **Trade-offs:** a reviewer can approve a flagged injection with no reason, relying on the warning shown. Requiring a reason there would be a one-line change.
+
+## D-066 Review keyboard shortcuts
+- **Date:** 2026-11-02. **Status:** decided in M9.
+- **Decision:** Tab moves between fields, and Alt+Shift+S, A, R and N save, approve, reject and go to the next document. They match on physical key codes, and work while an input has focus. Next document is the newest other document in review.
+- **Why:** plain letters would type into fields, and single-Alt combinations clash with browser menus.
+- **Trade-offs:** some screen readers and keyboard layouts may claim these keys. Every action is also a real button in the tab order, so the shortcuts are never the only way.
+
+## D-067 One event per approval, one delivery per target
+- **Date:** 2026-11-02. **Status:** decided in M10.
+- **Decision:** auto-approval and manual approval each create, in their own transaction, one `invoice.approved` event. Its `event_id` is shared by every target, with a delivery row and a `deliver_webhook` job per target. The payload is stored with the delivery, so a retry sends the same bytes. It says `approved_by: rules` or `reviewer`, and money is a string.
+- **Why:** SPEC section 8 puts delivery jobs in the approval transaction, so an approval can never lose its delivery. One event ID per approval lets a receiver deduplicate across retries.
+- **Trade-offs:** later edits to the invoice are not in the payload. Approved documents cannot be edited anyway (D-065).
+
+## D-068 Sending
+- **Date:** 2026-11-02. **Status:** decided in M10.
+- **Decision:** httpx2, with a timeout from `WEBHOOK_TIMEOUT_SECONDS`, redirects not followed, and no database connection held during the call. Each attempt is a `delivery_attempts` row with status code, duration and a code (`http_503`, `timeout`, `connection_error`). Failures retry through the job queue, and when the job dies the delivery is marked dead. A target removed from configuration fails at once with `unknown_target`. Targets are validated at start-up: unique names, an http or https URL, and a secret of at least 32 characters.
+- **Why:** targets come only from configuration, so following a redirect would let a target send traffic somewhere unconfigured.
+- **Trade-offs:** a downstream that answers 2xx after a redirect would need its configured URL updated.
+
+## D-069 The sink
+- **Date:** 2026-11-02. **Status:** decided in M10.
+- **Decision:** `intakefold_sink` is a separate package in the same project, with no database. It imports only the signing module. It keeps received events and seen IDs in memory, can fail the first N attempts of each event, and shows events on an escaped HTML page with its own CSP.
+- **Why:** it is a demo receiver, and sharing the verifier keeps the signature format defined once.
+- **Trade-offs:** a restart forgets seen IDs, so a redelivery after a restart would be processed again. A real receiver would store them.
+
+## D-070 CSV export
+- **Date:** 2026-11-02. **Status:** decided in M10.
+- **Decision:** approved and auto-approved documents, by approval date in UTC with an inclusive `to`. One row per line item, or one row for an invoice with none. The response is streamed in batches of 500 rows. Text cells starting with `=`, `+`, `-`, `@`, tab or carriage return get a leading `'`. Money is written from `Decimal` and never neutralized.
+- **Why:** SPEC section 9, and "filtered by date" most usefully means when it was approved.
+- **Trade-offs:** no byte-order mark, so some spreadsheet programs may need the encoding chosen by hand.
+
+## D-071 One gitleaks finding is a known false positive
+- **Date:** 2026-11-02. **Status:** decided in M10, for owner review.
+- **Decision:** `.gitleaksignore` lists one fingerprint: the fictional webhook secret on line 45 of `backend/tests/integration/test_delivery.py` in commit `db0954d`. Every other finding still fails the build.
+- **Why:** gitleaks matched its generic API key rule on a test value. The commit was not pushed, but removing it from history would mean rewriting history, which needs the owner's approval. The fingerprint names one commit, file, rule and line, so nothing else is hidden.
+- **Alternatives:** with the owner's approval, amend the unpushed commit and drop the ignore file.
+- **Trade-offs:** an ignore file to review. Future test secrets should look obviously fake to the scanner, or carry `gitleaks:allow` from the start.
+
+## D-072 What the metrics measure
+- **Date:** 2026-11-02. **Status:** decided in M11, for owner review.
+- **Decision:** one row per extractor, taken from each document's latest extraction, or `none` if it was never extracted.
+  - Processed: documents that are not queued or processing.
+  - Shares out of processed: auto-approved; sent to review, meaning needs review, approved or rejected; and failed. They add up to 1.
+  - Average time: from upload to the end of the last pipeline step.
+  - Evaluation batches are left out.
+  - Everything is computed in SQL, with shares as exact `NUMERIC` sent as strings.
+- **Why:** the spec names the five measures but does not define them. Counting review by the path taken, not the current status, keeps a later approval from looking like an auto-approval. Review time would swamp processing time, so it is left out and the page says so.
+- **Trade-offs:** no total across extractors, because mixing mock and model results would mislead. With no processed documents there are no rows, so nothing is divided by zero.
+
+## D-073 The document log
+- **Date:** 2026-11-02. **Status:** decided in M11.
+- **Decision:** `GET /documents/{id}/run-log` returns steps and audit events, with the actor's display name or nothing for the system. The screen adds deliveries from the M10 route. Every pipeline step already wrote `run_steps`, so no gap needed filling. Mock steps show no tokens or cost, rather than zeros.
+- **Why:** a zero would claim a measurement that did not happen.
+- **Trade-offs:** audit times come from the database clock, step times from the injectable one. Both are UTC.

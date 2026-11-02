@@ -28,7 +28,6 @@ from intakefold.documents.queries import (
     DocumentPage,
     DocumentSort,
     InvalidCursor,
-    get_document,
     list_documents,
 )
 from intakefold.documents.storage import Storage
@@ -53,10 +52,6 @@ class DocumentSummary(ApiModel):
     status: DocumentStatus
     received_at: datetime
     finished_at: datetime | None
-
-
-class DocumentDetail(DocumentSummary):
-    status_reasons: list[str]
 
 
 class DocumentList(ApiModel):
@@ -181,14 +176,6 @@ def list_all(
     return DocumentList(
         items=[summary(document) for document in page.items], next_cursor=page.next_cursor
     )
-
-
-@router.get("/{document_id}")
-def detail(request: Request, _: Reviewer, document_id: uuid.UUID) -> DocumentDetail:
-    document = get_document(request.app.state.engine, document_id)
-    if document is None:
-        raise HTTPException(status_code=404, detail="There is no such document.")
-    return DocumentDetail(**summary(document).model_dump(), status_reasons=document.status_reasons)
 
 
 @router.get("/{document_id}/pages/{page}")

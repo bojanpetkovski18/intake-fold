@@ -1,5 +1,6 @@
 import uuid
 from datetime import timedelta
+from typing import Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from pydantic import BaseModel, ConfigDict, Field, SecretStr
@@ -34,16 +35,17 @@ class SessionView(BaseModel):
 
     user: UserView
     csrf_token: str
+    extractor: Literal["mock", "claude"]  # Drives the banner shown while the mock is active.
 
 
-def session_view(principal: Principal, csrf_token: str) -> SessionView:
+def session_view(principal: Principal, csrf_token: str, settings: Settings) -> SessionView:
     user = UserView(
         id=principal.user_id,
         email=principal.email,
         display_name=principal.display_name,
         role=principal.role,
     )
-    return SessionView(user=user, csrf_token=csrf_token)
+    return SessionView(user=user, csrf_token=csrf_token, extractor=settings.extractor)
 
 
 @router.post("/login", dependencies=[Depends(limit_sign_in)])
@@ -68,7 +70,7 @@ def login(body: LoginRequest, request: Request, response: Response) -> SessionVi
         httponly=True,
         samesite="strict",
     )
-    return session_view(issued.principal, issued.csrf_token)
+    return session_view(issued.principal, issued.csrf_token, settings)
 
 
 @router.post("/logout", status_code=204)
@@ -86,4 +88,5 @@ def logout(principal: CurrentUser, request: Request, response: Response) -> None
 
 @router.get("/me")
 def me(principal: CurrentUser, request: Request) -> SessionView:
-    return session_view(principal, csrf_token_for(request.cookies[SESSION_COOKIE]))
+    settings: Settings = request.app.state.settings
+    return session_view(principal, csrf_token_for(request.cookies[SESSION_COOKIE]), settings)

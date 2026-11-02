@@ -14,10 +14,6 @@ class VendorProfile:
     tax_id: str
 
 
-def normalized_name(name: str) -> str:
-    return " ".join(name.lower().split())
-
-
 # Seeded into `vendors`, so these pass `known_vendor`.
 KNOWN_VENDORS = (
     VendorProfile(

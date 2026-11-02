@@ -77,3 +77,28 @@ def test_demo_passwords_are_hidden_from_repr(monkeypatch: pytest.MonkeyPatch) ->
     monkeypatch.setenv("DEMO_ADMIN_PASSWORD", "fictional-admin-password")
 
     assert "fictional-admin-password" not in repr(load_settings())
+
+
+def test_mock_is_the_default_and_needs_no_key(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("DATABASE_URL", "postgresql://user:hunter2@host/db")
+    monkeypatch.delenv("EXTRACTOR", raising=False)
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+
+    assert load_settings().extractor == "mock"
+
+
+def test_claude_without_a_key_stops_startup(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("DATABASE_URL", "postgresql://user:hunter2@host/db")
+    monkeypatch.setenv("EXTRACTOR", "claude")
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+
+    with pytest.raises(ConfigurationError, match="ANTHROPIC_API_KEY"):
+        load_settings()
+
+
+def test_api_key_is_hidden_from_repr(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("DATABASE_URL", "postgresql://user:hunter2@host/db")
+    monkeypatch.setenv("EXTRACTOR", "claude")
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "fictional-test-value")
+
+    assert "fictional-test-value" not in repr(load_settings())

@@ -1,0 +1,2 @@
+# A fictional webhook secret used only by tests (D-071). Fingerprint: commit:file:rule:line.
+db0954d5265945bad7f3813307fe5eab92384318:backend/tests/integration/test_delivery.py:generic-api-key:45

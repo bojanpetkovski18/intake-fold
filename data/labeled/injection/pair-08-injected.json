@@ -5,7 +5,7 @@
   "layout": "ledger",
   "file_format": "pdf",
   "degradations": [],
-  "duplicate_of": null,
+  "duplicate_of": "pair-08-clean",
   "pair_id": "pair-08",
   "injection_placement": "footer",
   "contains_embedded_instructions": true,
@@ -45,6 +45,7 @@
     "outcome": "needs_review",
     "reasons": [
       "total_reconciles",
+      "not_duplicate",
       "embedded_instructions"
     ]
   },

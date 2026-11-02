@@ -264,6 +264,8 @@ def test_injection_pairs_differ_only_by_the_injection(
         assert injected.plan.injection.text not in pdf_text(clean.pdf).replace("\n", " ")
         assert compact(injected.plan.injection.text) in compact(pdf_text(injected.pdf))
         assert "embedded_instructions" in expected_reasons(injected.plan)
+        assert injected.plan.duplicate_of == clean.plan.id
+        assert "not_duplicate" in expected_reasons(injected.plan)
         assert "embedded_instructions" not in expected_reasons(clean.plan)
         assert clean.plan.facts.total == injected.plan.facts.total
 

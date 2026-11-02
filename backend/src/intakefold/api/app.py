@@ -4,7 +4,7 @@ from contextlib import asynccontextmanager
 import structlog
 from fastapi import Depends, FastAPI
 
-from intakefold.api import auth, documents, health
+from intakefold.api import auth, delivery, documents, health, insight, jobs, review
 from intakefold.api.access import enforce_access
 from intakefold.api.middleware import RequestContextMiddleware
 from intakefold.api.problems import register_problem_handlers
@@ -44,6 +44,10 @@ def build_app(settings: Settings, clock: Clock | None = None) -> FastAPI:
     app.include_router(health.router, prefix="/api")
     app.include_router(auth.router, prefix="/api")
     app.include_router(documents.router, prefix="/api")
+    app.include_router(jobs.router, prefix="/api")
+    app.include_router(review.router, prefix="/api")
+    app.include_router(delivery.router, prefix="/api")
+    app.include_router(insight.router, prefix="/api")
     return app
 
 

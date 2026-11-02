@@ -21,3 +21,5 @@
 **Acceptance criteria:** AC-21.
 
 The mock output is expected to score near 100%, because it reads the labels. That number is a test of the harness and must never appear as accuracy.
+
+**From M7:** the injected twin of each pair is a real duplicate of its clean twin, so do not score that as a routing miss (D-059).
