@@ -29,12 +29,15 @@ from intakefold.db.models import (
     ExtractionOutcome,
     Job,
     JobStatus,
+    Role,
+    User,
     WebhookDelivery,
 )
 from intakefold.delivery.sender import WebhookSender
 from intakefold.documents.storage import Storage
 from intakefold.extraction.schema import ExtractedDocument
 from intakefold.extraction.types import DocumentInput, ExtractionResult
+from intakefold.jobs.dead_letters import retry_dead_job
 from intakefold.settings import Settings
 from intakefold.worker.handlers import build_handlers, on_job_dead
 from intakefold.worker.loop import Worker
@@ -284,6 +287,35 @@ def test_a_target_that_never_works_ends_dead_and_the_document_stays_approved(
         assert session.get_one(Document, document_id).status is DocumentStatus.AUTO_APPROVED
         job = session.scalars(select(Job).where(Job.kind == "deliver_webhook")).one()
     assert job.status is JobStatus.DEAD
+
+
+def test_a_requeued_dead_delivery_is_sent_again(
+    seeded: Engine, storage: Storage, clock: FakeClock, reviewer_for: Any
+) -> None:
+    def always_down(_: httpx2.Request) -> httpx2.Response:
+        return httpx2.Response(500)
+
+    def back_up(_: httpx2.Request) -> httpx2.Response:
+        return httpx2.Response(200)
+
+    settings = settings_for("http://downstream.invalid/webhook")
+    upload(reviewer_for(settings))
+    with httpx2.Client(transport=httpx2.MockTransport(always_down)) as client:
+        loop = worker(seeded, storage, clock, settings, client)
+        for _ in range(6):
+            loop.run_once()
+            clock.advance(timedelta(minutes=10))
+    with Session(seeded) as session:
+        job = session.scalars(select(Job).where(Job.kind == "deliver_webhook")).one()
+        admin = session.scalars(select(User.id).where(User.role == Role.ADMIN)).one()
+
+    retry_dead_job(seeded, job.id, admin, clock)
+    with httpx2.Client(transport=httpx2.MockTransport(back_up)) as client:
+        worker(seeded, storage, clock, settings, client).run_once()
+
+    [delivery] = deliveries(seeded)
+    assert delivery.status is DeliveryStatus.DELIVERED
+    assert [attempt.status_code for attempt in attempts(seeded)] == [500] * 5 + [200]
 
 
 def test_the_outbound_call_happens_with_no_database_connection_held(
