@@ -1,5 +1,6 @@
 import type {
   DeadJob,
+  DemoInfo,
   DocumentStatus,
   DocumentSummary,
   DeliveryView,
@@ -107,6 +108,15 @@ export async function signIn(email: string, password: string): Promise<Session> 
 export async function signOut(): Promise<void> {
   await request<unknown>("/auth/logout", { method: "POST" });
   setCsrfToken(null);
+}
+
+/** Outside demo mode this answers 404, and the sign-in page shows no accounts. */
+export function getDemo(): Promise<DemoInfo> {
+  return request<DemoInfo>("/demo");
+}
+
+export function resetDemo(): Promise<{ queued: number }> {
+  return request<{ queued: number }>("/demo/reset", { method: "POST" });
 }
 
 export interface DocumentQuery {

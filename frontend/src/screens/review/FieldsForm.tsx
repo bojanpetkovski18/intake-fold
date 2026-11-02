@@ -97,7 +97,7 @@ export function FieldsForm({ draft, setDraft, notes, readOnly }: FieldsFormProps
         })}
       </div>
       <section aria-labelledby="line-items-heading">
-        <h3 id="line-items-heading">Line items</h3>
+        <h2 id="line-items-heading">Line items</h2>
         {lineNote && <p className="field-note">{lineNote}</p>}
         {draft.lineItems.length === 0 && <p className="muted">No line items.</p>}
         {draft.lineItems.map((line, index) => {

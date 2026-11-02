@@ -13,6 +13,17 @@ export interface Session {
   user: User;
   csrfToken: string;
   extractor: "mock" | "claude";
+  demoMode: boolean;
+}
+
+export interface DemoAccount {
+  email: string;
+  role: Role;
+  password: string;
+}
+
+export interface DemoInfo {
+  accounts: DemoAccount[];
 }
 
 export const DOCUMENT_STATUSES = [

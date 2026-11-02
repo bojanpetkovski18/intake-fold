@@ -215,3 +215,10 @@ Owner chose Intakefold on 2026-10-31.
 | Haiku 5.5 | about $0.00125 | about $0.09 |
 
 Paired injection runs and repeats add to this. Real figures go in `PROGRESS.md` after an authorized run.
+
+## M13 checks (2026-11-02)
+
+Floor: 2026-10-19.
+
+- **axe-core 4.14.0**, published 2026-10-05, is the highest release on the floor (npm registry; 4.14.0 is also `latest`). No dependencies, MPL-2.0, dev only.
+- **nginxinc/nginx-unprivileged:1.30.6-alpine**, the newest 1.30 stable tag, pushed 2026-10-19 (Docker Hub). Image index digest `sha256:f5116ed4606f3eb015dd4a8e28cb9b351476dc0ad4bc6e9f93b19cec130cdf03`, read from `docker pull`. It runs as uid 101. Used only for the M13 scratch audit; M14 re-checks it before pinning the image.

@@ -24,6 +24,7 @@ browser
 - **api:** thin routes that authenticate, validate, and call handlers. It never calls the model.
 - **worker:** claims one job at a time with `FOR UPDATE SKIP LOCKED`, commits, then does the work outside a transaction, with a background thread renewing the lease. On a stop signal it finishes the current job and exits. Run more workers for concurrency.
 - **sink:** a separate small app with no access to the database.
+- **web:** `frontend/nginx.conf` serves the build with a strict CSP and proxies `/api` (D-078). M14 puts it in an image.
 
 ## Boundaries
 
@@ -40,6 +41,7 @@ browser
 - At-least-once jobs with idempotent handlers, leases, backoff and a dead state.
 - Delivery jobs are written in the approval transaction, and sent with no database connection held.
 - Run steps are written as work happens, so a crash leaves a trace. Metrics are read from them and from document status, in SQL.
+- In demo mode the seed uploads the demo set as an ordinary batch, so the worker processes it like any upload. The admin reset truncates the document tables under a table lock, deletes their files after the commit, and uploads the set again (D-076).
 
 ## To be written from the code
 

@@ -99,7 +99,7 @@ Keep the milestone report and PR description short: about half the length feels 
 
 ## Repository layout
 
-`api/`, `identity/`, `documents/`, `extraction/`, `validation/`, `delivery/`, `eval/`, `worker/`, `jobs/`, `audit/`, `db/`, `generator/`, `migrations/`, `data/labeled/`, `frontend/src/api/` and `frontend/src/screens/` exist. The rest is planned; update this as code lands.
+`api/`, `identity/`, `documents/`, `extraction/`, `validation/`, `delivery/`, `eval/`, `worker/`, `jobs/`, `audit/`, `db/`, `generator/`, `migrations/`, `data/labeled/`, `frontend/src/api/`, `frontend/src/screens/`, `frontend/src/components/`, `frontend/nginx.conf` and `docs/AUDIT.md` exist, and demo mode lives in `intakefold/demo.py`. The rest is planned; update this as code lands.
 
 ```
 backend/
@@ -114,6 +114,7 @@ backend/
     delivery/            webhook signing, sending, CSV export
     audit/               run steps, audit events, metrics queries
     eval/                evaluation harness
+    demo.py              demo seed batch and reset (D-076)
     generator/           fictional document generator
     db/                  SQLAlchemy models, session
   src/intakefold_sink/   demo webhook receiver
@@ -154,7 +155,7 @@ SINK_SECRET=... uv run uvicorn --factory intakefold_sink.app:create_app --host 1
 uv run --env-file ../.env alembic upgrade head
 uv run --env-file ../.env alembic check            # models and migrations agree
 uv run --env-file ../.env alembic revision --autogenerate --rev-id 0002 -m "short summary"
-uv run --env-file ../.env python -m intakefold.db.seed   # needs DEMO_*_PASSWORD
+uv run --env-file ../.env python -m intakefold.db.seed   # needs DEMO_*_PASSWORD; with DEMO_MODE=true also queues the demo batch (D-076)
 
 # Frontend (from frontend/)
 npm ci

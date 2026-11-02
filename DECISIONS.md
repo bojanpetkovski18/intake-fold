@@ -212,7 +212,7 @@ Numbered and never renumbered. A reversal is a new entry. The owner approved Pha
 - **Trade-offs:** less soak time for these three. The entries in `pyproject.toml` can go once `exclude-newer` passes those dates.
 
 ## D-034 TRUNCATE is the one way around the audit trigger
-- **Date:** 2026-10-31. **Status:** decided in M2, for owner review.
+- **Date:** 2026-10-31. **Status:** decided in M2; accepted by the owner in M13.
 - **Decision:** the append-only trigger is a row trigger, so `UPDATE` and `DELETE` fail but `TRUNCATE` works. A test records this.
 - **Why:** the demo reset (AC-22) must clear the audit trail. AC-18 says rows cannot be updated or deleted through SQL, and this meets it for those statements only.
 - **Alternatives:** a statement-level `BEFORE TRUNCATE` trigger with a separate privileged role for the reset, which is stronger but adds a second database role to a local demo.
@@ -255,7 +255,7 @@ Numbered and never renumbered. A reversal is a new entry. The owner approved Pha
 - **Trade-offs:** `PUBLIC_ROUTES` matches the request path, because FastAPI 0.143 keeps included routers lazy and the matched route omits their prefix. A public route with path parameters would need a different check. The route-table test reads the OpenAPI schema for the same reason, so a route hidden from the schema would escape it.
 
 ## D-041 Session and sign-in limits
-- **Date:** 2026-10-31. **Status:** decided in M3, for owner review.
+- **Date:** 2026-10-31. **Status:** decided in M3; kept by the owner in M13.
 - **Decision:** sessions last 12 hours with no sliding renewal. The cookie is HttpOnly, Secure, `SameSite=Strict` and scoped to `/api`. Sign-in allows 10 attempts per minute per client IP, counting successes. Unsafe requests with no `Origin` are refused. Argon2 uses the library's default parameters.
 - **Why:** the spec sets none of these. They are the simplest strict choices for a same-origin app.
 - **Trade-offs:** a reviewer signs in again after 12 hours, and scripts must send `Origin`. `ALLOW_INSECURE_COOKIES` must be on for browsers that refuse Secure cookies over local http; M14 decides this for the Docker demo.
@@ -404,10 +404,10 @@ Numbered and never renumbered. A reversal is a new entry. The owner approved Pha
 - **Trade-offs:** one column the spec's data model table does not list. The table names "key columns", so it was left alone, for the owner to add if wanted.
 
 ## D-065 Corrections never approve
-- **Date:** 2026-11-02. **Status:** decided in M9, for owner review.
-- **Decision:** a correction re-runs the rules and updates the reasons, and the document stays `needs_review` until a person acts. "A required rule fails" means any rule with outcome `fail`, and an override reason then lets the reviewer approve. Model signals such as low confidence or the injection flag do not block a person. Unsaved edits are saved first when approving or rejecting. A failed extraction can be keyed in by hand, as an invoice with low confidence. Approved, rejected and auto-approved documents cannot be edited.
+- **Date:** 2026-11-02. **Status:** decided in M9; revised by the owner in M13.
+- **Decision:** a correction re-runs the rules and updates the reasons, and the document stays `needs_review` until a person acts. "A required rule fails" means any rule with outcome `fail`, and an override reason then lets the reviewer approve. Since M13, the injection flag also needs an override reason, recorded the same way. Low confidence and uncertain fields do not block a person. Unsaved edits are saved first when approving or rejecting. A failed extraction can be keyed in by hand, as an invoice with low confidence. Approved, rejected and auto-approved documents cannot be edited.
 - **Why:** routing distrusts the model, but a reviewer has seen the page. Spec section 11 does not define which rules are "required".
-- **Trade-offs:** a reviewer can approve a flagged injection with no reason, relying on the warning shown. Requiring a reason there would be a one-line change.
+- **Trade-offs:** one more step on a flagged document. The flag comes from the model, so a compromised model could leave it off; the rules, not the flag, are what stop a bad auto-approval (AC-10).
 
 ## D-066 Review keyboard shortcuts
 - **Date:** 2026-11-02. **Status:** decided in M9.
@@ -486,3 +486,33 @@ Numbered and never renumbered. A reversal is a new entry. The owner approved Pha
   - The injection comparison lists fields that differ between twins, except a line description, which is where one injection is placed.
 - **Why:** each rule is visible in `eval/scoring.py` and tested.
 - **Trade-offs:** position alignment is harsh: one dropped line makes the following lines wrong. Counting empty-and-empty as correct raises accuracy, so the report also gives every count.
+
+## D-076 Demo mode
+- **Date:** 2026-11-02. **Status:** decided in M13.
+- **Decision:** `DEMO_MODE=true` needs `EXTRACTOR=mock` and both demo passwords, or startup stops.
+  - In demo mode the seed command uploads the development set as one batch with source `demo`, once, into an empty database. The worker processes it like any upload, so demo metrics are real mock runs.
+  - `POST /demo/reset` is admin only and answers 404 outside demo mode. It locks `documents`, truncates every document table in one statement, deletes those documents' files after the commit, and uploads the demo set again as the admin. Users, sessions and vendors stay, so nobody is signed out.
+  - A test fails if a new table is neither reset nor listed as kept.
+- **Why:** the brief asks for real runs labeled as mock, and a reset must never cost money. Truncating the named tables without `CASCADE` makes a new foreign key fail loudly instead of being emptied unseen.
+- **Alternatives:** process the batch inside the request, which would hold an HTTP request for the whole pipeline; or delete row by row, which the audit trigger forbids (D-034).
+- **Trade-offs:** the reset answers once the files are queued, so the inbox fills over a few seconds. A worker midway through an old job fails that job's writes harmlessly, because its rows are gone. The reset leaves no audit row, because audit events belong to documents; it writes a `demo_reset` log line with the admin's ID.
+
+## D-077 Demo accounts on a public route
+- **Date:** 2026-11-02. **Status:** decided by the owner in M13. Spec 0.2.
+- **Decision:** public `GET /demo` returns the demo accounts with their passwords in demo mode, and 404 otherwise. `GET /auth/me` gains `demoMode`, which drives the banner and the reset control.
+- **Why:** the spec shows demo credentials on the sign-in page only in demo mode, and a signed-out page has no other way to know. The owner chose this over listing them only in the README.
+- **Trade-offs:** outside demo mode the sign-in page's request logs a 404 in the browser console, like the 401s in D-063. The M14 journey runs in demo mode, so it does not see one.
+
+## D-078 The front end's security headers, checked in M13
+- **Date:** 2026-11-02. **Status:** decided in M13.
+- **Decision:** `frontend/nginx.conf`, for `nginx-unprivileged` on port 8080, serves the build and proxies `/api`. Every page and asset gets a strict CSP (`default-src 'none'`, then `'self'` for scripts, styles, images, fetches, fonts and the manifest; `base-uri 'none'`, `form-action 'self'`, `frame-ancestors 'none'`), plus `nosniff`, `no-referrer`, a `Permissions-Policy` and `Cross-Origin-Opener-Policy: same-origin`. The headers repeat in each location, because nginx drops inherited `add_header` lines in a location that adds its own. API responses keep the API's own stricter headers.
+- **Why:** the brief asks for the production build under its real headers now. Writing the config M14 will ship, and testing that, beats a stand-in server.
+- **Alternatives:** a Node static server with the same headers, which M14 would replace.
+- **Trade-offs:** M14 still builds the image and pins it. M13 ran this config in a scratch container from `nginxinc/nginx-unprivileged:1.30.6-alpine`, pinned by digest.
+
+## D-079 Automated accessibility checks
+- **Date:** 2026-11-02. **Status:** decided in M13.
+- **Decision:** `axe-core` 4.14.0 runs in Vitest on every screen in each state: loading, empty, error and success, plus the open reset, override and reject questions. Contrast is off there, because jsdom has no layout. The real-browser audit runs axe with every rule, contrast included, in light and dark at five widths.
+- **Why:** unit runs catch names, roles and structure on every commit; only a browser can judge colour and layout.
+- **Alternatives:** `vitest-axe` or `jest-axe`, which add a wrapper over the same engine.
+- **Trade-offs:** contrast is checked only when the audit is run by hand, until M14's Playwright journey runs axe on each page in CI.

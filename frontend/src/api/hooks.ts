@@ -8,10 +8,12 @@ import {
 } from "@tanstack/react-query";
 import {
   ApiError,
+  getDemo,
   getDocument,
   getSession,
   listDeadJobs,
   listDocuments,
+  resetDemo,
   retryJob,
   signIn,
   signOut,
@@ -93,6 +95,23 @@ export function useDeadJobs() {
     queryFn: ({ pageParam }) => listDeadJobs(pageParam),
     initialPageParam: null as string | null,
     getNextPageParam: (page) => page.nextCursor,
+  });
+}
+
+export function useDemo() {
+  // Only an aid on the sign-in page, so a failure is neither retried nor shown.
+  return useQuery({ queryKey: ["demo"], queryFn: getDemo, retry: false });
+}
+
+export function useResetDemo() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: resetDemo,
+    onSuccess: async () => {
+      await client.invalidateQueries({
+        predicate: (query) => query.queryKey[0] !== SESSION_KEY[0],
+      });
+    },
   });
 }
 

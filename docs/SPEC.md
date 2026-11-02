@@ -1,6 +1,9 @@
 # Intakefold specification
 
-Version 0.1, 2026-10-31. Draft for owner approval. Change this file only with the owner, and note why.
+Version 0.2, 2026-11-02. Change this file only with the owner, and note why.
+
+- 0.2, 2026-11-02: public `GET /demo` added, so the sign-in page can show demo credentials in demo mode. Chosen by the owner in M13 (D-077).
+- 0.1, 2026-10-31: first draft.
 
 ## 1. Purpose
 
@@ -239,6 +242,7 @@ Base path `/api`. JSON. Errors are RFC 9457 problem details with `traceId`. Mone
 | `GET /metrics` | Reviewer | Aggregates, computed in SQL, split by extractor |
 | `GET /jobs?status=dead` | Reviewer | Dead-letter list |
 | `POST /jobs/{id}/retry` | Admin | Requeue a dead job |
+| `GET /demo` | Public | Demo accounts; 404 unless `DEMO_MODE=true` |
 | `POST /demo/reset` | Admin | Restore seed data; only when `DEMO_MODE=true` |
 
 ## 12. Screens

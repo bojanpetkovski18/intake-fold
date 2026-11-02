@@ -102,3 +102,44 @@ def test_api_key_is_hidden_from_repr(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("ANTHROPIC_API_KEY", "fictional-test-value")
 
     assert "fictional-test-value" not in repr(load_settings())
+
+
+def demo_environment(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("DATABASE_URL", "postgresql://user:hunter2@host/db")
+    monkeypatch.setenv("DEMO_MODE", "true")
+    monkeypatch.setenv("DEMO_REVIEWER_PASSWORD", "fictional-reviewer-password")
+    monkeypatch.setenv("DEMO_ADMIN_PASSWORD", "fictional-admin-password")
+    monkeypatch.delenv("EXTRACTOR", raising=False)
+
+
+def test_demo_mode_is_off_by_default(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("DATABASE_URL", "postgresql://user:hunter2@host/db")
+    monkeypatch.delenv("DEMO_MODE", raising=False)
+
+    assert load_settings().demo_mode is False
+
+
+def test_demo_mode_starts_with_the_mock_and_both_passwords(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    demo_environment(monkeypatch)
+
+    assert load_settings().demo_mode is True
+
+
+def test_demo_mode_refuses_the_real_model(monkeypatch: pytest.MonkeyPatch) -> None:
+    demo_environment(monkeypatch)
+    monkeypatch.setenv("EXTRACTOR", "claude")
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant-fictional")
+
+    with pytest.raises(ConfigurationError, match="EXTRACTOR=mock"):
+        load_settings()
+
+
+@pytest.mark.parametrize("missing", ["DEMO_REVIEWER_PASSWORD", "DEMO_ADMIN_PASSWORD"])
+def test_demo_mode_needs_both_passwords(monkeypatch: pytest.MonkeyPatch, missing: str) -> None:
+    demo_environment(monkeypatch)
+    monkeypatch.delenv(missing)
+
+    with pytest.raises(ConfigurationError, match=missing):
+        load_settings()
