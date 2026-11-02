@@ -66,7 +66,7 @@ SQL
 run_journey() {
   if [ "${E2E_RUNNER:-}" = container ]; then
     # Git Bash on Windows would otherwise rewrite /work as a Windows path.
-    MSYS_NO_PATHCONV=1 docker run --rm --network host --ipc host -e E2E_BASE_URL -e CI \
+    MSYS_NO_PATHCONV=1 docker run --rm --network host --ipc host -e E2E_BASE_URL -e CI -e NPM_CONFIG_UPDATE_NOTIFIER=false \
       -v "$root/frontend:/work" -w /work "$playwright_image" npx playwright test
   else
     (cd "$root/frontend" && npx playwright test)
