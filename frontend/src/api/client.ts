@@ -110,14 +110,9 @@ export async function signOut(): Promise<void> {
   setCsrfToken(null);
 }
 
-/** The demo accounts, or null outside demo mode, where the route answers 404. */
-export async function getDemo(): Promise<DemoInfo | null> {
-  try {
-    return await request<DemoInfo>("/demo");
-  } catch (error) {
-    if (error instanceof ApiError && error.status === 404) return null;
-    throw error;
-  }
+/** Outside demo mode this answers 404, and the sign-in page shows no accounts. */
+export function getDemo(): Promise<DemoInfo> {
+  return request<DemoInfo>("/demo");
 }
 
 export function resetDemo(): Promise<{ queued: number }> {

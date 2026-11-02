@@ -261,3 +261,20 @@ def test_the_seed_command_runs_the_demo_seed_in_demo_mode(
         f"Demo mode: queued {DEMO_DOCUMENTS} documents for the worker.",
         "Demo mode: queued 0 documents for the worker.",
     ]
+
+
+def test_the_seed_command_leaves_a_database_with_other_documents_alone(
+    demo_app: FastAPI, admin: tuple[TestClient, str], seeded: Engine, clock: FakeClock
+) -> None:
+    client, csrf = admin
+    upload = client.post(
+        "/api/documents",
+        files=[("files", ("own.pdf", pdf_bytes(seed=11)))],
+        headers=headers(csrf),
+    )
+    assert upload.status_code == 201
+
+    queued = seed_demo_if_empty(seeded, demo_app.state.storage, clock, demo_app.state.settings)
+
+    assert queued == 0
+    assert count(seeded, Document) == 1
