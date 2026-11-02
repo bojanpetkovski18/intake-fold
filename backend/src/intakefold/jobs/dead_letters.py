@@ -4,7 +4,7 @@ import uuid
 from dataclasses import dataclass
 from datetime import datetime
 
-from sqlalchemy import Engine, String, cast, select, tuple_, update
+from sqlalchemy import Engine, String, cast, func, select, tuple_, update
 from sqlalchemy.orm import Session
 
 from intakefold.audit.records import record_audit_event
@@ -49,9 +49,15 @@ class JobNotDead(Exception):
 def list_dead_jobs(
     engine: Engine, *, limit: int, after: tuple[datetime, uuid.UUID] | None
 ) -> DeadJobPage:
+    # A processing job names its document; a delivery job names its delivery, which does.
+    delivery = Job.payload["delivery_id"].astext == cast(WebhookDelivery.id, String)
+    document_id = func.coalesce(
+        Job.payload["document_id"].astext, cast(WebhookDelivery.document_id, String)
+    )
     statement = (
         select(Job, Document.id, Document.original_filename)
-        .outerjoin(Document, Job.payload["document_id"].astext == cast(Document.id, String))
+        .outerjoin(WebhookDelivery, delivery)
+        .outerjoin(Document, document_id == cast(Document.id, String))
         .where(Job.status == JobStatus.DEAD)
         .order_by(Job.updated_at.desc(), Job.id.desc())
         .limit(limit + 1)
