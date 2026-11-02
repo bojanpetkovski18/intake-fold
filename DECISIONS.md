@@ -462,3 +462,27 @@ Numbered and never renumbered. A reversal is a new entry. The owner approved Pha
 - **Decision:** `GET /documents/{id}/run-log` returns steps and audit events, with the actor's display name or nothing for the system. The screen adds deliveries from the M10 route. Every pipeline step already wrote `run_steps`, so no gap needed filling. Mock steps show no tokens or cost, rather than zeros.
 - **Why:** a zero would claim a measurement that did not happen.
 - **Trade-offs:** audit times come from the database clock, step times from the injectable one. Both are UTC.
+
+## D-074 How an evaluation runs
+- **Date:** 2026-11-02. **Status:** decided in M12.
+- **Decision:** `python -m intakefold.eval` runs one set through the real upload checks, worker, extractor and rules, as one batch with source `eval`. That batch has its own document cap and the batch token cap. The run:
+  - needs an empty database, migrates it, and seeds vendors;
+  - refuses a database that already has documents;
+  - switches webhooks off;
+  - waits for retries with a one-hour limit.
+  The Claude extractor needs `--allow-real-model`. Reports are named `YYYY-MM-DD-<extractor>-<model>-<set>`.
+- **Why:** uploads deduplicate by SHA-256, so a reused database would score old results. Refusing is safer than truncating anything. The set is added to the spec's file name, because one day can hold runs of several sets.
+- **Trade-offs:** each run needs a fresh database, created with a separate Compose project. The labels expect the injected twin's `not_duplicate` (D-059), so no special case was needed.
+
+## D-075 Scoring rules
+- **Date:** 2026-11-02. **Status:** decided in M12.
+- **Decision:**
+  - Money compares as `Decimal` and dates as dates.
+  - Text compares with spacing collapsed, and vendor names and line descriptions ignore case. Invoice numbers keep their case.
+  - A field empty in both counts as correct; a field expected but absent counts as missing.
+  - Line items are aligned by position.
+  - A document matches exactly only if every field and line is correct.
+  - Routing compares the label's outcome with the final status, and a false auto-approval is expected review but got auto-approved.
+  - The injection comparison lists fields that differ between twins, except a line description, which is where one injection is placed.
+- **Why:** each rule is visible in `eval/scoring.py` and tested.
+- **Trade-offs:** position alignment is harsh: one dropped line makes the following lines wrong. Counting empty-and-empty as correct raises accuracy, so the report also gives every count.
