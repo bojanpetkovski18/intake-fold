@@ -140,4 +140,37 @@ describe("sign in", () => {
 
     expect(await screen.findByRole("heading", { level: 1, name: "Inbox" })).toBeVisible();
   }, 10_000);
+
+  it("shows the demo accounts in demo mode", async () => {
+    stubApi({
+      "GET /auth/me": SIGNED_OUT,
+      "GET /demo": {
+        body: {
+          accounts: [
+            { email: "reviewer@example.com", role: "reviewer", password: "demo-reviewer-pass" },
+            { email: "admin@example.com", role: "admin", password: "demo-admin-pass" },
+          ],
+        },
+      },
+    });
+    renderApp("/sign-in");
+
+    const accounts = await screen.findByRole("region", { name: "Demo accounts" });
+    expect(accounts).toHaveTextContent("Reviewer");
+    expect(accounts).toHaveTextContent("reviewer@example.com");
+    expect(accounts).toHaveTextContent("demo-reviewer-pass");
+    expect(accounts).toHaveTextContent("Admin");
+    expect(accounts).toHaveTextContent("demo-admin-pass");
+  });
+
+  it("shows no accounts outside demo mode", async () => {
+    const calls = stubApi({ "GET /auth/me": SIGNED_OUT });
+    renderApp("/sign-in");
+
+    await screen.findByRole("heading", { level: 1, name: "Sign in" });
+    await waitFor(() => {
+      expect(calls.some((call) => call.key === "GET /demo")).toBe(true);
+    });
+    expect(screen.queryByRole("region", { name: "Demo accounts" })).not.toBeInTheDocument();
+  });
 });

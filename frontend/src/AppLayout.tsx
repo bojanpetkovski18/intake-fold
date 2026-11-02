@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router";
 import { useSession, useSignOut } from "./api/hooks";
+import { DemoBanner } from "./components/DemoBanner";
 import { BusyButton, ErrorNotice } from "./components/feedback";
 
 export function AppLayout() {
@@ -27,6 +28,15 @@ export function AppLayout() {
       onSuccess: () => {
         void navigate("/sign-in");
       },
+    });
+  }
+
+  function afterReset(queued: number) {
+    const flash = `Demo data reset. ${String(queued)} documents are being processed again.`;
+    // Focus moves to the inbox even when it is already showing, because the confirm buttons
+    // that held focus are gone.
+    void Promise.resolve(navigate("/", { state: { flash } })).then(() => {
+      main.current?.focus();
     });
   }
 
@@ -70,6 +80,9 @@ export function AppLayout() {
           </>
         )}
       </header>
+      {user && session.data?.demoMode && (
+        <DemoBanner canReset={user.role === "admin"} onReset={afterReset} />
+      )}
       {session.data?.extractor === "mock" && (
         <p className="banner">
           Mock extractor: results come from stored labels, not a model. They say nothing about

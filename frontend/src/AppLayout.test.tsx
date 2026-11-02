@@ -184,4 +184,85 @@ describe("app shell", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent("It broke.");
     expect(screen.getByRole("alert")).toHaveTextContent("Reference: abc");
   });
+
+  describe("demo mode", () => {
+    function demo(role: "reviewer" | "admin", extra: Record<string, Reply | Reply[]> = {}) {
+      return stubApi({
+        "GET /auth/me": { body: { ...session(role), demoMode: true } },
+        "GET /documents": EMPTY,
+        ...extra,
+      });
+    }
+
+    it("shows the demo banner without a reset control to a reviewer", async () => {
+      demo("reviewer");
+      renderApp("/");
+
+      expect(await screen.findByRole("region", { name: "Demo mode" })).toHaveTextContent(
+        "fictional",
+      );
+      expect(screen.queryByRole("button", { name: "Reset demo data" })).not.toBeInTheDocument();
+    });
+
+    it("shows no demo banner outside demo mode", async () => {
+      signedIn();
+      renderApp("/");
+
+      await screen.findByRole("heading", { level: 1, name: "Inbox" });
+      expect(screen.queryByRole("region", { name: "Demo mode" })).not.toBeInTheDocument();
+    });
+
+    it("asks before resetting, and cancel changes nothing", async () => {
+      const calls = demo("admin");
+      const user = userEvent.setup();
+      renderApp("/");
+
+      const trigger = await screen.findByRole("button", { name: "Reset demo data" });
+      await user.click(trigger);
+
+      expect(screen.getByRole("group", { name: /Delete every document/ })).toBeVisible();
+      expect(screen.getByRole("button", { name: "Cancel" })).toHaveFocus();
+      await user.keyboard("{Escape}");
+
+      expect(screen.queryByRole("group", { name: /Delete every document/ })).toBeNull();
+      expect(screen.getByRole("button", { name: "Reset demo data" })).toHaveFocus();
+      expect(calls.some((call) => call.key === "POST /demo/reset")).toBe(false);
+    });
+
+    it("resets after confirmation, then reports it and refreshes the inbox", async () => {
+      const calls = demo("admin", {
+        "POST /demo/reset": { status: 202, body: { queued: 20 } },
+        "GET /documents": [EMPTY, { body: { items: [documentRow()], nextCursor: null } }],
+      });
+      const user = userEvent.setup();
+      renderApp("/");
+
+      await user.click(await screen.findByRole("button", { name: "Reset demo data" }));
+      await user.click(screen.getByRole("button", { name: "Reset" }));
+
+      expect(await screen.findByRole("status")).toHaveTextContent(
+        "Demo data reset. 20 documents are being processed again.",
+      );
+      await waitFor(() => {
+        expect(screen.getByRole("main")).toHaveFocus();
+      });
+      expect(await screen.findByText("invoice.pdf")).toBeVisible();
+      const reset = calls.find((call) => call.key === "POST /demo/reset");
+      expect(new Headers(reset?.init?.headers).get("X-CSRF-Token")).toBe("csrf-1");
+    });
+
+    it("keeps the question open and says why when the reset fails", async () => {
+      demo("admin", {
+        "POST /demo/reset": { status: 500, body: { detail: "It broke.", traceId: "t1" } },
+      });
+      const user = userEvent.setup();
+      renderApp("/");
+
+      await user.click(await screen.findByRole("button", { name: "Reset demo data" }));
+      await user.click(screen.getByRole("button", { name: "Reset" }));
+
+      expect(await screen.findByRole("alert")).toHaveTextContent("It broke.");
+      expect(screen.getByRole("group", { name: /Delete every document/ })).toBeVisible();
+    });
+  });
 });
