@@ -1,0 +1,13 @@
+# The backend image is built from the repository root. Only what it copies is sent,
+# so secrets, local data and build output never reach the build context.
+*
+!backend/pyproject.toml
+!backend/uv.lock
+!backend/alembic.ini
+!backend/src/
+!backend/migrations/
+!data/labeled/
+**/__pycache__
+**/*.py[cod]
+**/.env
+**/.env.*

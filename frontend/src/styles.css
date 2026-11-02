@@ -256,6 +256,10 @@ select {
   flex: 1 1 14rem;
 }
 
+.panel .export-form label {
+  flex-basis: auto;
+}
+
 progress {
   display: block;
   width: 100%;

@@ -9,6 +9,8 @@ import { routes } from "./routes";
 export interface Reply {
   status?: number;
   body?: unknown;
+  /** Sent as is, for replies that are not JSON. */
+  text?: string;
 }
 
 type Routes = Record<string, Reply | Reply[] | (() => Promise<Reply>)>;
@@ -73,7 +75,7 @@ export function stubApi(api: Routes) {
       } else {
         reply = entry;
       }
-      const text = reply.body === undefined ? null : JSON.stringify(reply.body);
+      const text = reply.text ?? (reply.body === undefined ? null : JSON.stringify(reply.body));
       return new Response(text, { status: reply.status ?? 200 });
     }),
   );
