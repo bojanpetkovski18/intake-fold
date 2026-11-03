@@ -7,7 +7,7 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, field_validator
 
-SCHEMA_VERSION = "2026-11-01.1"
+SCHEMA_VERSION = "2026-11-03.1"
 
 # Strings, because a plain Decimal field lets the model answer with a JSON number (D-011).
 DECIMAL_PATTERN = r"^-?[0-9]+(\.[0-9]+)?$"
@@ -15,6 +15,10 @@ CURRENCY_PATTERN = r"^[A-Z]{3}$"
 # Fits NUMERIC(14,4). This runs after the response: the API rejects numeric constraints.
 LARGEST_AMOUNT = Decimal("9999999999")
 MOST_DECIMAL_PLACES = 4
+# The sizes of their database columns. Checked after the response too, like the amounts:
+# text that does not fit would fail the insert once the call was already paid for.
+VENDOR_NAME_LENGTH = 200
+INVOICE_NUMBER_LENGTH = 100
 
 
 def lower_text(value: object) -> object:
@@ -66,8 +70,8 @@ class ExtractedDocument(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
 
     document_type: Annotated[Literal["invoice", "receipt", "other"], BeforeValidator(lower_text)]
-    vendor_name: str | None
-    invoice_number: str | None
+    vendor_name: Annotated[str, Field(max_length=VENDOR_NAME_LENGTH)] | None
+    invoice_number: Annotated[str, Field(max_length=INVOICE_NUMBER_LENGTH)] | None
     issue_date: date | None
     due_date: date | None
     currency: Annotated[str, Field(pattern=CURRENCY_PATTERN)] | None

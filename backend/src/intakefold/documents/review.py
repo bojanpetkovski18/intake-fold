@@ -24,7 +24,7 @@ from intakefold.db.models import (
 from intakefold.delivery.events import enqueue_deliveries
 from intakefold.settings import Settings
 from intakefold.validation.apply import evaluate
-from intakefold.validation.normalize import normalize_invoice_number, normalize_vendor
+from intakefold.validation.normalize import invoice_keys
 from intakefold.validation.rules import (
     DATE_PLAUSIBLE,
     KNOWN_VENDOR,
@@ -240,6 +240,7 @@ def correct_document(
     with Session(engine) as session, session.begin():
         document = lock_for_review(session, document_id, version)
         invoice = session.scalar(select(Invoice).where(Invoice.document_id == document_id))
+        created = invoice is None
         if invoice is None:
             # The extraction failed, so the reviewer is typing the fields in.
             invoice = Invoice(
@@ -259,13 +260,12 @@ def correct_document(
         )
         scalars_changed = apply_scalars(session, invoice, correction, actor)
         lines_changed = apply_lines(session, invoice, lines, correction.line_items, actor)
-        if not scalars_changed and not lines_changed:
+        # A new invoice is a change even if every field is empty: approval reads the rule
+        # results, so they must exist before anything can be approved.
+        if not created and not scalars_changed and not lines_changed:
             return
-        invoice.normalized_vendor = (
-            normalize_vendor(invoice.vendor_name) if invoice.vendor_name else None
-        )
-        invoice.normalized_invoice_number = (
-            normalize_invoice_number(invoice.invoice_number) if invoice.invoice_number else None
+        invoice.normalized_vendor, invoice.normalized_invoice_number = invoice_keys(
+            invoice.vendor_name, invoice.invoice_number
         )
         session.flush()
         decision = evaluate(session, clock, settings, document_id, invoice)

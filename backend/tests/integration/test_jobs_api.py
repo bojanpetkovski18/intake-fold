@@ -24,10 +24,12 @@ from support import FakeClock
 
 from intakefold.db.models import (
     AuditEvent,
+    DeliveryStatus,
     Document,
     DocumentStatus,
     Job,
     JobStatus,
+    WebhookDelivery,
 )
 from intakefold.documents.storage import Storage
 from intakefold.extraction.mock import MockExtractor
@@ -124,6 +126,41 @@ def test_dead_job_is_listed_with_its_document(
     assert item["kind"] == "process_document"
     assert item["lastError"] == "api_400"
     assert item["attempts"] == 1
+    assert item["documentId"] == str(document_id)
+    assert item["filename"] == "broken.pdf"
+
+
+def test_dead_delivery_is_listed_with_its_document(
+    reviewer: tuple[TestClient, str], seeded: Engine, clock: FakeClock
+) -> None:
+    # A delivery job names its delivery, not its document, so the admin needs the join.
+    document_id = upload(reviewer)
+    with Session(seeded) as session, session.begin():
+        delivery = WebhookDelivery(
+            id=uuid.uuid4(),
+            document_id=document_id,
+            target="sink",
+            payload={},
+            status=DeliveryStatus.DEAD,
+        )
+        session.add(delivery)
+        session.flush()
+        session.add(
+            Job(
+                kind="deliver_webhook",
+                payload={"delivery_id": str(delivery.id)},
+                idempotency_key=f"deliver_webhook:{delivery.id}",
+                status=JobStatus.DEAD,
+                attempts=5,
+                max_attempts=5,
+                run_after=clock.now(),
+                last_error="DeliveryFailed",
+            )
+        )
+
+    item = reviewer[0].get(JOBS).json()["items"][0]
+
+    assert item["kind"] == "deliver_webhook"
     assert item["documentId"] == str(document_id)
     assert item["filename"] == "broken.pdf"
 

@@ -547,6 +547,33 @@ def test_failed_extraction_can_be_keyed_in_by_hand(
     assert post(reviewer, document_id, "approve", {"version": 2}).status_code == 200
 
 
+def test_an_empty_save_on_a_failed_extraction_still_runs_the_rules(
+    reviewer: tuple[TestClient, str], seeded: Engine, storage: Storage, clock: FakeClock
+) -> None:
+    document_id = in_review(reviewer, seeded, storage, clock, Failing())
+    empty: dict[str, Any] = {
+        "documentType": "receipt",
+        "vendorName": None,
+        "invoiceNumber": None,
+        "issueDate": None,
+        "dueDate": None,
+        "currency": None,
+        "subtotal": None,
+        "taxTotal": None,
+        "adjustmentsTotal": None,
+        "total": None,
+        "lineItems": [],
+    }
+
+    saved = patch(reviewer, document_id, 1, empty).json()
+    approved = post(reviewer, document_id, "approve", {"version": saved["version"]})
+
+    failed = [rule["rule"] for rule in saved["ruleResults"] if rule["outcome"] == "fail"]
+    assert failed == ["required_fields"]
+    assert approved.status_code == 422
+    assert status_of(seeded, document_id) is DocumentStatus.NEEDS_REVIEW
+
+
 def test_missing_document_is_404_everywhere(reviewer: tuple[TestClient, str]) -> None:
     missing = uuid.uuid4()
     fields: dict[str, Any] = {

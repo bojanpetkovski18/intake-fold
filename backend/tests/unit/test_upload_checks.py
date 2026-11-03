@@ -8,6 +8,7 @@ from PIL.PngImagePlugin import PngInfo
 from pypdf import PdfReader, PdfWriter
 
 from intakefold.documents.checks import JPEG, PDF, PNG, UploadRefused, check_upload
+from intakefold.documents.intake import display_filename
 from intakefold.settings import Settings
 
 
@@ -239,3 +240,23 @@ def test_cmyk_jpeg_is_converted() -> None:
 
 def test_helper_pdf_is_real() -> None:
     assert len(PdfReader(BytesIO(pdf_bytes(pages=3))).pages) == 3
+
+
+@pytest.mark.parametrize(
+    ("raw", "shown"),
+    [
+        ("invoice.pdf", "invoice.pdf"),
+        ("C:\\Users\\someone\\invoice.pdf", "invoice.pdf"),
+        ("../../etc/invoice.pdf", "invoice.pdf"),
+        ("in\x00voice\x1f.pdf", "invoice.pdf"),
+        ("  spaced.pdf  ", "spaced.pdf"),
+        ("", "unnamed"),
+        (None, "unnamed"),
+        ("a" * 300 + ".pdf", "a" * 255),
+        # A right-to-left override would show "invoice\u202efdp.exe" as "invoiceexe.pdf".
+        ("invoice\u202efdp.exe", "invoicefdp.exe"),
+        ("\u2066invoice\u2069\u200f.pdf", "invoice.pdf"),
+    ],
+)
+def test_display_filename_keeps_only_what_is_safe_to_show(raw: str | None, shown: str) -> None:
+    assert display_filename(raw) == shown

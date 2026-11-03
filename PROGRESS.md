@@ -1,6 +1,6 @@
 # Progress
 
-Last updated 2026-11-02. **M14 is pushed for review. Next: the owner merges, click-tests Codespaces, and decides on M15 and the release.**
+Last updated 2026-11-02. **M16, the full-codebase review, is pushed for review. Next: the owner merges, answers D-087, and decides on M15 and the release.**
 
 ## Milestones
 
@@ -22,8 +22,9 @@ Estimates are planning guesses, not measurements. Total: about 104 hours.
 | 11 | Run log, audit trail and metrics | 9, 10 | 6 h | Merged |
 | 12 | Evaluation harness | 7 | 6 h | Merged; `dev` now contains `main` |
 | 13 | Polish, accessibility and demo mode | 11, 12 | 8 h | Merged |
-| 14 | End-to-end test, Docker, README and portfolio kit | 13 | 9 h | Pushed for review |
+| 14 | End-to-end test, Docker, README and portfolio kit | 13 | 9 h | Merged |
 | 15 | Real-model measurement (owner-gated) | 12 | 3 h plus API spend | Blocked until the owner authorizes it; blocks nothing |
+| 16 | Full-codebase review (playbook Phase 9) | 14 | not estimated | Pushed for review; `docs/REVIEW.md` |
 
 ## Changes from the owner's expected plan
 
@@ -42,12 +43,13 @@ Every number used in the README or portfolio kit must have a row here. None of t
 
 | What | Value | Method | Model | Date | Machine |
 |---|---|---|---|---|---|
-| Backend tests | 663 passed, 310 of them integration tests against PostgreSQL | `bash scripts/check.sh`; `pytest --collect-only -m integration` | Mock | 2026-11-02 | Owner's machine, and a `node:24.22.1-bookworm` Linux container |
-| Front-end tests | 127 passed, with axe on 24 screen states | `bash scripts/check.sh` (Vitest) | None | 2026-11-02 | Owner's machine, and the Linux container |
-| End-to-end journey | 3 of 3 runs passed in a row, no retries, 6.7 to 8.9 s each | `bash scripts/check.sh` (`scripts/e2e.sh`), Chromium from Playwright 1.64.1 | Mock | 2026-11-02 | Owner's machine; also passed with `E2E_RUNNER=container` |
+| Backend tests | 685 passed, 315 of them integration tests against PostgreSQL | `bash scripts/check.sh`; `pytest --collect-only -m integration` | Mock | 2026-11-03 | Owner's machine, and a `node:24.22.1-bookworm` Linux container |
+| Front-end tests | 128 passed, with axe on 24 screen states | `bash scripts/check.sh` (Vitest) | None | 2026-11-03 | Owner's machine, and the Linux container |
+| End-to-end journey | 3 of 3 runs passed in a row, no retries, 6.7 to 8.9 s each (2026-11-02); again 3 of 3 after M16, 6.9 to 8.8 s | `bash scripts/check.sh` (`scripts/e2e.sh`), Chromium from Playwright 1.64.1 | Mock | 2026-11-03 | Owner's machine; also passed with `E2E_RUNNER=container` |
 | Browser accessibility audit | 116 axe runs, 0 violations, across 9 contexts (5 widths, light and dark, 200% zoom) | M13 audit, `docs/AUDIT.md` | Mock | 2026-11-02 | Owner's machine |
 | Fresh clone to a working app | 112 s from `docker compose up --build` to `/api/demo` answering 200 | Clone into a temp folder, an empty buildx builder for a cold build cache, follow the README | Mock | 2026-11-02 | Owner's machine |
 | Dev container start | 4 min 13 s from `devcontainer up` to the stack healthy | `@devcontainers/cli` 0.89.0 from a fresh clone | Mock | 2026-11-02 | Owner's machine |
+| Full-codebase review | 10 findings fixed, each regression test failing before its fix; 13 of 13 hand mutations of the fixes caught | `docs/REVIEW.md` | Mock | 2026-11-03 | Owner's machine |
 | Image sizes | backend 385 MB, web 90.7 MB | `docker image ls` | None | 2026-11-02 | Owner's machine |
 | Production bundle | JS 385.19 kB (119.16 kB gzip), CSS 7.90 kB | `vite build` output in the web image build | None | 2026-11-02 | Owner's machine |
 
@@ -76,4 +78,4 @@ Every number used in the README or portfolio kit must have a row here. None of t
 
 ## Next step
 
-Owner opens a PR for `#0014-e2e-docker-readme-and-portfolio-kit` against `dev`, checks CI (now including the e2e job), and merges. Then, owner actions: open the repository in Codespaces once, and decide on M15 (real-model measurement) and the release steps in the playbook's section 16.
+Owner opens a PR for `#0016-full-codebase-review` against `dev`, checks CI, merges, and answers the duplicate question in D-087. Then, owner actions: open the repository in Codespaces once, and decide on M15 (real-model measurement) and the release steps in the playbook.

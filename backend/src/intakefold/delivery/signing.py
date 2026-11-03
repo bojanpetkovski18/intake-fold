@@ -45,6 +45,7 @@ def verify(
     # Too old is a replay; too far ahead is a clock that cannot be trusted either.
     if abs(now - timestamp) > tolerance:
         return False
-    expected = signature(secret, timestamp, body)
-    # compare_digest takes the same time wherever the strings differ, so it leaks nothing.
-    return any(hmac.compare_digest(expected, candidate) for candidate in candidates)
+    expected = signature(secret, timestamp, body).encode()
+    # compare_digest takes the same time wherever the values differ, so it leaks nothing.
+    # Bytes, because on text it raises for any non-ASCII character a sender puts in the header.
+    return any(hmac.compare_digest(expected, candidate.encode()) for candidate in candidates)

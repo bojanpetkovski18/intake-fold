@@ -168,6 +168,19 @@ def test_invalid_output_is_repaired_by_resending_the_whole_request() -> None:
     assert "1,100.00" not in note  # The rejected value could be document content.
 
 
+@pytest.mark.parametrize(("field", "length"), [("vendor_name", 201), ("invoice_number", 101)])
+def test_text_longer_than_its_column_is_repaired_not_stored(field: str, length: int) -> None:
+    # The database columns are 200 and 100 characters. Longer text would fail the insert after
+    # the call was paid for, and every retry of the job would pay again.
+    api = FakeApi(message(json.dumps(VALID | {field: "x" * length})), valid_reply())
+
+    result = run(api)
+
+    assert result.outcome is ExtractionOutcome.SUCCEEDED
+    assert result.repairs == 1
+    assert f"{field}: string_too_long" in str(user_content(api.sent[1])[1]["text"])
+
+
 def test_repairs_are_limited_then_the_result_is_invalid() -> None:
     bad = message(json.dumps(VALID | {"total": "nope"}))
     api = FakeApi(bad, bad, bad, bad)

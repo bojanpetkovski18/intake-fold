@@ -46,6 +46,12 @@ repository() {
   .tools/gitleaks git --redact --no-banner .
   .tools/actionlint
   git ls-files -z | xargs -0 .tools/ec
+  # Bidirectional controls make code read differently from how it runs ("Trojan Source").
+  # -I skips binary files, whose bytes can match by chance.
+  if git grep -I -n -P '[\x{061C}\x{200E}\x{200F}\x{202A}-\x{202E}\x{2066}-\x{2069}]'; then
+    echo "Tracked text files contain bidirectional control characters." >&2
+    exit 1
+  fi
 }
 
 case "$group" in

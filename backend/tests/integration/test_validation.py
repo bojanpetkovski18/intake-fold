@@ -209,6 +209,19 @@ def test_another_number_from_the_same_vendor_is_not_a_duplicate(
     assert document(seeded, second).status is DocumentStatus.AUTO_APPROVED
 
 
+def test_numbers_with_no_letters_or_digits_do_not_all_match(
+    client: TestClient, seeded: Engine, storage: Storage, clock: FakeClock
+) -> None:
+    # Both normalize to nothing. They are compared like invoices with no number, by date and
+    # total, so two different invoices are not flagged as one.
+    process(client, seeded, storage, clock, Fixed(invoice_number="—"))
+    second = process(
+        client, seeded, storage, clock, Fixed(invoice_number="#", issue_date="2026-09-02")
+    )
+
+    assert document(seeded, second).status is DocumentStatus.AUTO_APPROVED
+
+
 def test_same_number_from_another_vendor_is_not_a_duplicate(
     client: TestClient, seeded: Engine, storage: Storage, clock: FakeClock
 ) -> None:
