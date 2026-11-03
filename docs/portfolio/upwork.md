@@ -50,7 +50,7 @@ Alternatives if one is missing from the list: TypeScript, Docker, API Developmen
 
 All from `PROGRESS.md`, "Measured results", 2026-11-02, on the owner's Windows 11 machine with Docker Desktop:
 
-- 663 backend tests (310 against a real PostgreSQL) and 127 front-end tests pass.
+- 685 backend tests (315 against a real PostgreSQL) and 128 front-end tests pass.
 - One Playwright journey passes three times in a row against the built stack, failing on any console error, CSP violation or accessibility finding.
 - No axe violations in 116 browser runs across nine widths and both themes.
 - From a fresh clone, `docker compose up --build` with an empty build cache served the app in 112 seconds.
