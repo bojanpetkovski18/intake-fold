@@ -250,3 +250,12 @@ Security releases:
 - **Node:** 24.22.1 (2026-10-20) is the latest 24.x security release (nodejs.org `index.json`). 24.22.2 (2026-10-27) is not a security release.
 
 Upwork portfolio limits: title 70, role 100, description 600 characters, from Upwork's help article "Add a portfolio project" as quoted in search results. A direct read answered 403, so the owner should confirm them in the form. The number of skills (five) comes from the brief.
+
+## M15 checks (2026-11-04)
+
+Floor: 2026-10-21 at 10:27 UTC, two weeks before the check.
+
+- **Model:** `claude-haiku-5-5`, chosen by the owner for the measurement. No date suffix.
+- **Prices**, from the [pricing page](https://platform.claude.com/docs/en/about-claude/pricing), read 2026-11-04, per million tokens. For prompts up to 100,000 tokens: input $0.10, 5-minute cache write $0.125, 1-hour cache write $0.20, cache read $0.01, output $0.50. Over 100,000 tokens: $0.50, $0.625, $1, $0.05 and $2.50. These match `extraction/prices.py`, which prices the short-prompt card; `MAX_INPUT_TOKENS_PER_DOC` (60,000) keeps every request on it. The Batch API halves both rates but is not used.
+- **Behaviour** (Claude API skill, Haiku 5.5 migration guide): adaptive thinking is on by default; `effort` defaults to `medium`; `temperature`, `top_p` and `top_k` are rejected; prefill is rejected; structured outputs carry over; the tokenizer counts about 30% more tokens than Haiku 4.5 did. **There is no server-side fallback:** `fallbacks: "default"` leaves a refusal as it is, and a model list is a 400. The extractor now sends no fallback request for this model.
+- **SDK:** `anthropic` 2.0.0 was published 2026-10-21 at 15:51 UTC and 2.1.0 at 22:00 UTC (PyPI), so neither clears the floor until later on 2026-11-04. Later releases: 2.2.0 and 2.3.0 (2026-10-23) and 2.4.0 (2026-11-02). The highest eligible at the check was 1.17.0.
