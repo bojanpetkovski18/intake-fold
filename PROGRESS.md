@@ -43,7 +43,7 @@ Every number used in the README or portfolio kit must have a row here. None of t
 
 | What | Value | Method | Model | Date | Machine |
 |---|---|---|---|---|---|
-| Backend tests | 685 passed, 315 of them integration tests against PostgreSQL | `bash scripts/check.sh`; `pytest --collect-only -m integration` | Mock | 2026-11-03 | Owner's machine, and a `node:24.22.1-bookworm` Linux container |
+| Backend tests | 687 passed, 316 of them integration tests against PostgreSQL | `bash scripts/check.sh`; `pytest --collect-only -m integration` | Mock | 2026-11-04 | Owner's machine, and a `node:24.22.1-bookworm` Linux container |
 | Front-end tests | 128 passed, with axe on 24 screen states | `bash scripts/check.sh` (Vitest) | None | 2026-11-03 | Owner's machine, and the Linux container |
 | End-to-end journey | 3 of 3 runs passed in a row, no retries, 6.7 to 8.9 s each (2026-11-02); again 3 of 3 after M16, 6.9 to 8.8 s | `bash scripts/check.sh` (`scripts/e2e.sh`), Chromium from Playwright 1.64.1 | Mock | 2026-11-03 | Owner's machine; also passed with `E2E_RUNNER=container` |
 | Browser accessibility audit | 116 axe runs, 0 violations, across 9 contexts (5 widths, light and dark, 200% zoom) | M13 audit, `docs/AUDIT.md` | Mock | 2026-11-02 | Owner's machine |
