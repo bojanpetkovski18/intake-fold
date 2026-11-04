@@ -85,7 +85,7 @@ Versions are pinned and were at least two weeks old when chosen; see [docs/RESEA
 
 What is checked on every push, in CI, with the mock extractor:
 
-- **Backend:** ruff, pyright in strict mode, pip-audit, and 685 pytest tests, 315 of them against a real PostgreSQL in a container. They include two workers racing for jobs, a worker killed mid-job, a model that tries to get an injected document approved, and anonymous, wrong-role and missing-CSRF requests across the whole route table.
+- **Backend:** ruff, pyright in strict mode, pip-audit, and 687 pytest tests, 316 of them against a real PostgreSQL in a container. They include two workers racing for jobs, a worker killed mid-job, a model that tries to get an injected document approved, and anonymous, wrong-role and missing-CSRF requests across the whole route table.
 - **Front end:** ESLint, Prettier, TypeScript and 128 Vitest tests, including axe checks on 24 screen states.
 - **End to end:** one Playwright journey against the built Compose stack, three runs in a row with no retries. It signs in, uploads, corrects, approves, checks the webhook arrived, exports, reads the metrics and requeues a dead job. It fails on any console error, CSP violation or axe finding.
 - **Repository:** gitleaks over the full history, actionlint and editorconfig.

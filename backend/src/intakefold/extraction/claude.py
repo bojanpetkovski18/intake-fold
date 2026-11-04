@@ -29,6 +29,9 @@ log = structlog.get_logger()
 
 CLAUDE = "claude"
 FALLBACK_BETA = "server-side-fallback-2026-07-01"
+# No server-side fallback exists for these: "default" leaves a refusal as it is, and a model
+# list is a 400, so the request goes without one (docs, checked 2026-11-04).
+NO_SERVER_FALLBACK = frozenset({"claude-haiku-5-5"})
 SPEND_CAP_CODE = "enforced_spend_limit_reached"
 # The SDK types these request bodies as deep unions of TypedDicts. They are built in one place
 # and every test inspects the bytes actually sent, so Any costs less here than casts would.
@@ -200,6 +203,9 @@ class ClaudeExtractor:
                 "format": self.output_format,
             },
         }
-        if self.settings.claude_refusal_fallback:
+        if (
+            self.settings.claude_refusal_fallback
+            and self.settings.claude_model not in NO_SERVER_FALLBACK
+        ):
             request |= {"betas": [FALLBACK_BETA], "fallbacks": "default"}
         return cast(BetaMessage, self.client.beta.messages.create(**request))

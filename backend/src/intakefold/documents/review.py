@@ -32,6 +32,7 @@ from intakefold.validation.rules import (
     NOT_DUPLICATE,
     REQUIRED_FIELDS,
     TOTAL_RECONCILES,
+    amount_text,
 )
 
 log = structlog.get_logger()
@@ -158,7 +159,10 @@ def lock_for_review(session: Session, document_id: uuid.UUID, version: int) -> D
 
 
 def audit_text(value: object) -> str | None:
-    return None if value is None else str(value)
+    if value is None:
+        return None
+    # Money as the API and the webhook write it: a stored 1575.5400 reads as 1575.54.
+    return amount_text(value) if isinstance(value, Decimal) else str(value)
 
 
 def apply_scalars(

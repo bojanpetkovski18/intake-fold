@@ -591,3 +591,9 @@ Numbered and never renumbered. A reversal is a new entry. The owner approved Pha
   - The repository check now fails on bidirectional control characters in tracked text files.
 - **For the owner:** when a reviewer corrects the first of two copies of one invoice, the rules run again and flag that first copy as a duplicate of the second. This follows SPEC section 7 ("no other non-rejected document"); D-057 covers only first routing. Keeping the first copy unflagged would mean comparing only with documents received earlier, a spec change.
 - **Trade-offs:** the generator was read at the level of its entry point and plan, not line by line; its tests cover reproducibility.
+
+## D-088 Real-model measurement deferred
+- **Date:** 2026-11-04. **Status:** decided by the owner in M15.
+- **Decision:** the owner chose Haiku 5.5 for the measurement, then deferred the paid run to present the project from the demo first. What M15 did is free: the extractor sends no fallback request to models without a server-side fallback (Haiku 5.5), the evaluation takes `--limit N` for smoke runs, and the model and prices were re-checked. No key was stored and no paid call was made.
+- **Why:** the demo needs no key, and the README already says plainly that accuracy is not measured (AC-28).
+- **When it resumes:** move to `anthropic` 2.x first (D-052), then a `--limit` smoke batch on Haiku 5.5 to compare tokens with the estimate, then the sets as the brief orders them, under a cap the owner gives.

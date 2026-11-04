@@ -466,6 +466,16 @@ def test_refusal_fallback_is_on_by_default() -> None:
     assert FALLBACK_BETA in api.headers[0]["anthropic-beta"]
 
 
+def test_a_model_with_no_server_side_fallback_is_not_asked_for_one() -> None:
+    # Haiku 5.5 has none: "default" leaves a refusal as it is, and a model list is a 400.
+    api = FakeApi(message(json.dumps(VALID), model="claude-haiku-5-5"))
+
+    run(api, claude_model="claude-haiku-5-5")
+
+    assert "fallbacks" not in api.sent[0]
+    assert "anthropic-beta" not in api.headers[0]
+
+
 def test_refusal_fallback_can_be_switched_off() -> None:
     api = FakeApi(valid_reply())
 
