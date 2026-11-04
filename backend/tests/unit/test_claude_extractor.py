@@ -168,6 +168,19 @@ def test_invalid_output_is_repaired_by_resending_the_whole_request() -> None:
     assert "1,100.00" not in note  # The rejected value could be document content.
 
 
+@pytest.mark.parametrize(("field", "length"), [("vendor_name", 201), ("invoice_number", 101)])
+def test_text_longer_than_its_column_is_repaired_not_stored(field: str, length: int) -> None:
+    # The database columns are 200 and 100 characters. Longer text would fail the insert after
+    # the call was paid for, and every retry of the job would pay again.
+    api = FakeApi(message(json.dumps(VALID | {field: "x" * length})), valid_reply())
+
+    result = run(api)
+
+    assert result.outcome is ExtractionOutcome.SUCCEEDED
+    assert result.repairs == 1
+    assert f"{field}: string_too_long" in str(user_content(api.sent[1])[1]["text"])
+
+
 def test_repairs_are_limited_then_the_result_is_invalid() -> None:
     bad = message(json.dumps(VALID | {"total": "nope"}))
     api = FakeApi(bad, bad, bad, bad)
@@ -451,6 +464,16 @@ def test_refusal_fallback_is_on_by_default() -> None:
 
     assert api.sent[0]["fallbacks"] == "default"
     assert FALLBACK_BETA in api.headers[0]["anthropic-beta"]
+
+
+def test_a_model_with_no_server_side_fallback_is_not_asked_for_one() -> None:
+    # Haiku 5.5 has none: "default" leaves a refusal as it is, and a model list is a 400.
+    api = FakeApi(message(json.dumps(VALID), model="claude-haiku-5-5"))
+
+    run(api, claude_model="claude-haiku-5-5")
+
+    assert "fallbacks" not in api.sent[0]
+    assert "anthropic-beta" not in api.headers[0]
 
 
 def test_refusal_fallback_can_be_switched_off() -> None:

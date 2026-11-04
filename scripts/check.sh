@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Runs everything CI runs. Any failure stops the script, so it can guard a push.
 #   scripts/check.sh            all checks
-#   scripts/check.sh backend    one group: backend, frontend or repository
+#   scripts/check.sh backend    one group: backend, frontend, e2e or repository
 set -euo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -35,21 +35,33 @@ frontend() {
   npm audit --audit-level=high
 }
 
+e2e() {
+  # Needs frontend/node_modules (the frontend group installs it) and Playwright's Chromium.
+  bash "$root/scripts/e2e.sh"
+}
+
 repository() {
   cd "$root"
   bash scripts/install-tools.sh
   .tools/gitleaks git --redact --no-banner .
   .tools/actionlint
   git ls-files -z | xargs -0 .tools/ec
+  # Bidirectional controls make code read differently from how it runs ("Trojan Source").
+  # -I skips binary files, whose bytes can match by chance.
+  if git grep -I -n -P '[\x{061C}\x{200E}\x{200F}\x{202A}-\x{202E}\x{2066}-\x{2069}]'; then
+    echo "Tracked text files contain bidirectional control characters." >&2
+    exit 1
+  fi
 }
 
 case "$group" in
   all)
     (backend)
     (frontend)
+    (e2e)
     (repository)
     ;;
-  backend | frontend | repository) ("$group") ;;
+  backend | frontend | e2e | repository) ("$group") ;;
   *)
     echo "Unknown group: $group" >&2
     exit 2

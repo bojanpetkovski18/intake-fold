@@ -4,12 +4,19 @@ import uuid
 from dataclasses import dataclass
 from datetime import datetime
 
-from sqlalchemy import Engine, String, cast, select, tuple_
+from sqlalchemy import Engine, String, cast, func, select, tuple_, update
 from sqlalchemy.orm import Session
 
 from intakefold.audit.records import record_audit_event
 from intakefold.clock import Clock
-from intakefold.db.models import Document, DocumentStatus, Job, JobStatus
+from intakefold.db.models import (
+    DeliveryStatus,
+    Document,
+    DocumentStatus,
+    Job,
+    JobStatus,
+    WebhookDelivery,
+)
 from intakefold.jobs.queue import requeue_statement
 
 
@@ -42,9 +49,15 @@ class JobNotDead(Exception):
 def list_dead_jobs(
     engine: Engine, *, limit: int, after: tuple[datetime, uuid.UUID] | None
 ) -> DeadJobPage:
+    # A processing job names its document; a delivery job names its delivery, which does.
+    delivery = Job.payload["delivery_id"].astext == cast(WebhookDelivery.id, String)
+    document_id = func.coalesce(
+        Job.payload["document_id"].astext, cast(WebhookDelivery.document_id, String)
+    )
     statement = (
         select(Job, Document.id, Document.original_filename)
-        .outerjoin(Document, Job.payload["document_id"].astext == cast(Document.id, String))
+        .outerjoin(WebhookDelivery, delivery)
+        .outerjoin(Document, document_id == cast(Document.id, String))
         .where(Job.status == JobStatus.DEAD)
         .order_by(Job.updated_at.desc(), Job.id.desc())
         .limit(limit + 1)
@@ -71,7 +84,7 @@ def list_dead_jobs(
 
 
 def retry_dead_job(engine: Engine, job_id: uuid.UUID, actor: uuid.UUID, clock: Clock) -> None:
-    """Requeues the job and reopens its document together, so neither is left behind."""
+    """Requeues the job and reopens its document or delivery together, so none is left behind."""
     with Session(engine) as session, session.begin():
         job = session.get(Job, job_id, with_for_update=True)
         if job is None:
@@ -79,8 +92,19 @@ def retry_dead_job(engine: Engine, job_id: uuid.UUID, actor: uuid.UUID, clock: C
         if job.status is not JobStatus.DEAD:
             raise JobNotDead
         raw_id = job.payload.get("document_id")
+        raw_delivery_id = job.payload.get("delivery_id")
         session.expire(job)
         session.execute(requeue_statement(job_id, clock.now()))
+        if raw_delivery_id is not None:
+            # The sender sends only pending deliveries, so a dead one would stay unsent.
+            session.execute(
+                update(WebhookDelivery)
+                .where(
+                    WebhookDelivery.id == uuid.UUID(str(raw_delivery_id)),
+                    WebhookDelivery.status == DeliveryStatus.DEAD,
+                )
+                .values(status=DeliveryStatus.PENDING)
+            )
         if raw_id is None:
             return
         document = session.get_one(Document, uuid.UUID(str(raw_id)))

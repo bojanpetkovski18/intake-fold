@@ -253,7 +253,8 @@ def test_every_correction_records_who_changed_what(
         for event in events(seeded, document_id, "field_corrected")
     }
     assert found == {
-        "total": ("999.0000", "110.00", user.id),
+        # Money reads as everywhere else: two places unless more are real, not NUMERIC(14,4).
+        "total": ("999.00", "110.00", user.id),
         "currency": ("USD", "EUR", user.id),
     }
 
@@ -417,6 +418,26 @@ def test_override_reason_approves_and_is_audited(
     assert event.actor_user_id is not None
 
 
+def test_a_flagged_injection_needs_an_override_reason_even_when_rules_pass(
+    reviewer: tuple[TestClient, str], seeded: Engine, storage: Storage, clock: FakeClock
+) -> None:
+    flagged = Fixed(total="110.00", contains_embedded_instructions=True)
+    document_id = in_review(reviewer, seeded, storage, clock, flagged)
+    assert all(rule["outcome"] != "fail" for rule in detail(reviewer, document_id)["ruleResults"])
+
+    refused = post(reviewer, document_id, "approve", {"version": 1, "overrideReason": None})
+    approved = post(
+        reviewer, document_id, "approve", {"version": 1, "overrideReason": "Instructions ignored."}
+    )
+
+    assert refused.status_code == 422
+    assert "embedded instructions" in refused.json()["detail"]
+    assert approved.status_code == 200
+    event = events(seeded, document_id, "document_approved")[0]
+    assert event.field == "override_reason"
+    assert event.new_value == "Instructions ignored."
+
+
 def test_clean_document_is_approved_without_a_reason(
     reviewer: tuple[TestClient, str], seeded: Engine, document_id: uuid.UUID
 ) -> None:
@@ -431,15 +452,16 @@ def test_clean_document_is_approved_without_a_reason(
     assert event.new_value is None
 
 
-def test_model_signals_alone_do_not_block_a_person(
+def test_low_confidence_alone_does_not_block_a_person(
     reviewer: tuple[TestClient, str], seeded: Engine, storage: Storage, clock: FakeClock
 ) -> None:
+    # The injection flag used to be included here; since D-065 was revised it needs a reason.
     document_id = in_review(
         reviewer,
         seeded,
         storage,
         clock,
-        Fixed(total="110.00", overall_confidence="low", contains_embedded_instructions=True),
+        Fixed(total="110.00", overall_confidence="low", uncertain_fields=["total"]),
     )
 
     response = post(reviewer, document_id, "approve", {"version": 1})
@@ -524,6 +546,33 @@ def test_failed_extraction_can_be_keyed_in_by_hand(
     assert saved.status_code == 200
     assert saved.json()["fields"]["vendorName"] == "Tarnwell Freight"
     assert post(reviewer, document_id, "approve", {"version": 2}).status_code == 200
+
+
+def test_an_empty_save_on_a_failed_extraction_still_runs_the_rules(
+    reviewer: tuple[TestClient, str], seeded: Engine, storage: Storage, clock: FakeClock
+) -> None:
+    document_id = in_review(reviewer, seeded, storage, clock, Failing())
+    empty: dict[str, Any] = {
+        "documentType": "receipt",
+        "vendorName": None,
+        "invoiceNumber": None,
+        "issueDate": None,
+        "dueDate": None,
+        "currency": None,
+        "subtotal": None,
+        "taxTotal": None,
+        "adjustmentsTotal": None,
+        "total": None,
+        "lineItems": [],
+    }
+
+    saved = patch(reviewer, document_id, 1, empty).json()
+    approved = post(reviewer, document_id, "approve", {"version": saved["version"]})
+
+    failed = [rule["rule"] for rule in saved["ruleResults"] if rule["outcome"] == "fail"]
+    assert failed == ["required_fields"]
+    assert approved.status_code == 422
+    assert status_of(seeded, document_id) is DocumentStatus.NEEDS_REVIEW
 
 
 def test_missing_document_is_404_everywhere(reviewer: tuple[TestClient, str]) -> None:

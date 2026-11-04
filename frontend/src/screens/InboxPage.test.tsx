@@ -36,9 +36,9 @@ class FakeXhr {
     this.sent = form;
   }
 
-  finish() {
+  finish(rawText?: string) {
     this.status = FakeXhr.status;
-    this.responseText = JSON.stringify(FakeXhr.response);
+    this.responseText = rawText ?? JSON.stringify(FakeXhr.response);
     this.onload?.();
   }
 }
@@ -310,6 +310,23 @@ describe("upload", () => {
     latestXhr().finish();
 
     expect(await screen.findByRole("alert")).toHaveTextContent("Too many uploads");
+  });
+
+  it("shows an error, not a stuck upload, when a success answer is not JSON", async () => {
+    // A proxy in between can answer 200 with a page of its own.
+    useFakeXhr(200, {});
+    stubApi({ "GET /auth/me": ME, "GET /documents": EMPTY });
+    const user = userEvent.setup();
+    renderApp("/");
+
+    await chooseAndUpload(user);
+    latestXhr().finish("<html>Proxy page</html>");
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("Something went wrong");
+    expect(screen.getByRole("button", { name: "Upload" })).toHaveAttribute(
+      "aria-disabled",
+      "false",
+    );
   });
 
   it("reports a lost connection", async () => {

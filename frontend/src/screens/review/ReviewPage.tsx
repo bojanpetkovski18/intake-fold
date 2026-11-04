@@ -11,7 +11,7 @@ import {
 } from "../../api/client";
 import { useDocument } from "../../api/hooks";
 import { STATUS_LABELS } from "../../api/labels";
-import type { ReviewDocument } from "../../api/types";
+import type { ReviewDocument, RuleView } from "../../api/types";
 import { BusyButton, ErrorNotice, Loading } from "../../components/feedback";
 import { flaggedFields, isDirty, serverFieldName, toDraft, toFields } from "./draft";
 import { FieldsForm } from "./FieldsForm";
@@ -43,6 +43,15 @@ const SHORTCUTS = [
 ] as const;
 
 type Panel = "override" | "reject" | null;
+
+function failed(rule: RuleView): boolean {
+  return rule.outcome === "fail";
+}
+
+// The server makes the same check (D-065); asking first saves a refused request.
+function needsOverride(document: ReviewDocument): boolean {
+  return document.ruleResults.some(failed) || document.containsEmbeddedInstructions;
+}
 
 function Workspace({ document: initial }: { document: ReviewDocument }) {
   const client = useQueryClient();
@@ -125,7 +134,7 @@ function Workspace({ document: initial }: { document: ReviewDocument }) {
   function approve() {
     void run(async () => {
       const current = await saved();
-      if (current.ruleResults.some((rule) => rule.outcome === "fail")) {
+      if (needsOverride(current)) {
         openPanel("override");
         return;
       }
@@ -271,7 +280,9 @@ function Workspace({ document: initial }: { document: ReviewDocument }) {
             >
               <label htmlFor="reason">
                 {panel === "override"
-                  ? "A rule failed. Why approve anyway?"
+                  ? document.ruleResults.some(failed)
+                    ? "A rule failed. Why approve anyway?"
+                    : "The document has embedded instructions. Why approve anyway?"
                   : "Why is this document rejected?"}
               </label>
               <textarea

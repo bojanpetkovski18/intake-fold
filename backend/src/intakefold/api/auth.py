@@ -35,7 +35,9 @@ class SessionView(BaseModel):
 
     user: UserView
     csrf_token: str
-    extractor: Literal["mock", "claude"]  # Drives the banner shown while the mock is active.
+    # These two drive the banners, and demo mode also the reset control.
+    extractor: Literal["mock", "claude"]
+    demo_mode: bool
 
 
 def session_view(principal: Principal, csrf_token: str, settings: Settings) -> SessionView:
@@ -45,7 +47,12 @@ def session_view(principal: Principal, csrf_token: str, settings: Settings) -> S
         display_name=principal.display_name,
         role=principal.role,
     )
-    return SessionView(user=user, csrf_token=csrf_token, extractor=settings.extractor)
+    return SessionView(
+        user=user,
+        csrf_token=csrf_token,
+        extractor=settings.extractor,
+        demo_mode=settings.demo_mode,
+    )
 
 
 @router.post("/login", dependencies=[Depends(limit_sign_in)])

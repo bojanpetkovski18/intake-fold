@@ -24,7 +24,7 @@ from intakefold.db.models import (
 from intakefold.delivery.events import enqueue_deliveries
 from intakefold.settings import Settings
 from intakefold.validation.apply import evaluate
-from intakefold.validation.normalize import normalize_invoice_number, normalize_vendor
+from intakefold.validation.normalize import invoice_keys
 from intakefold.validation.rules import (
     DATE_PLAUSIBLE,
     KNOWN_VENDOR,
@@ -32,6 +32,7 @@ from intakefold.validation.rules import (
     NOT_DUPLICATE,
     REQUIRED_FIELDS,
     TOTAL_RECONCILES,
+    amount_text,
 )
 
 log = structlog.get_logger()
@@ -72,7 +73,9 @@ class NotReviewable(Exception):
 
 
 class OverrideRequired(Exception):
-    pass
+    def __init__(self, *, injection: bool) -> None:
+        super().__init__()
+        self.injection = injection
 
 
 class NothingToApprove(Exception):
@@ -156,7 +159,10 @@ def lock_for_review(session: Session, document_id: uuid.UUID, version: int) -> D
 
 
 def audit_text(value: object) -> str | None:
-    return None if value is None else str(value)
+    if value is None:
+        return None
+    # Money as the API and the webhook write it: a stored 1575.5400 reads as 1575.54.
+    return amount_text(value) if isinstance(value, Decimal) else str(value)
 
 
 def apply_scalars(
@@ -238,6 +244,7 @@ def correct_document(
     with Session(engine) as session, session.begin():
         document = lock_for_review(session, document_id, version)
         invoice = session.scalar(select(Invoice).where(Invoice.document_id == document_id))
+        created = invoice is None
         if invoice is None:
             # The extraction failed, so the reviewer is typing the fields in.
             invoice = Invoice(
@@ -257,13 +264,12 @@ def correct_document(
         )
         scalars_changed = apply_scalars(session, invoice, correction, actor)
         lines_changed = apply_lines(session, invoice, lines, correction.line_items, actor)
-        if not scalars_changed and not lines_changed:
+        # A new invoice is a change even if every field is empty: approval reads the rule
+        # results, so they must exist before anything can be approved.
+        if not created and not scalars_changed and not lines_changed:
             return
-        invoice.normalized_vendor = (
-            normalize_vendor(invoice.vendor_name) if invoice.vendor_name else None
-        )
-        invoice.normalized_invoice_number = (
-            normalize_invoice_number(invoice.invoice_number) if invoice.invoice_number else None
+        invoice.normalized_vendor, invoice.normalized_invoice_number = invoice_keys(
+            invoice.vendor_name, invoice.invoice_number
         )
         session.flush()
         decision = evaluate(session, clock, settings, document_id, invoice)
@@ -284,7 +290,7 @@ def approve_document(
 ) -> None:
     with Session(engine) as session, session.begin():
         document = lock_for_review(session, document_id, version)
-        invoice = session.scalar(select(Invoice.id).where(Invoice.document_id == document_id))
+        invoice = session.scalar(select(Invoice).where(Invoice.document_id == document_id))
         if invoice is None:
             raise NothingToApprove
         failed = session.scalars(
@@ -292,8 +298,10 @@ def approve_document(
                 RuleResult.document_id == document_id, RuleResult.outcome == RuleOutcome.FAIL
             )
         ).first()
-        if failed is not None and not override_reason:
-            raise OverrideRequired
+        # D-065: a flagged injection needs a written reason too, even when every rule passes.
+        overridden = failed is not None or invoice.contains_embedded_instructions
+        if overridden and not override_reason:
+            raise OverrideRequired(injection=failed is None)
         document.status = DocumentStatus.APPROVED
         document.finished_at = clock.now()
         document.version += 1
@@ -303,10 +311,10 @@ def approve_document(
             document_id=document_id,
             actor_user_id=actor,
             action="document_approved",
-            field="override_reason" if failed is not None else None,
-            new_value=override_reason if failed is not None else None,
+            field="override_reason" if overridden else None,
+            new_value=override_reason if overridden else None,
         )
-    log.info("document_approved", document_id=str(document_id), overridden=failed is not None)
+    log.info("document_approved", document_id=str(document_id), overridden=overridden)
 
 
 def reject_document(

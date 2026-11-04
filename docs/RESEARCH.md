@@ -215,3 +215,47 @@ Owner chose Intakefold on 2026-10-31.
 | Haiku 5.5 | about $0.00125 | about $0.09 |
 
 Paired injection runs and repeats add to this. Real figures go in `PROGRESS.md` after an authorized run.
+
+## M13 checks (2026-11-02)
+
+Floor: 2026-10-19.
+
+- **axe-core 4.14.0**, published 2026-10-05, is the highest release on the floor (npm registry; 4.14.0 is also `latest`). No dependencies, MPL-2.0, dev only.
+- **nginxinc/nginx-unprivileged:1.30.6-alpine**, the newest 1.30 stable tag, pushed 2026-10-19 (Docker Hub). Image index digest `sha256:f5116ed4606f3eb015dd4a8e28cb9b351476dc0ad4bc6e9f93b19cec130cdf03`, read from `docker pull`. It runs as uid 101. Used only for the M13 scratch audit; M14 re-checks it before pinning the image.
+
+## M14 checks (2026-11-02)
+
+Floor: 2026-10-19. Digests are image index digests read with `docker buildx imagetools inspect`.
+
+| Image or tool | Pinned | Notes |
+|---|---|---|
+| `python:3.15.0-slim` | `sha256:f5b92f2a669a4c347044f29367f31983280b648250ca94dea66f98c53bc87e58` | Same digest as recorded in Phase 0; Debian 13.7 inside. Build and runtime stages of `backend/Dockerfile` |
+| `ghcr.io/astral-sh/uv:0.13.1` | `sha256:4a1f3666816dafadd20ceb71eac9a7d56d7ef30279f7d64048519ab901ada336` | Same uv version as CI |
+| `node:24.22.1-bookworm-slim` | `sha256:be8204d4bd327363357f532187b752ff62759c31bedf98e9e18fc08c9cbd605c` | Build stage of `frontend/Dockerfile`; matches `.nvmrc` |
+| `nginxinc/nginx-unprivileged:1.30.6-alpine` | `sha256:f5116ed4606f3eb015dd4a8e28cb9b351476dc0ad4bc6e9f93b19cec130cdf03` | Unchanged since M13 |
+| `mcr.microsoft.com/playwright:v1.64.1-noble` | `sha256:2f05f8a734509a7b3f26a912639488ee08f58a7b292d14d62271bcff9038768f` | Matches `@playwright/test`; Node 26 inside |
+| `mcr.microsoft.com/devcontainers/base:2-bookworm` | `sha256:99f5250dd2d5f8b11046d5662dd94c1e3c1dae56b560c7caad5ceb7edf349046` | Dev container |
+| `ghcr.io/devcontainers/features/docker-in-docker` 4.1.3 | `sha256:fae40f3c8be5a7c3b0db344c1d30341bc2c91ba38d1d5b14cd2ad72e6d65d084` | Highest version. Released with commit `cf6f1cd` on 2026-10-07 (GitHub API, file history of `devcontainer-feature.json`) |
+
+npm, from the registry's `time` field:
+
+- **@playwright/test 1.64.1** (2026-10-14) is the highest on the floor; Phase 0 recorded the same.
+- **@types/node 24.19.2** (2026-10-09) is the highest 24.x on the floor, matching Node 24.
+- **@devcontainers/cli 0.89.0** (2026-08-31) is the highest on the floor; 0.90.0 is from 2026-10-28. Used from scratch space only, not added to the repository.
+- `npm audit` still lists the same 11 moderate `minimatch` lines (PROGRESS, known issues).
+
+Security releases:
+
+- **Python:** 3.15.1 (2026-10-21) and 3.15.2 (2026-10-25) are both under the floor. Their security fixes ([3.15.2 changelog](https://docs.python.org/release/3.15.2/whatsnew/changelog.html)): `http.cookiejar` cookies with a negative version, `tarfile` link members that resolve to the destination (CVE 2026-114583), an `ssl` denylist for compromised eMudhra CA keys (CVE 2026-115557), the bundled pip, `mimetypes` on Windows and libexpat 2.9.0. Intakefold extracts no tar files, and makes outbound TLS calls only to the Claude API in M15. The images stay on 3.15.0; bump when 3.15.2 clears the floor on 2026-11-08.
+- **Node:** 24.22.1 (2026-10-20) is the latest 24.x security release (nodejs.org `index.json`). 24.22.2 (2026-10-27) is not a security release.
+
+Upwork portfolio limits: title 70, role 100, description 600 characters, from Upwork's help article "Add a portfolio project" as quoted in search results. A direct read answered 403, so the owner should confirm them in the form. The number of skills (five) comes from the brief.
+
+## M15 checks (2026-11-04)
+
+Floor: 2026-10-21 at 10:27 UTC, two weeks before the check.
+
+- **Model:** `claude-haiku-5-5`, chosen by the owner for the measurement. No date suffix.
+- **Prices**, from the [pricing page](https://platform.claude.com/docs/en/about-claude/pricing), read 2026-11-04, per million tokens. For prompts up to 100,000 tokens: input $0.10, 5-minute cache write $0.125, 1-hour cache write $0.20, cache read $0.01, output $0.50. Over 100,000 tokens: $0.50, $0.625, $1, $0.05 and $2.50. These match `extraction/prices.py`, which prices the short-prompt card; `MAX_INPUT_TOKENS_PER_DOC` (60,000) keeps every request on it. The Batch API halves both rates but is not used.
+- **Behaviour** (Claude API skill, Haiku 5.5 migration guide): adaptive thinking is on by default; `effort` defaults to `medium`; `temperature`, `top_p` and `top_k` are rejected; prefill is rejected; structured outputs carry over; the tokenizer counts about 30% more tokens than Haiku 4.5 did. **There is no server-side fallback:** `fallbacks: "default"` leaves a refusal as it is, and a model list is a 400. The extractor now sends no fallback request for this model.
+- **SDK:** `anthropic` 2.0.0 was published 2026-10-21 at 15:51 UTC and 2.1.0 at 22:00 UTC (PyPI), so neither clears the floor until later on 2026-11-04. Later releases: 2.2.0 and 2.3.0 (2026-10-23) and 2.4.0 (2026-11-02). The highest eligible at the check was 1.17.0.

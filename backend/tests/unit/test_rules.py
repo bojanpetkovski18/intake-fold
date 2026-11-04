@@ -7,7 +7,7 @@ from hypothesis import given
 from hypothesis import strategies as st
 
 from intakefold.db.models import DocumentStatus, RuleOutcome
-from intakefold.validation.normalize import normalize_invoice_number, normalize_vendor
+from intakefold.validation.normalize import invoice_keys, normalize_invoice_number, normalize_vendor
 from intakefold.validation.routing import Signals, route
 from intakefold.validation.rules import (
     InvoiceFacts,
@@ -410,6 +410,21 @@ def test_vendor_normalization_is_not_fuzzy() -> None:
 @pytest.mark.parametrize("number", ["INV-2601", "inv 2601", "INV_2601", "INV/2601", " inv.2601 "])
 def test_invoice_number_normalization(number: str) -> None:
     assert normalize_invoice_number(number) == "INV2601"
+
+
+@pytest.mark.parametrize(
+    ("vendor", "number", "keys"),
+    [
+        ("Tarnwell Freight", "INV-2601", ("tarnwell freight", "INV2601")),
+        ("Tarnwell Freight", "—", ("tarnwell freight", None)),
+        ("...", "INV-2601", (None, "INV2601")),
+        (None, None, (None, None)),
+    ],
+)
+def test_a_value_that_normalizes_to_nothing_has_no_duplicate_key(
+    vendor: str | None, number: str | None, keys: tuple[str | None, str | None]
+) -> None:
+    assert invoice_keys(vendor, number) == keys
 
 
 def test_messages_show_amounts_the_way_people_write_them() -> None:

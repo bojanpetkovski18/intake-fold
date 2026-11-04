@@ -14,7 +14,9 @@ CSRF_HEADER = "X-CSRF-Token"
 
 SAFE_METHODS = frozenset({"GET", "HEAD", "OPTIONS"})
 # Everything else needs a session. tests/integration/test_route_table.py must list new routes.
-PUBLIC_ROUTES = frozenset({("GET", "/api/health"), ("POST", "/api/auth/login")})
+PUBLIC_ROUTES = frozenset(
+    {("GET", "/api/health"), ("POST", "/api/auth/login"), ("GET", "/api/demo")}
+)
 ROLE_RANK = {Role.REVIEWER: 1, Role.ADMIN: 2}
 
 

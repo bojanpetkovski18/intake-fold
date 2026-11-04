@@ -44,6 +44,8 @@ ROUTE_TABLE: dict[tuple[str, str], str | Role] = {
     ("GET", "/api/metrics"): Role.REVIEWER,
     ("GET", "/api/jobs"): Role.REVIEWER,
     ("POST", "/api/jobs/{job_id}/retry"): Role.ADMIN,
+    ("GET", "/api/demo"): PUBLIC,
+    ("POST", "/api/demo/reset"): Role.ADMIN,
 }
 PATH_VALUES = {
     "document_id": "00000000-0000-7000-8000-000000000000",

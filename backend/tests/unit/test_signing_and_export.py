@@ -63,7 +63,16 @@ def test_a_moved_timestamp_breaks_the_signature() -> None:
 
 @pytest.mark.parametrize(
     "header",
-    ["", "garbage", f"t={NOW}", "v1=abc", f"t=soon,v1={'0' * 64}", f"t={NOW},v1="],
+    [
+        "",
+        "garbage",
+        f"t={NOW}",
+        "v1=abc",
+        f"t=soon,v1={'0' * 64}",
+        f"t={NOW},v1=",
+        # Headers arrive as Latin-1, and compare_digest raises on non-ASCII text.
+        f"t={NOW},v1=é{'0' * 63}",
+    ],
 )
 def test_malformed_headers_fail(header: str) -> None:
     assert not verify(SECRET, header, BODY, NOW)
@@ -76,9 +85,9 @@ def test_any_listed_signature_may_match_during_secret_rotation() -> None:
 
 
 def test_comparison_is_constant_time(monkeypatch: pytest.MonkeyPatch) -> None:
-    calls: list[tuple[str, str]] = []
+    calls: list[tuple[bytes, bytes]] = []
 
-    def spy(left: str, right: str) -> bool:
+    def spy(left: bytes, right: bytes) -> bool:
         calls.append((left, right))
         return left == right
 

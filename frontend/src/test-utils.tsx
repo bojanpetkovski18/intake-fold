@@ -9,6 +9,8 @@ import { routes } from "./routes";
 export interface Reply {
   status?: number;
   body?: unknown;
+  /** Sent as is, for replies that are not JSON. */
+  text?: string;
 }
 
 type Routes = Record<string, Reply | Reply[] | (() => Promise<Reply>)>;
@@ -18,6 +20,7 @@ export function session(role: Role = "reviewer"): Session {
     user: { id: "u1", email: `${role}@example.com`, displayName: "Riley Reviewer", role },
     csrfToken: "csrf-1",
     extractor: "mock",
+    demoMode: false,
   };
 }
 
@@ -59,7 +62,8 @@ export function stubApi(api: Routes) {
     vi.fn(async (url: string, init?: RequestInit) => {
       const key = `${init?.method ?? "GET"} ${url.replace("/api", "")}`;
       calls.push({ key, init });
-      const entry = api[key];
+      // Outside demo mode, as the API is by default.
+      const entry = api[key] ?? (key === "GET /demo" ? { status: 404, body: {} } : undefined);
       if (entry === undefined) {
         return new Response(JSON.stringify({ detail: `Unexpected ${key}` }), { status: 500 });
       }
@@ -71,7 +75,7 @@ export function stubApi(api: Routes) {
       } else {
         reply = entry;
       }
-      const text = reply.body === undefined ? null : JSON.stringify(reply.body);
+      const text = reply.text ?? (reply.body === undefined ? null : JSON.stringify(reply.body));
       return new Response(text, { status: reply.status ?? 200 });
     }),
   );

@@ -1,12 +1,42 @@
 import { useEffect, useRef, useState, type SubmitEvent } from "react";
 import { Navigate, useLocation } from "react-router";
-import { useSession, useSignIn } from "../api/hooks";
+import { useDemo, useSession, useSignIn } from "../api/hooks";
+import type { DemoAccount } from "../api/types";
 import { BusyButton, errorText } from "../components/feedback";
+
+const ROLE_NAMES = { reviewer: "Reviewer", admin: "Admin" } as const;
+
+function DemoAccounts({ accounts }: { accounts: DemoAccount[] }) {
+  return (
+    <section className="demo-accounts" aria-labelledby="demo-accounts-heading">
+      <h2 id="demo-accounts-heading">Demo accounts</h2>
+      <p className="muted">Fictional accounts, shown because this is a demo.</p>
+      <ul>
+        {accounts.map((account) => (
+          <li key={account.email}>
+            <strong>{ROLE_NAMES[account.role]}</strong>
+            <dl>
+              <div>
+                <dt>Email</dt>
+                <dd>{account.email}</dd>
+              </div>
+              <div>
+                <dt>Password</dt>
+                <dd>{account.password}</dd>
+              </div>
+            </dl>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
 
 export function SignInPage() {
   const location = useLocation();
   const session = useSession();
   const signIn = useSignIn();
+  const demo = useDemo();
   const errorRef = useRef<HTMLParagraphElement>(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -67,6 +97,7 @@ export function SignInPage() {
           Sign in
         </BusyButton>
       </form>
+      {demo.data && <DemoAccounts accounts={demo.data.accounts} />}
     </section>
   );
 }

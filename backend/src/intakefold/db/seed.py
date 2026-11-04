@@ -1,11 +1,16 @@
-"""Fictional vendors and users. Safe to run repeatedly. Run: python -m intakefold.db.seed"""
+"""Fictional vendors and users, and in demo mode the demo batch. Safe to run repeatedly.
+
+Run: python -m intakefold.db.seed
+"""
 
 from pydantic import SecretStr
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
 
+from intakefold.clock import SystemClock
 from intakefold.db.engine import build_engine
 from intakefold.db.models import Role, User, Vendor, new_id
+from intakefold.documents.storage import Storage
 from intakefold.generator.vendors import KNOWN_VENDORS
 from intakefold.identity.passwords import hash_password
 from intakefold.settings import ConfigurationError, Settings, load_settings
@@ -25,6 +30,11 @@ def demo_passwords(settings: Settings) -> dict[Role, SecretStr]:
 
 
 def seed(session: Session, passwords: dict[Role, SecretStr]) -> None:
+    seed_vendors(session)
+    seed_users(session, passwords)
+
+
+def seed_vendors(session: Session) -> None:
     for vendor in KNOWN_VENDORS:
         session.execute(
             insert(Vendor)
@@ -36,6 +46,9 @@ def seed(session: Session, passwords: dict[Role, SecretStr]) -> None:
             )
             .on_conflict_do_nothing(index_elements=[Vendor.normalized_name])
         )
+
+
+def seed_users(session: Session, passwords: dict[Role, SecretStr]) -> None:
     for email, display_name, role in USERS:
         password_hash = hash_password(passwords[role].get_secret_value())
         # Updates on conflict, so a changed password applies to an existing database.
@@ -63,6 +76,13 @@ def main() -> None:
     engine = build_engine(settings)
     with Session(engine) as session, session.begin():
         seed(session, passwords)
+    if settings.demo_mode:
+        # Imported here: the demo module uses this one's accounts, so a top-level import
+        # would be circular.
+        from intakefold.demo import seed_demo_if_empty
+
+        queued = seed_demo_if_empty(engine, Storage(settings.storage_dir), SystemClock(), settings)
+        print(f"Demo mode: queued {queued} documents for the worker.")
     engine.dispose()
 
 

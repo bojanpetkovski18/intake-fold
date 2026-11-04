@@ -95,6 +95,28 @@ def test_upload_creates_a_document_a_job_and_an_audit_event(
     assert event.actor_user_id == batch.created_by
 
 
+def test_a_batch_that_fails_to_save_leaves_no_files_behind(
+    client: TestClient,
+    csrf: str,
+    seeded: Engine,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # The files are written before the transaction, so its failure must take them back.
+    def failing_enqueue(*_: object, **__: object) -> None:
+        raise RuntimeError("database went away")
+
+    monkeypatch.setattr("intakefold.documents.intake.enqueue", failing_enqueue)
+
+    response = post_files(
+        client, csrf, part("a.pdf", pdf_bytes(seed=1)), part("b.png", png_bytes())
+    )
+
+    assert response.status_code == 500
+    assert count(seeded, Document) == 0
+    assert originals(tmp_path) == []
+
+
 def test_document_named_pdf_with_other_content_is_refused(
     client: TestClient, csrf: str, seeded: Engine, tmp_path: Path
 ) -> None:

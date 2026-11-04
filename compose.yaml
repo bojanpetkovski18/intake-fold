@@ -1,12 +1,35 @@
 name: intakefold
 
+# `docker compose up --build` runs the demo from a fresh clone with no .env and no API key.
+# Every default below is a fictional, local-only demo value; .env overrides them (D-080).
+x-backend: &backend
+  build:
+    context: .
+    dockerfile: backend/Dockerfile
+  image: intakefold-backend:local
+  restart: unless-stopped
+  environment: &backend-env
+    DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-intakefold}:${POSTGRES_PASSWORD:-demo-db-local-only}@db:5432/${POSTGRES_DB:-intakefold}
+    LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    # The demo is mock only: no key is passed in, and demo mode refuses any other extractor.
+    EXTRACTOR: mock
+    DEMO_MODE: "true"
+    DEMO_REVIEWER_PASSWORD: ${DEMO_REVIEWER_PASSWORD:-demo-reviewer-local-only}
+    DEMO_ADMIN_PASSWORD: ${DEMO_ADMIN_PASSWORD:-demo-admin-local-only}
+    WEBHOOK_TARGETS: '[{"name": "sink", "url": "http://sink:8190/webhook", "secret": "${SINK_SECRET:-demo-sink-secret-local-only-0000000}"}]'
+  volumes:
+    - storage:/data/storage
+  networks:
+    - default
+
 services:
   db:
     image: postgres:18.6-alpine@sha256:10a5c69a83035ab5239f5620d708520e8b28f5aa1f2b20143e6024532edadfb5
+    restart: unless-stopped
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:?set in .env}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set in .env}
-      POSTGRES_DB: ${POSTGRES_DB:?set in .env}
+      POSTGRES_USER: ${POSTGRES_USER:-intakefold}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-demo-db-local-only}
+      POSTGRES_DB: ${POSTGRES_DB:-intakefold}
     ports:
       - "127.0.0.1:${POSTGRES_HOST_PORT:-5441}:5432"
     volumes:
@@ -17,5 +40,81 @@ services:
       timeout: 3s
       retries: 10
 
+  # Migrations, accounts and the demo batch, once per start. Safe to repeat.
+  setup:
+    <<: *backend
+    restart: "no"
+    command: ["sh", "-c", "alembic upgrade head && python -m intakefold.db.seed"]
+    depends_on:
+      db:
+        condition: service_healthy
+
+  api:
+    <<: *backend
+    environment:
+      <<: *backend-env
+      # Both spellings of the local address. Codespaces sets its forwarded URL (D-081).
+      ALLOWED_ORIGINS: ${WEB_ORIGINS:-http://127.0.0.1:8180,http://localhost:8180}
+      # Plain http on this machine only. Codespaces serves https and turns it off (D-080).
+      ALLOW_INSECURE_COOKIES: ${WEB_INSECURE_COOKIES:-true}
+      # Only the web container may say who it forwarded for (D-042).
+      TRUSTED_PROXIES: ${NETWORK_PREFIX:-172.31.80}.10/32
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8100/api/health', timeout=2)"]
+      interval: 10s
+      timeout: 3s
+      start_period: 10s
+      retries: 3
+    depends_on:
+      setup:
+        condition: service_completed_successfully
+
+  worker:
+    <<: *backend
+    command: ["python", "-m", "intakefold.worker"]
+    # No health check: it serves nothing to probe. A crash ends the process, and restart brings
+    # it back. `up --wait` waits for it to be running.
+    depends_on:
+      setup:
+        condition: service_completed_successfully
+
+  sink:
+    <<: *backend
+    command:
+      ["uvicorn", "--factory", "intakefold_sink.app:create_app", "--host", "0.0.0.0", "--port", "8190", "--no-proxy-headers"]
+    environment:
+      SINK_SECRET: ${SINK_SECRET:-demo-sink-secret-local-only-0000000}
+      SINK_FAIL_FIRST: ${SINK_FAIL_FIRST:-0}
+    volumes: []
+    ports:
+      - "127.0.0.1:${SINK_HOST_PORT:-8190}:8190"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8190/events', timeout=2)"]
+      interval: 10s
+      timeout: 3s
+      start_period: 10s
+      retries: 3
+
+  web:
+    build:
+      context: frontend
+    image: intakefold-web:local
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${WEB_HOST_PORT:-8180}:8080"
+    networks:
+      default:
+        ipv4_address: ${NETWORK_PREFIX:-172.31.80}.10
+    depends_on:
+      api:
+        condition: service_healthy
+
+networks:
+  default:
+    ipam:
+      config:
+        - subnet: ${NETWORK_PREFIX:-172.31.80}.0/24
+
 volumes:
   db-data:
+  storage:

@@ -1,5 +1,6 @@
 import type {
   DeadJob,
+  DemoInfo,
   DocumentStatus,
   DocumentSummary,
   DeliveryView,
@@ -63,6 +64,11 @@ function parseProblem(text: string): Problem {
 }
 
 async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
+  const text = await send(path, init);
+  return (text ? JSON.parse(text) : undefined) as T;
+}
+
+async function send(path: string, init: RequestInit = {}): Promise<string> {
   const headers = new Headers(init.headers);
   if (init.method && csrfToken) {
     headers.set("X-CSRF-Token", csrfToken);
@@ -77,7 +83,7 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   if (!response.ok) {
     throw new ApiError(response.status, parseProblem(text));
   }
-  return (text ? JSON.parse(text) : undefined) as T;
+  return text;
 }
 
 export async function getSession(): Promise<Session | null> {
@@ -107,6 +113,15 @@ export async function signIn(email: string, password: string): Promise<Session> 
 export async function signOut(): Promise<void> {
   await request<unknown>("/auth/logout", { method: "POST" });
   setCsrfToken(null);
+}
+
+/** Outside demo mode this answers 404, and the sign-in page shows no accounts. */
+export function getDemo(): Promise<DemoInfo> {
+  return request<DemoInfo>("/demo");
+}
+
+export function resetDemo(): Promise<{ queued: number }> {
+  return request<{ queued: number }>("/demo/reset", { method: "POST" });
 }
 
 export interface DocumentQuery {
@@ -172,6 +187,15 @@ export function getDeliveries(id: string): Promise<DeliveryView[]> {
   return request<DeliveryView[]>(`/documents/${id}/deliveries`);
 }
 
+/** Approved invoices as CSV text, by approval date in UTC, both ends inclusive (D-070). */
+export function exportInvoices(from: string, to: string): Promise<string> {
+  const params = new URLSearchParams();
+  if (from) params.set("from", from);
+  if (to) params.set("to", to);
+  const query = params.toString();
+  return send(`/exports/invoices.csv${query ? `?${query}` : ""}`);
+}
+
 export function getMetrics(): Promise<{ rows: MetricsRow[] }> {
   return request<{ rows: MetricsRow[] }>("/metrics");
 }
@@ -211,7 +235,12 @@ export function uploadDocuments(
     };
     xhr.onload = () => {
       if (xhr.status >= 200 && xhr.status < 300) {
-        resolve(JSON.parse(xhr.responseText) as UploadResult);
+        try {
+          resolve(JSON.parse(xhr.responseText) as UploadResult);
+        } catch {
+          // Thrown here, it would escape the handler and leave the upload pending forever.
+          reject(new ApiError(xhr.status, {}));
+        }
         return;
       }
       const error = new ApiError(xhr.status, parseProblem(xhr.responseText));

@@ -7,7 +7,7 @@ Numbered and never renumbered. A reversal is a new entry. The owner approved Pha
 - **Decision:** rename the project from Filefold to Intakefold, Python package `intakefold`.
 - **Why:** filefold.com is a live product in the same space, a client document portal with AI retrieval. Intakefold is free on PyPI and npm, has no GitHub repositories, and no product was found.
 - **Alternatives:** Slipfold, Foliowise, keeping Filefold.
-- **Trade-offs:** the GitHub repository is still called `file-fold`, and renaming it is the owner's action. No trademark search was done.
+- **Trade-offs:** the GitHub repository was called `file-fold`; the owner renamed it `intake-fold` on 2026-10-31. No trademark search was done.
 
 ## D-002 Minimal sign-in with two roles
 - **Date:** 2026-10-31. **Status:** decided by the owner.
@@ -140,7 +140,7 @@ Numbered and never renumbered. A reversal is a new entry. The owner approved Pha
 - **Why:** 5432 to 5434 and 8080 are in use by the owner's other projects. All are overridable from `.env`.
 
 ## D-022 No hosting; Docker demo
-- **Date:** 2026-10-31. **Status:** approved with Phase 0.
+- **Date:** 2026-10-31. **Status:** approved with Phase 0; the owner added the dev container in M14 (D-081).
 - **Decision:** one-command Docker run, per the brief's V2 list. A pinned Codespaces dev container is decided at M14.
 - **Why:** a hosted demo is out of the MVP.
 
@@ -212,7 +212,7 @@ Numbered and never renumbered. A reversal is a new entry. The owner approved Pha
 - **Trade-offs:** less soak time for these three. The entries in `pyproject.toml` can go once `exclude-newer` passes those dates.
 
 ## D-034 TRUNCATE is the one way around the audit trigger
-- **Date:** 2026-10-31. **Status:** decided in M2, for owner review.
+- **Date:** 2026-10-31. **Status:** decided in M2; accepted by the owner in M13.
 - **Decision:** the append-only trigger is a row trigger, so `UPDATE` and `DELETE` fail but `TRUNCATE` works. A test records this.
 - **Why:** the demo reset (AC-22) must clear the audit trail. AC-18 says rows cannot be updated or deleted through SQL, and this meets it for those statements only.
 - **Alternatives:** a statement-level `BEFORE TRUNCATE` trigger with a separate privileged role for the reset, which is stronger but adds a second database role to a local demo.
@@ -255,7 +255,7 @@ Numbered and never renumbered. A reversal is a new entry. The owner approved Pha
 - **Trade-offs:** `PUBLIC_ROUTES` matches the request path, because FastAPI 0.143 keeps included routers lazy and the matched route omits their prefix. A public route with path parameters would need a different check. The route-table test reads the OpenAPI schema for the same reason, so a route hidden from the schema would escape it.
 
 ## D-041 Session and sign-in limits
-- **Date:** 2026-10-31. **Status:** decided in M3, for owner review.
+- **Date:** 2026-10-31. **Status:** decided in M3; kept by the owner in M13. The Docker demo's cookie setting is D-080.
 - **Decision:** sessions last 12 hours with no sliding renewal. The cookie is HttpOnly, Secure, `SameSite=Strict` and scoped to `/api`. Sign-in allows 10 attempts per minute per client IP, counting successes. Unsafe requests with no `Origin` are refused. Argon2 uses the library's default parameters.
 - **Why:** the spec sets none of these. They are the simplest strict choices for a same-origin app.
 - **Trade-offs:** a reviewer signs in again after 12 hours, and scripts must send `Origin`. `ALLOW_INSECURE_COOKIES` must be on for browsers that refuse Secure cookies over local http; M14 decides this for the Docker demo.
@@ -404,10 +404,10 @@ Numbered and never renumbered. A reversal is a new entry. The owner approved Pha
 - **Trade-offs:** one column the spec's data model table does not list. The table names "key columns", so it was left alone, for the owner to add if wanted.
 
 ## D-065 Corrections never approve
-- **Date:** 2026-11-02. **Status:** decided in M9, for owner review.
-- **Decision:** a correction re-runs the rules and updates the reasons, and the document stays `needs_review` until a person acts. "A required rule fails" means any rule with outcome `fail`, and an override reason then lets the reviewer approve. Model signals such as low confidence or the injection flag do not block a person. Unsaved edits are saved first when approving or rejecting. A failed extraction can be keyed in by hand, as an invoice with low confidence. Approved, rejected and auto-approved documents cannot be edited.
+- **Date:** 2026-11-02. **Status:** decided in M9; revised by the owner in M13.
+- **Decision:** a correction re-runs the rules and updates the reasons, and the document stays `needs_review` until a person acts. "A required rule fails" means any rule with outcome `fail`, and an override reason then lets the reviewer approve. Since M13, the injection flag also needs an override reason, recorded the same way. Low confidence and uncertain fields do not block a person. Unsaved edits are saved first when approving or rejecting. A failed extraction can be keyed in by hand, as an invoice with low confidence. Approved, rejected and auto-approved documents cannot be edited.
 - **Why:** routing distrusts the model, but a reviewer has seen the page. Spec section 11 does not define which rules are "required".
-- **Trade-offs:** a reviewer can approve a flagged injection with no reason, relying on the warning shown. Requiring a reason there would be a one-line change.
+- **Trade-offs:** one more step on a flagged document. The flag comes from the model, so a compromised model could leave it off; the rules, not the flag, are what stop a bad auto-approval (AC-10).
 
 ## D-066 Review keyboard shortcuts
 - **Date:** 2026-11-02. **Status:** decided in M9.
@@ -462,3 +462,138 @@ Numbered and never renumbered. A reversal is a new entry. The owner approved Pha
 - **Decision:** `GET /documents/{id}/run-log` returns steps and audit events, with the actor's display name or nothing for the system. The screen adds deliveries from the M10 route. Every pipeline step already wrote `run_steps`, so no gap needed filling. Mock steps show no tokens or cost, rather than zeros.
 - **Why:** a zero would claim a measurement that did not happen.
 - **Trade-offs:** audit times come from the database clock, step times from the injectable one. Both are UTC.
+
+## D-074 How an evaluation runs
+- **Date:** 2026-11-02. **Status:** decided in M12.
+- **Decision:** `python -m intakefold.eval` runs one set through the real upload checks, worker, extractor and rules, as one batch with source `eval`. That batch has its own document cap and the batch token cap. The run:
+  - needs an empty database, migrates it, and seeds vendors;
+  - refuses a database that already has documents;
+  - switches webhooks off;
+  - waits for retries with a one-hour limit.
+  The Claude extractor needs `--allow-real-model`. Reports are named `YYYY-MM-DD-<extractor>-<model>-<set>`.
+- **Why:** uploads deduplicate by SHA-256, so a reused database would score old results. Refusing is safer than truncating anything. The set is added to the spec's file name, because one day can hold runs of several sets.
+- **Trade-offs:** each run needs a fresh database, created with a separate Compose project. The labels expect the injected twin's `not_duplicate` (D-059), so no special case was needed.
+
+## D-075 Scoring rules
+- **Date:** 2026-11-02. **Status:** decided in M12.
+- **Decision:**
+  - Money compares as `Decimal` and dates as dates.
+  - Text compares with spacing collapsed, and vendor names and line descriptions ignore case. Invoice numbers keep their case.
+  - A field empty in both counts as correct; a field expected but absent counts as missing.
+  - Line items are aligned by position.
+  - A document matches exactly only if every field and line is correct.
+  - Routing compares the label's outcome with the final status, and a false auto-approval is expected review but got auto-approved.
+  - The injection comparison lists fields that differ between twins, except a line description, which is where one injection is placed.
+- **Why:** each rule is visible in `eval/scoring.py` and tested.
+- **Trade-offs:** position alignment is harsh: one dropped line makes the following lines wrong. Counting empty-and-empty as correct raises accuracy, so the report also gives every count.
+
+## D-076 Demo mode
+- **Date:** 2026-11-02. **Status:** decided in M13.
+- **Decision:** `DEMO_MODE=true` needs `EXTRACTOR=mock` and both demo passwords, or startup stops.
+  - In demo mode the seed command uploads the development set as one batch with source `demo`, once, into an empty database. The worker processes it like any upload, so demo metrics are real mock runs.
+  - `POST /demo/reset` is admin only and answers 404 outside demo mode. It locks `documents`, truncates every document table in one statement, deletes those documents' files after the commit, and uploads the demo set again as the admin. Users, sessions and vendors stay, so nobody is signed out.
+  - A test fails if a new table is neither reset nor listed as kept.
+- **Why:** the brief asks for real runs labeled as mock, and a reset must never cost money. Truncating the named tables without `CASCADE` makes a new foreign key fail loudly instead of being emptied unseen.
+- **Alternatives:** process the batch inside the request, which would hold an HTTP request for the whole pipeline; or delete row by row, which the audit trigger forbids (D-034).
+- **Trade-offs:** the reset answers once the files are queued, so the inbox fills over a few seconds. A worker midway through an old job fails that job's writes harmlessly, because its rows are gone. The reset leaves no audit row, because audit events belong to documents; it writes a `demo_reset` log line with the admin's ID.
+
+## D-077 Demo accounts on a public route
+- **Date:** 2026-11-02. **Status:** decided by the owner in M13. Spec 0.2.
+- **Decision:** public `GET /demo` returns the demo accounts with their passwords in demo mode, and 404 otherwise. `GET /auth/me` gains `demoMode`, which drives the banner and the reset control.
+- **Why:** the spec shows demo credentials on the sign-in page only in demo mode, and a signed-out page has no other way to know. The owner chose this over listing them only in the README.
+- **Trade-offs:** outside demo mode the sign-in page's request logs a 404 in the browser console, like the 401s in D-063. The M14 journey runs in demo mode, so it does not see one.
+
+## D-078 The front end's security headers, checked in M13
+- **Date:** 2026-11-02. **Status:** decided in M13.
+- **Decision:** `frontend/nginx.conf`, for `nginx-unprivileged` on port 8080, serves the build and proxies `/api`. Every page and asset gets a strict CSP (`default-src 'none'`, then `'self'` for scripts, styles, images, fetches, fonts and the manifest; `base-uri 'none'`, `form-action 'self'`, `frame-ancestors 'none'`), plus `nosniff`, `no-referrer`, a `Permissions-Policy` and `Cross-Origin-Opener-Policy: same-origin`. The headers repeat in each location, because nginx drops inherited `add_header` lines in a location that adds its own. API responses keep the API's own stricter headers.
+- **Why:** the brief asks for the production build under its real headers now. Writing the config M14 will ship, and testing that, beats a stand-in server.
+- **Alternatives:** a Node static server with the same headers, which M14 would replace.
+- **Trade-offs:** M14 still builds the image and pins it. M13 ran this config in a scratch container from `nginxinc/nginx-unprivileged:1.30.6-alpine`, pinned by digest.
+
+## D-079 Automated accessibility checks
+- **Date:** 2026-11-02. **Status:** decided in M13.
+- **Decision:** `axe-core` 4.14.0 runs in Vitest on every screen in each state: loading, empty, error and success, plus the open reset, override and reject questions. Contrast is off there, because jsdom has no layout. The real-browser audit runs axe with every rule, contrast included, in light and dark at five widths.
+- **Why:** unit runs catch names, roles and structure on every commit; only a browser can judge colour and layout.
+- **Alternatives:** `vitest-axe` or `jest-axe`, which add a wrapper over the same engine.
+- **Trade-offs:** contrast is checked only when the audit is run by hand, until M14's Playwright journey runs axe on each page in CI.
+
+## D-080 The Compose demo runs from a fresh clone with no .env
+- **Date:** 2026-11-02. **Status:** decided in M14.
+- **Decision:** every value in `compose.yaml` has a fictional, local-only default, so `docker compose up --build` needs no `.env` and no key. A `setup` service runs migrations and the seed, then exits; `api` and `worker` wait for it. The stack is always demo mode with the mock extractor, and no API key is passed in.
+  - `ALLOW_INSECURE_COOKIES` is on for the stack, through its own variable `WEB_INSECURE_COOKIES`, because the demo is plain http on 127.0.0.1 and some browsers refuse Secure cookies there. The setting's default stays off (D-041). Codespaces serves https and turns it off (D-081).
+  - `ALLOWED_ORIGINS` comes from `WEB_ORIGINS`, by default both `http://127.0.0.1:8180` and `http://localhost:8180`.
+  - nginx gets a fixed address on a fixed /24 network, and `TRUSTED_PROXIES` names only that address (D-042). `NETWORK_PREFIX` moves the network if it clashes.
+  - The worker has no health check. It serves nothing to probe; a crash ends the container and `restart: unless-stopped` starts it again.
+  - Health checks live in `compose.yaml`, per role, not in the shared image. The first CI run showed why: with a `HEALTHCHECK` in the image and `disable: true` on the worker, the container still carries a check (`Test: NONE`) but no health data, and Compose 2.38.2 on the runner fails `up --wait` with "has no healthcheck configured". Compose 5.5.1, used locally, accepted it.
+- **Why:** the spec requires the stack to run from a fresh clone with no key. Separate variable names keep a developer's `.env`, written for host-run tools, from changing the Docker demo.
+- **Alternatives:** require `cp .env.example .env` first; or trust the whole Compose network, which would include the gateway that host traffic arrives from.
+- **Trade-offs:** the default passwords are public, which is the point of a demo and why demo mode refuses a real model. A fixed subnet can clash with another Docker network; the e2e stack uses its own prefix.
+
+## D-081 Codespaces dev container
+- **Date:** 2026-11-02. **Status:** decided by the owner in M14.
+- **Decision:** `.devcontainer/` uses `mcr.microsoft.com/devcontainers/base:2-bookworm` and the docker-in-docker feature 4.1.3, both pinned by digest. On each start, `.devcontainer/start.sh` runs `docker compose up --build --detach --wait`. In Codespaces it sets `WEB_ORIGINS` to the forwarded https address and turns insecure cookies off.
+- **Why:** the playbook's no-hosting option, so a visitor can try the demo without installing Docker.
+- **Verified:** with the dev container CLI 0.89.0 from a fresh clone, the container started the stack and the sign-in worked. With the Codespaces variables set by hand, the API accepted the forwarded origin, refused the local one, and set a Secure cookie. Not yet clicked through on GitHub: the owner's step after merge.
+- **Trade-offs:** the feature installs the Docker engine and Compose at their latest versions from their own signed sources, not pinned by checksum. The first start builds the images, which takes minutes.
+
+## D-082 CSV export on the inbox
+- **Date:** 2026-11-02. **Status:** decided in M14, for owner review.
+- **Decision:** the inbox gains an Export panel: optional "Approved from" and "Approved to" dates and an "Export CSV" button. It fetches `GET /exports/invoices.csv` through the API client and saves the text as `approved-invoices.csv`, with busy, error and success states.
+- **Why:** F-10 and the role table give reviewers CSV export, and the M14 journey must export, but no screen offered it. Fetching rather than linking shows a refused export (for example, a reversed date range) as an error on the page, not a downloaded error file.
+- **Alternatives:** a plain link, which cannot show errors; or a separate export screen.
+- **Trade-offs:** the whole CSV is held in memory before saving, which is fine at demo scale. SPEC section 12 still lists the inbox without export; changing it is the owner's call.
+
+## D-083 The end-to-end journey
+- **Date:** 2026-11-02. **Status:** decided in M14.
+- **Decision:** `scripts/e2e.sh` builds the stack under its own project name, ports and network, ignoring any `.env`, then runs one Playwright journey three times in a row with no retries (AC-24):
+  - sign in with the account shown on the page, including one wrong password;
+  - upload a PNG generated per run, which the mock has no label for, so it arrives with empty fields;
+  - correct every field, see the rules pass, approve;
+  - see the signed delivery and the corrections on the document log;
+  - export and read the CSV, read the metrics;
+  - requeue a dead delivery and see focus move to the result.
+
+  Each page gets axe with every rule. The journey fails on any console error or warning, page error or CSP violation, except the browser's own 401 lines for `/api/auth/me` and `/api/auth/login` (D-063).
+  - Before each run, the script turns one delivered webhook into a dead job and dead delivery with SQL, as an outage would leave them. No API creates dead jobs, and a real outage takes minutes of backoff.
+  - After the runs, the script replaces the API container while a placeholder holds its old address, and checks `/api/health` through nginx (D-085).
+  - CI runs Playwright in `mcr.microsoft.com/playwright:v1.64.1-noble`, pinned by digest, on the host network. Locally it runs from `frontend/node_modules`.
+- **Why:** the brief's journey and AC-24. A generated file avoids duplicates without resetting between runs.
+- **Trade-offs:** the dead-job fixture writes to the database directly. The journey runs at desktop width only; the M13 audit covers the other widths.
+- **Found:** the first runs found two bugs, each now covered by a regression test. Requeuing a dead webhook delivery reset the job but left the delivery dead, so it was never sent again (fixed in `jobs/dead_letters.py`). nginx kept proxying to a replaced API container's old address (D-085).
+
+## D-084 Licence
+- **Date:** 2026-11-02. **Status:** decided by the owner in M14.
+- **Decision:** MIT, in `LICENSE`, copyright the owner.
+- **Why:** short, permissive and widely understood for a portfolio project.
+- **Alternatives:** Apache-2.0, or no licence.
+
+## D-085 nginx resolves the API at request time
+- **Date:** 2026-11-02. **Status:** decided in M14.
+- **Decision:** `frontend/nginx.conf` sets `resolver 127.0.0.11 valid=10s` (Docker's DNS) and proxies to a variable, so the API's address is looked up again after 10 seconds.
+- **Why:** with a literal host, nginx resolved `api` once at start. When `docker compose up` recreated the API container, it got a new address and every API request answered 502 until nginx restarted. The e2e script showed this failing before the fix.
+- **Trade-offs:** the config now works only on a Docker network with the embedded DNS, which is how it ships.
+
+## D-086 Pre-release scan
+- **Date:** 2026-11-02. **Status:** done in M14; findings for the owner.
+- **Method:** gitleaks (pinned and checksum-verified by `scripts/install-tools.sh`) over all 75 commits, and over an export of the tracked files. Searches of the tracked files and of `git log -p --all` for emails outside the `example` domain, phone numbers, local paths, the owner's name and username, and the old project name.
+- **Findings:**
+  - Secrets: none in the history. The working tree had the fictional test secret from D-071, on a line the ignore file no longer matched; it is now marked `gitleaks:allow`.
+  - Emails: none outside the reserved domain. Commit author and committer emails are GitHub `noreply` addresses; the author name, Bojan Petkovski, is in every commit.
+  - The GitHub username appears in `docs/RESEARCH.md`, merge commit messages and the README's clone link.
+  - Phone numbers: only the fictional 555-01xx range. Local paths: none.
+  - The old name: D-001 and `docs/RESEARCH.md` record the rename, and name real products found during the name check (filefold.com, `TerryHank/FilefoldAI`, FileFolder, Fold & File). They are research notes, not sample data.
+- **Trade-offs:** no history was rewritten, and none is needed for the findings above.
+
+## D-087 Full-codebase review (M16)
+- **Date:** 2026-11-03. **Status:** done in M16; one question for the owner.
+- **Decision:** the owner's review brief ran as M16, numbered after M15, which stays owner-gated. Ten findings were fixed, each with a regression test shown failing first; `docs/REVIEW.md` lists them with coverage and the reasons for what was left.
+  - Extracted vendor names and invoice numbers are limited to their column sizes after the response, like amounts, and `SCHEMA_VERSION` moved to `2026-11-03.1`. Earlier extractions keep the old version.
+  - The repository check now fails on bidirectional control characters in tracked text files.
+- **For the owner:** when a reviewer corrects the first of two copies of one invoice, the rules run again and flag that first copy as a duplicate of the second. This follows SPEC section 7 ("no other non-rejected document"); D-057 covers only first routing. Keeping the first copy unflagged would mean comparing only with documents received earlier, a spec change.
+- **Trade-offs:** the generator was read at the level of its entry point and plan, not line by line; its tests cover reproducibility.
+
+## D-088 Real-model measurement deferred
+- **Date:** 2026-11-04. **Status:** decided by the owner in M15.
+- **Decision:** the owner chose Haiku 5.5 for the measurement, then deferred the paid run to present the project from the demo first. What M15 did is free: the extractor sends no fallback request to models without a server-side fallback (Haiku 5.5), the evaluation takes `--limit N` for smoke runs, and the model and prices were re-checked. No key was stored and no paid call was made.
+- **Why:** the demo needs no key, and the README already says plainly that accuracy is not measured (AC-28).
+- **When it resumes:** move to `anthropic` 2.x first (D-052), then a `--limit` smoke batch on Haiku 5.5 to compare tokens with the estimate, then the sets as the brief orders them, under a cap the owner gives.
