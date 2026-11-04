@@ -1,6 +1,6 @@
 # Progress
 
-Last updated 2026-11-02. **M16, the full-codebase review, is pushed for review. Next: the owner merges, answers D-087, and decides on M15 and the release.**
+Last updated 2026-11-04. **M15 is deferred by the owner after its free preparation (D-088). Next: the demo video and thumbnail, then the release.**
 
 ## Milestones
 
@@ -23,8 +23,8 @@ Estimates are planning guesses, not measurements. Total: about 104 hours.
 | 12 | Evaluation harness | 7 | 6 h | Merged; `dev` now contains `main` |
 | 13 | Polish, accessibility and demo mode | 11, 12 | 8 h | Merged |
 | 14 | End-to-end test, Docker, README and portfolio kit | 13 | 9 h | Merged |
-| 15 | Real-model measurement (owner-gated) | 12 | 3 h plus API spend | Blocked until the owner authorizes it; blocks nothing |
-| 16 | Full-codebase review (playbook Phase 9) | 14 | not estimated | Pushed for review; `docs/REVIEW.md` |
+| 15 | Real-model measurement (owner-gated) | 12 | 3 h plus API spend | Deferred by the owner on 2026-11-04 after free preparation (D-088); no paid call made |
+| 16 | Full-codebase review (playbook Phase 9) | 14 | not estimated | Merged; `docs/REVIEW.md` |
 
 ## Changes from the owner's expected plan
 
@@ -64,12 +64,12 @@ Every number used in the README or portfolio kit must have a row here. None of t
 | `main` lacks M12 and M13; `dev` contains everything on `main` | A release brings `main` up to date. Setting `dev` as the default branch prevents PRs landing on `main` |
 | The Vite dev server needs `ALLOW_INSECURE_COOKIES=true` and its origin in `ALLOWED_ORIGINS` | Local setup only |
 | No time limit on a single PDFium render | Revisit in M6 (D-047) |
-| Move to `anthropic` 2.x before any real run | After 2026-11-04, in M15 (D-052) |
-| Fallback with structured outputs is unconfirmed | First test in M15, with a switch to turn it off (D-054) |
+| Move to `anthropic` 2.x before any real run | 2.0.0 clears the floor on 2026-11-04 at 15:52 UTC; first step when M15 resumes (D-052, D-088) |
+| Fallback with structured outputs is unconfirmed | First test when M15 resumes on a model that has a fallback; Haiku 5.5 has none, and is now sent no fallback request (D-054, D-088) |
 | Extraction limits and the batch token cap are not measured | Replace with real figures in M15 (D-048, D-055) |
 | Local databases need migration `0002` | `alembic upgrade head` |
 | The sink forgets seen event IDs on restart | Demo only (D-069) |
-| The API key is not needed until M15 | Owner stores it in local `.env` when authorizing a run |
+| The API key is not needed until M15 resumes | Owner stores it in local `.env`, sets a Console spend limit and gives the milestone cap |
 | No page scores or load test (playbook Phase 7) | Not in the M14 brief, and not done. Only the bundle and image sizes are measured |
 | Screen readers, Firefox and Safari not run in the M13 audit | Chromium plus axe only; see `docs/AUDIT.md` |
 | Codespaces not yet started on GitHub | Tested with the dev container CLI; the owner click-tests after merge (D-081) |
@@ -78,4 +78,4 @@ Every number used in the README or portfolio kit must have a row here. None of t
 
 ## Next step
 
-Owner opens a PR for `#0016-full-codebase-review` against `dev`, checks CI, merges, and answers the duplicate question in D-087. Then, owner actions: open the repository in Codespaces once, and decide on M15 (real-model measurement) and the release steps in the playbook.
+Owner opens a PR for `#0015-real-model-measurement` (free preparation only) against `dev` and merges. Then the demo video, thumbnail, frames and captions, outside the repository (playbook section 14), then the release steps.
