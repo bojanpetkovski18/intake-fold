@@ -12,7 +12,13 @@ from intakefold.clock import SystemClock
 from intakefold.db.engine import build_engine
 from intakefold.db.seed import seed_vendors
 from intakefold.documents.storage import Storage
-from intakefold.eval.harness import SETS, DatabaseNotEmpty, load_labels, run_evaluation
+from intakefold.eval.harness import (
+    SETS,
+    DatabaseNotEmpty,
+    first_documents,
+    load_labels,
+    run_evaluation,
+)
 from intakefold.eval.report import write_reports
 from intakefold.extraction.factory import build_extractor
 from intakefold.settings import ConfigurationError, load_settings
@@ -36,6 +42,13 @@ def parse() -> argparse.Namespace:
     parser.add_argument("--labels", type=Path, default=Path("../data/labeled"))
     parser.add_argument("--out", type=Path, default=Path("../reports/eval"))
     parser.add_argument("--token-cap", type=int, help="Defaults to BATCH_TOKEN_CAP.")
+    parser.add_argument(
+        "--limit",
+        type=int,
+        choices=range(1, 1000),
+        metavar="N",
+        help="Only the first N documents, for a smoke run. The report name says so.",
+    )
     return parser.parse_args()
 
 
@@ -63,7 +76,9 @@ def main() -> None:
     engine = build_engine(settings)
     with Session(engine) as session, session.begin():
         seed_vendors(session)
-    labels = load_labels(arguments.labels, arguments.set_name)
+    labels, run_name = first_documents(
+        load_labels(arguments.labels, arguments.set_name), arguments.set_name, arguments.limit
+    )
     with tempfile.TemporaryDirectory() as directory:
         try:
             result = run_evaluation(
@@ -73,7 +88,7 @@ def main() -> None:
                 settings,
                 build_extractor(settings, engine),
                 labels,
-                arguments.set_name,
+                run_name,
             )
         except DatabaseNotEmpty:
             raise SystemExit(

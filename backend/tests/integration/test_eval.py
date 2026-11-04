@@ -11,7 +11,12 @@ from intakefold.clock import SystemClock
 from intakefold.db.models import Batch, BatchSource, ExtractionOutcome, WebhookDelivery
 from intakefold.db.seed import seed_vendors
 from intakefold.documents.storage import Storage
-from intakefold.eval.harness import DatabaseNotEmpty, load_labels, run_evaluation
+from intakefold.eval.harness import (
+    DatabaseNotEmpty,
+    first_documents,
+    load_labels,
+    run_evaluation,
+)
 from intakefold.eval.report import PLUMBING_HEADING, write_reports
 from intakefold.eval.scoring import Outcome
 from intakefold.extraction.mock import MockExtractor
@@ -139,6 +144,16 @@ def test_reports_are_written_dated_with_the_plumbing_heading(
     assert payload["plumbing_test"] is True
     assert payload["documents"] == 20
     assert payload["field_accuracy"] == "1.0000"
+
+
+def test_a_smoke_run_takes_the_first_documents_and_says_so_in_its_name() -> None:
+    labels = load_labels(LABELED_SET, "development")
+
+    smoke, name = first_documents(labels, "development", 3)
+
+    assert smoke == labels[:3]
+    assert name == "development-first3"
+    assert first_documents(labels, "development", None) == (labels, "development")
 
 
 def test_the_batch_token_cap_applies_to_an_evaluation(vendors: Engine, tmp_path: Path) -> None:

@@ -112,6 +112,16 @@ def load_labels(labels_dir: Path, set_name: str) -> list[Label]:
     return labels
 
 
+def first_documents(
+    labels: list[Label], set_name: str, limit: int | None
+) -> tuple[list[Label], str]:
+    """A smoke run's labels and name. The name carries the limit, so its report is never
+    mistaken for the whole set's."""
+    if limit is None:
+        return labels, set_name
+    return labels[:limit], f"{set_name}-first{limit}"
+
+
 def ensure_empty(engine: Engine) -> None:
     with Session(engine) as session:
         if session.scalar(select(func.count()).select_from(Document)):
