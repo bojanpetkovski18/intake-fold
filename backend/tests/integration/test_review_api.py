@@ -253,7 +253,8 @@ def test_every_correction_records_who_changed_what(
         for event in events(seeded, document_id, "field_corrected")
     }
     assert found == {
-        "total": ("999.0000", "110.00", user.id),
+        # Money reads as everywhere else: two places unless more are real, not NUMERIC(14,4).
+        "total": ("999.00", "110.00", user.id),
         "currency": ("USD", "EUR", user.id),
     }
 
